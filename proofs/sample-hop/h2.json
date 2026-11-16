@@ -1,0 +1,31 @@
+{
+  "checks": [],
+  "format": 1,
+  "game": "sample-hop",
+  "kind": "tick",
+  "level": "h2",
+  "replay": {
+    "actions": [
+      "none*5",
+      "hop",
+      "none*7",
+      "hop",
+      "none*15",
+      "hop",
+      "none*9"
+    ],
+    "finalHash": "7b54914a1cc08fc0",
+    "finalPhase": "won",
+    "format": 1,
+    "game": "sample-hop",
+    "level": "h2",
+    "rulesVersion": "1",
+    "seed": 1
+  },
+  "rulesVersion": "1",
+  "seed": 1,
+  "stats": {
+    "actions": 39,
+    "nodes": 151
+  }
+}

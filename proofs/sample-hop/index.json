@@ -1,0 +1,13 @@
+{
+  "game": "sample-hop",
+  "levels": [
+    {
+      "actions": 39,
+      "id": "h1"
+    },
+    {
+      "actions": 39,
+      "id": "h2"
+    }
+  ]
+}

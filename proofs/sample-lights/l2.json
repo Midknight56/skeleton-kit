@@ -1,0 +1,26 @@
+{
+  "checks": [],
+  "format": 1,
+  "game": "sample-lights",
+  "kind": "turn",
+  "level": "l2",
+  "replay": {
+    "actions": [
+      "press:0,0",
+      "press:2,2"
+    ],
+    "finalHash": "6ccb2c6a8194c8ac",
+    "finalPhase": "won",
+    "format": 1,
+    "game": "sample-lights",
+    "level": "l2",
+    "rulesVersion": "1",
+    "seed": 1
+  },
+  "rulesVersion": "1",
+  "seed": 1,
+  "stats": {
+    "actions": 2,
+    "nodes": 19
+  }
+}

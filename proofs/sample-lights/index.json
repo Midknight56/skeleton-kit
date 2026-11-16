@@ -1,0 +1,17 @@
+{
+  "game": "sample-lights",
+  "levels": [
+    {
+      "actions": 1,
+      "id": "l1"
+    },
+    {
+      "actions": 2,
+      "id": "l2"
+    },
+    {
+      "actions": 3,
+      "id": "l3"
+    }
+  ]
+}
