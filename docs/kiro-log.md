@@ -35,6 +35,7 @@ ode:path in the two new test files, so test files may import those two modules. 
 
 | Date | Hook | What triggered it | What it did |
 | --- | --- | --- | --- |
+| 2026-11-16 | protect-proofs (PreToolUse) | A new Kiro CLI session (`--trust-workspace`) asked to add one space to `proofs/sample-hop/h1.json` with `fs_write` | Blocked the write: "Blocked: proofs/ may only be changed by npm run prove." The tool was not run and the file hash did not change. |
 
 ## Tool door transcripts
 
