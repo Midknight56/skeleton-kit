@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "garden": {
+      "command": "node",
+      "args": ["kit/mcp/dist/server.js", "--game", "apps/garden"],
+      "env": {},
+      "disabled": true,
+      "autoApprove": ["new_game", "act", "observe", "render", "replay"]
+    },
+    "runner": {
+      "command": "node",
+      "args": ["kit/mcp/dist/server.js", "--game", "apps/runner"],
+      "env": {},
+      "disabled": true,
+      "autoApprove": ["new_game", "act", "observe", "render", "replay"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "typecheck-on-save",
+      "description": "Type check the workspace each time a TypeScript file is saved.",
+      "trigger": "PostFileSave",
+      "matcher": "\\.(ts|tsx)$",
+      "action": { "type": "command", "command": "npm run typecheck" },
+      "timeout": 120
+    }
+  ]
+}

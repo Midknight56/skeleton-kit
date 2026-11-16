@@ -1,0 +1,12 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "verify-on-stop",
+      "description": "Run type check, lint, tests and the proof check each time the agent finishes a turn.",
+      "trigger": "Stop",
+      "action": { "type": "command", "command": "npm run verify" },
+      "timeout": 900
+    }
+  ]
+}
