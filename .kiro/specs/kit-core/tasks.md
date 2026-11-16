@@ -78,13 +78,13 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test` passes.
   - _Requirements: 2.3, 3.2, 4.3, 5.3_
 
-- [ ] 13. Lint rules for rule code
+- [x] 13. Lint rules for rule code
   - Add the ESLint rule block for the folders in requirement 9.1, excluding `*.test.ts`, and the fixture `tools/lint-fixtures/bad-rule.ts`. Exclude `tools/lint-fixtures/` from the normal `npm run lint` run, or the workspace lint can never pass.
   - Add `tools/lint-fixtures/lint.test.ts` that runs ESLint on the fixture with the rule block applied by an explicit override, because the fixture is outside the folders in 9.1, and expects a failure that names `Math.random` and a line. Make sure Vitest includes `tools/**`.
   - Verify: `npm run lint` passes on the workspace and the fixture test passes.
   - _Requirements: 9.1, 9.2_
 
-- [ ] 14. Boundary test and contract page
+- [x] 14. Boundary test and contract page
   - Add `kit/core/src/boundary.test.ts`: `kit/core/package.json` lists no runtime dependency, and every import in `kit/core/src` is a relative path or a Node-free standard module. Check that `index.ts` is the only file `kit/conformance` imports from `kit/core`.
   - Add `kit/core/src/game-words.test.ts`: no file under `kit/` contains a word from the game list in `kit-boundary` as a whole word, in any letter case. `navigate` must not count as `gate`. Add one test case that shows a planted whole word is found.
   - Write `docs/kit-contract.md`: how to write a game in one page, with `sample-lights` as the example. Use no word from the game list in `kit-boundary`.
