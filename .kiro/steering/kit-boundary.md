@@ -23,6 +23,7 @@ inclusion: always
 - `kit/core` has no dependency outside the TypeScript standard library.
 - A new dependency needs its licence written in the task's log row. Only MIT, BSD, ISC or Apache 2.0 licences are allowed.
 - One task changes one folder from the table. If a task needs a second folder, stop and say so.
+- Write every text file as UTF-8 with no byte order mark and with LF line endings. On Windows, do not write files with PowerShell `Set-Content` or `Out-File`.
 
 ## Public surface
 - Each kit package exports from one `index.ts`. Apps import only from that file.
