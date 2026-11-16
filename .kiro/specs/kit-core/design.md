@@ -31,7 +31,7 @@ kit/core/src/replay.ts       runReplay
 kit/core/src/scene.ts        validateScene, paintSvg
 kit/core/src/validate.ts     validateDef
 kit/core/src/index.ts        the only export file
-kit/conformance/src/index.ts runConformance
+kit/conformance/src/index.ts runConformance and the two sample games (`sampleLights`, `sampleHop`)
 kit/conformance/sample-lights/  kit/conformance/sample-hop/  kit/conformance/broken/
 ```
 
@@ -105,7 +105,7 @@ export interface Session<S extends Json, A> {
 
 export type ReplayResult =
   | { ok: true; finalHash: string; finalPhase: Phase }
-  | { ok: false; error: 'wrong_game' | 'rules_changed' | 'bad_action_text' | 'illegal_action' | 'hash_mismatch' | 'phase_mismatch'; mismatchAt?: number; message: string };
+  | { ok: false; error: 'wrong_game' | 'rules_changed' | 'unknown_level' | 'bad_seed' | 'bad_action_text' | 'illegal_action' | 'game_over' | 'hash_mismatch' | 'phase_mismatch'; mismatchAt?: number; message: string };
 
 export function createSession<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number): Session<S, A>;
 export function runReplay<S extends Json, A>(def: GameDef<S, A>, replay: Replay): ReplayResult;
@@ -119,7 +119,7 @@ export function validateScene(scene: Scene): string[];
 export function paintSvg(scene: Scene, options?: { sprites?: Record<string, string> }): string;
 
 export class KitError extends Error {
-  code: 'unknown_level' | 'bad_seed' | 'not_plain_data' | 'bad_def';
+  code: 'unknown_level' | 'bad_seed' | 'not_plain_data';
   path?: string;
 }
 ```
@@ -135,15 +135,16 @@ export function runConformance<S extends Json, A>(def: GameDef<S, A>, options?: 
 ## Data Models
 
 - Canonical JSON: object keys sorted by code unit order, no spaces, numbers written with `String(n)`, strings with `JSON.stringify`. Arrays keep their order.
-- Hash: FNV-1a 64 bit over the UTF-8 bytes of the canonical JSON, computed with `BigInt`, written as 16 lower case hex characters with leading zeros.
+- Hash: FNV-1a 64 bit over the UTF-8 bytes of the canonical JSON, computed with `BigInt`, written as 16 lower case hex characters with leading zeros. The UTF-8 bytes come from a small encoder written in `hash.ts`, because `TextEncoder` is not part of the TypeScript standard library.
 - Random: the mulberry32 algorithm. `rngState` is an unsigned 32 bit integer. `randomInt` uses `value % n`. The small bias is accepted for n up to 65536.
-- Session history: a stack of earlier states, turn games only, capped at 500 entries. When the cap is reached the oldest entry is dropped.
-- Run length: `compressActions(['a','a','a','b'])` gives `['a*3','b']`. `expandActions` rejects a count below 2 or above 3600, a missing count, and a text with more than one `*`.
+- Session history: a stack of earlier states, turn games only, capped at 500 entries. When the cap is reached the oldest entry is dropped. `undo` lowers the tick by 1.
+- Run length: `compressActions(['a','a','a','b'])` gives `['a*3','b']`. A run longer than 3600 is split, so 3601 equal actions give `['a*3600','a']`. `compressActions` throws `KitError` with code `not_plain_data` for a text that contains `*`; legal actions never do (property 7). `expandActions` rejects a count below 2 or above 3600, a missing count, and a text with more than one `*`.
+- Date test: `hashState` finds a `Date` with `Object.prototype.toString.call(v) === '[object Date]'`, not with `instanceof Date`, because lint bans the name `Date` in `kit/core` source.
 
 ## Error Handling
 
 - Bad input that comes from a tool or a file returns a typed result. It never throws.
-- A programming mistake in a game definition throws `KitError` at session creation or at hash time, with the path of the bad value.
+- A programming mistake in a game definition throws `KitError` with the path of the bad value, at hash time. `createSession` throws `KitError` only for an unknown level or a bad seed. `validateDef` reports definition problems as a list and never throws.
 - A failed `apply` leaves the session exactly as it was. Tests compare the hash before and after.
 
 ## Testing Strategy
@@ -151,22 +152,23 @@ export function runConformance<S extends Json, A>(def: GameDef<S, A>, options?: 
 - Unit tests with Vitest sit next to each source file as `*.test.ts`. Each one is written first and seen to fail.
 - Hash tests: `hashState({})` and `hashState({a:1,b:2})` equal `hashState` of the same objects built in the other key order. A second, slow reference hash written inside the test file with plain number arrays must agree on 200 random values.
 - Random tests: the first 5 outputs for state 1 are compared with a reference loop written inside the test file from the published mulberry32 steps.
-- Session tests use `sample-lights`. Level `l1` has only the centre lamp and its four neighbours on. `press:1,1` wins it in one action.
+- Session tests use `sample-lights`. Level `l1` has only the centre lamp and its four neighbours on (5 lamps, the corners off). `press:1,1` flips exactly those 5 lamps, so it wins in one action.
+- Sample-hop fixture: the line has cells 0 to 39 and the runner starts on cell 0. Each step first sets 4 airborne ticks when the action is `hop` and the runner has none left, then moves one cell. If the runner has an airborne tick left on arrival, it spends one and cannot be lost. Otherwise it is lost when the cell is blocked. It wins on cell 39. Level `h1` has one blocked cell, 10. With no hop the runner is on cell 10 after 10 ticks and the phase is `lost`. The replay `['none*6','hop','none*32']` takes 6 + 1 + 32 = 39 ticks, passes cell 10 while airborne (cells 7 to 10), reaches cell 39 and wins.
 - Replay tests: a valid replay passes. The same replay with one action changed returns `illegal_action` or `hash_mismatch`. A replay with `rulesVersion` changed returns `rules_changed`.
 - SVG tests: the output parses as XML with a tiny parser in the test, holds one element for each scene item, and escapes the text `a<b & "c"`.
-- Conformance tests: both samples pass. Each of the three broken samples fails the named property.
+- Conformance tests: both samples pass. Each broken sample fails exactly the property named here: the hidden counter fails property 1, the changed input fails property 5, and the unlisted action fails property 3. A failing result must hold the property name, a replay with the level, the seed and the shrunk actions.
 
 ## Correctness Properties
 
 1. **Repeatable.** For any level, seed and legal action list, two fresh sessions give equal hashes after every action. (Requirements 2.3, 3.2)
 2. **Replay round trip.** For any finished or unfinished run, `runReplay(def, session.toReplay())` is ok and returns the same hash and phase. (4.1, 4.3)
-3. **Legal closure.** Every text from `legal()` is accepted by `apply`. A text outside `legal()` is refused and the hash does not change. (2.3, 2.4, 2.5)
+3. **Legal closure.** Every text from `legal()` is accepted by `apply`. A text outside `legal()` is refused and the hash does not change. For each text that was legal at another state of the same run but is not legal now, `def.step(state, decodeAction(text))` returns a state with the same hash, so a definition cannot accept an action it did not list. The broken sample for this property decodes such a text and changes the state. (2.3, 2.4, 2.5)
 4. **Plain data.** After every action, `JSON.parse(JSON.stringify(state))` is deep equal to the state and `hashState` does not throw. (3.3)
 5. **Input not changed.** `def.step(state, action)` leaves its `state` argument with the same hash as before the call. (2.3)
 6. **Game over is final.** When the phase is `won` or `lost`, `legal()` is empty and every `apply` returns `game_over`. (2.6)
 7. **Action text round trip.** For every legal action, `decodeAction(encodeAction(a))` encodes to the same text, and no text contains `*`. (4.2)
 8. **Undo.** On a turn game, `apply` then `undo` gives the hash from before the `apply`. (2.8)
-9. **View and observation are safe.** After every action, `view` returns a scene with no problem from `validateScene`, and `observe` returns a summary of at most 120 characters and a text map whose rows have equal length. (6.1, 6.5)
+9. **View and observation are safe.** After every action, `view` returns a scene with no problem from `validateScene`, and `observe` returns a summary of at most 120 characters and a text map whose rows have equal length. (6.1, 6.5, 1.5)
 
 ## Decisions and Alternatives
 

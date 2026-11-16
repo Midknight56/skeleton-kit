@@ -10,6 +10,7 @@ These rules apply to the kit core, the solver, the conformance tests and every g
 - State is plain JSON data: objects, arrays, strings, booleans, finite numbers and null. No functions, classes, Maps, Sets, Dates, `undefined`, `NaN` or `Infinity`.
 - In a tick game every number in state is an integer. Positions and speeds use fixed point units named in that game's spec.
 - `step(state, action)` returns a new state and never changes its input.
+- `step(state, action)` called with an action that is not in `actions(state)` returns a state with the same hash as `state`. Conformance property 3 checks this.
 
 ## Forbidden in rule code
 - `Math.random`, `Date`, `performance`, `setTimeout`, `setInterval`, `requestAnimationFrame`.
