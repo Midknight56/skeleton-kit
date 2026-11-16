@@ -10,37 +10,37 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run verify` exits 0. If the hooks `typecheck-on-save` and `verify-on-stop` exist in `.kiro/hooks`, save one TypeScript file and end one turn, and write in the log whether each fired. If they do not exist, write that.
   - _Requirements: none (setup for 9.1)_
 
-- [ ] 2. Write the contract types
+- [x] 2. Write the contract types
   - Create `kit/core/package.json` (no runtime dependencies), `kit/core/tsconfig.json`, `kit/core/src/types.ts` and `kit/core/src/errors.ts` exactly as in the design. Create `kit/core/src/index.ts` that exports them. Every later task in this spec that adds an export adds it to this file, so other packages can import from it from task 6 on.
   - Add `kit/core/src/types.test.ts` with one tiny game definition that must type check, and one `// @ts-expect-error` line for a definition with a missing member.
   - Verify: `npm run typecheck` passes.
   - _Requirements: 1.1, 1.2_
 
-- [ ] 3. Canonical JSON and hash
+- [x] 3. Canonical JSON and hash
   - Write `canonical.test.ts` and `hash.test.ts` first: key order, 16 hex characters, the slow reference hash on 200 random values, and one test for each bad value in requirement 3.3. Run them and see them fail.
   - Implement `canonical.ts` and `hash.ts`.
   - Verify: `npm test -- hash canonical` passes.
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 4. Random numbers
+- [x] 4. Random numbers
   - Write `random.test.ts` first: the reference loop, the value ranges, and equal sequences for equal states. See it fail.
   - Implement `random.ts`.
   - Verify: `npm test -- random` passes.
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 5. Run length coding for actions
+- [x] 5. Run length coding for actions
   - Write `rle.test.ts` first: round trip on 100 random lists, the limits 2 and 3600, and the refused forms. See it fail.
   - Implement `rle.ts`.
   - Verify: `npm test -- rle` passes.
   - _Requirements: 4.2_
 
-- [ ] 6. The two sample games
+- [x] 6. The two sample games
   - Create `kit/conformance/package.json` (depends on `kit/core` and fast-check; licence MIT in the log row), `kit/conformance/sample-lights/` and `kit/conformance/sample-hop/` as in requirement 8 and the design fixture, each with `def.ts` and `def.test.ts`. Import `kit/core` only through its `index.ts`.
   - Tests first: `sample-lights` has levels `l1`, `l2`, `l3` and `press:1,1` wins `l1`. `sample-hop` has levels `h1`, `h2` and the design replay `['none*6','hop','none*32']` wins `h1` in 39 ticks. A run with no hop is lost on cell 10 at tick 10.
   - Verify: `npm test -- sample` passes.
   - _Requirements: 8.1, 8.2_
 
-- [ ] 7. Definition check
+- [x] 7. Definition check
   - Write `validate.test.ts` first for each problem in requirement 1.3 and for `ticksPerSecond`. See it fail.
   - Implement `validate.ts`.
   - Verify: `npm test -- validate` passes.

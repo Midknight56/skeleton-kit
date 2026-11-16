@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "sample-lights/**/*.ts", "sample-hop/**/*.ts", "broken/**/*.ts"]
+}
