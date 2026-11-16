@@ -1,0 +1,27 @@
+{
+  "name": "skeleton-kit",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": ["kit/*", "apps/*"],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "prove": "node -e \"console.log('not built yet')\"",
+    "verify": "npm run typecheck && npm run lint && npm run test",
+    "build": "node -e \"console.log('not built yet')\"",
+    "e2e": "node -e \"console.log('not built yet')\"",
+    "new:game": "node -e \"console.log('not built yet')\""
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.15.0",
+    "fast-check": "4.10.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.0"
+  }
+}

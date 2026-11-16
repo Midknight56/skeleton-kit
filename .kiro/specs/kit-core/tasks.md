@@ -2,7 +2,7 @@
 
 Rule for every task: when the task is finished, add one row to `docs/kiro-log.md` on the same day and leave the Credits cell empty. The owner fills it. A task that adds a dependency writes its licence in that row. A task changes one folder from the kit-boundary table. Files outside the table (root files, `tools/`, `docs/`) go in the scaffold, lint and contract tasks only.
 
-- [ ] 1. Scaffold the workspace
+- [x] 1. Scaffold the workspace
   - Create the root `package.json` with version `0.1.0` and npm workspaces for `kit/*` and `apps/*`, a base `tsconfig.json` with `strict` on, TypeScript, typescript-eslint, ESLint, Vitest and fast-check. Pin each version and write each licence in the log row. Run Vitest with `--passWithNoTests` until tests exist.
   - Add the root scripts `typecheck`, `lint`, `test`, `prove`, `verify`, `build`, `e2e` and `new:game`. `verify` runs `typecheck`, `lint` and `test`. `prove`, `e2e`, `build` and `new:game` print `not built yet` and exit 0 until their specs replace them. That output is not a pass of any proof or end to end check.
   - Add `LICENSE` (MIT), `README.md` with three lines, `.gitignore` for `node_modules` and `dist`, and `docs/kiro-log.md` from the log template. Do not ignore `.kiro`.
