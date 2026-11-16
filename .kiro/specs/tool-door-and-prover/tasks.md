@@ -77,14 +77,14 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test -- protect-proofs` passes and the log row holds the observation.
   - _Requirements: 10.1, 10.2_
 
-- [ ] 12. Kiro plays the sample game
+- [x] 12. Kiro plays the sample game
   - Add a server named `sample` to `.kiro/settings/mcp.json` that runs `node kit/mcp/dist/server.js --game kit/mcp/test-fixtures/sample-lights`.
   - Ask the `playtester` agent to start level `l2`, play it to a won status through the tools, and call `replay` with `save` true. The agent writes no file itself. The tool door writes the file to `kit/mcp/test-fixtures/sample-lights/tests/replays/`.
   - Copy the list of tool calls into the "Tool door transcripts" section of the log. Run the saved replay with the `replay` tool and record the result.
   - Verify: the saved file passes `runReplay` in a unit test added to `kit/mcp/src/saved-replay.test.ts`.
   - _Requirements: 2.2, 3.1, 6.2, 6.3_
 
-- [ ] 13. Tool door page
+- [x] 13. Tool door page
   - Write `docs/tool-door.md`: the five tools with one example call and answer each, taken from the real run in task 12.
   - Verify: `npm run verify` passes.
   - _Requirements: 1.1, 9.1_

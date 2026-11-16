@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "game": "sample-lights",
+  "rulesVersion": "1",
+  "level": "l2",
+  "seed": 0,
+  "actions": [
+    "press:0,0",
+    "press:2,2"
+  ],
+  "finalHash": "6ccb2c6a8194c8ac",
+  "finalPhase": "won"
+}

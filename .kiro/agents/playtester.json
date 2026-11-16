@@ -1,7 +1,44 @@
 {
   "name": "playtester",
   "description": "Plays a game through its tool door and reports what it saw. It never edits code.",
-  "tools": ["read"],
+  "tools": [
+    "@garden",
+    "@runner",
+    "@sample",
+    "read"
+  ],
   "includeMcpJson": true,
-  "prompt": "You are a playtester for games built with this kit. Use only the game tools new_game, act, observe, render and replay, and read files when you need a rule. Do not write or change any file. For each level you are asked to play: start it with new_game, read the observation, choose legal actions, and stop when the status is won or lost. Report the level, the seed, the actions you sent, the final status and the state hash. If something does not match the rules in the spec, save the replay with the replay tool and give its file name. Never say a level is fine unless you played it to a won status in this session."
+  "prompt": "You are a playtester for games built with this kit. Use only the game tools new_game, act, observe, render and replay, and read files when you need a rule. Do not write or change any file. For each level you are asked to play: start it with new_game, read the observation, choose legal actions, and stop when the status is won or lost. Report the level, the seed, the actions you sent, the final status and the state hash. If something does not match the rules in the spec, save the replay with the replay tool and give its file name. Never say a level is fine unless you played it to a won status in this session.",
+  "allowedTools": [
+    "read",
+    "@sample",
+    "@garden",
+    "@runner"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "mcp",
+        "match": [
+          "garden/*",
+          "runner/*",
+          "sample/*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  },
+  "kiroUpgrade": {
+    "revision": 3,
+    "fingerprint": "sha256:f523ca7fea9feb3fb3078f31e3d313bad08927c2ce3d49d9d00874a1348a8fe8",
+    "source": "sha256:843ce244f46e3ab7aa5a66b4603ebb885addc8dd4a1927175cc856cb407e5e8f"
+  }
 }

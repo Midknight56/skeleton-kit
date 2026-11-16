@@ -270,7 +270,11 @@ describe('replay', () => {
     const dir = mkdtempSync(join(tmpdir(), 'kit-mcp-'));
     temporary.push(dir);
     const target = join(dir, 'sample-lights');
-    cpSync(new URL('../test-fixtures/sample-lights', import.meta.url), target, { recursive: true });
+    // Skip tests/, which holds the replay saved in the playtester run, so that each copy starts with no saved files.
+    cpSync(new URL('../test-fixtures/sample-lights', import.meta.url), target, {
+      recursive: true,
+      filter: (source) => !/[\\/]tests([\\/]|$)/.test(source),
+    });
     return target;
   }
 

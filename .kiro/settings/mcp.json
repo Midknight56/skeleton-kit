@@ -2,17 +2,54 @@
   "mcpServers": {
     "garden": {
       "command": "node",
-      "args": ["kit/mcp/dist/server.js", "--game", "apps/garden"],
+      "args": [
+        "kit/mcp/dist/server.js",
+        "--game",
+        "apps/garden"
+      ],
       "env": {},
       "disabled": true,
-      "autoApprove": ["new_game", "act", "observe", "render", "replay"]
+      "autoApprove": [
+        "new_game",
+        "act",
+        "observe",
+        "render",
+        "replay"
+      ]
     },
     "runner": {
       "command": "node",
-      "args": ["kit/mcp/dist/server.js", "--game", "apps/runner"],
+      "args": [
+        "kit/mcp/dist/server.js",
+        "--game",
+        "apps/runner"
+      ],
       "env": {},
       "disabled": true,
-      "autoApprove": ["new_game", "act", "observe", "render", "replay"]
+      "autoApprove": [
+        "new_game",
+        "act",
+        "observe",
+        "render",
+        "replay"
+      ]
+    },
+    "sample": {
+      "command": "node",
+      "args": [
+        "kit/mcp/dist/server.js",
+        "--game",
+        "kit/mcp/test-fixtures/sample-lights"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "new_game",
+        "act",
+        "observe",
+        "render",
+        "replay"
+      ]
     }
   }
 }
