@@ -46,25 +46,25 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test -- validate` passes.
   - _Requirements: 1.2, 1.3_
 
-- [ ] 8. Session
+- [x] 8. Session
   - Write `session.test.ts` first with `sample-lights` and `sample-hop`: creation, each refused case with the hash and the tick unchanged, `game_over` for an undecodable text, `legal()` empty after the game ends, `legal()` order, `undo` on both kinds, and the 500 entry cap (after 501 applies on a turn game, 500 undos return `true` and the next returns `false`). See it fail.
   - Implement `session.ts`.
   - Verify: `npm test -- session` passes.
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
 
-- [ ] 9. Replay
+- [x] 9. Replay
   - Write `replay.test.ts` first: a good replay, a changed action, a changed hash, a changed phase, a wrong game id, a changed rules version, an unknown level, a bad seed, an undecodable text, a malformed `*` item, an action after the game ended, and a run of 3601 equal actions that compresses to two items. Check that none of these throws. See it fail.
   - Implement `toReplay` in the session and `replay.ts`.
   - Verify: `npm test -- replay` passes.
   - _Requirements: 4.1, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-- [ ] 10. Scene check and SVG painter
+- [x] 10. Scene check and SVG painter
   - Write `scene.test.ts` first: layer order, the placeholder for a sprite with no map entry, escaping, and each problem from `validateScene`. See it fail.
   - Implement `scene.ts`.
   - Verify: `npm test -- scene` passes.
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 11. Conformance suite
+- [x] 11. Conformance suite
   - Create the three broken samples in `kit/conformance/broken/`.
   - Write `conformance.test.ts` first: both samples pass all nine properties, each broken sample fails the property named in the design (hidden counter: 1, changed input: 5, unlisted action: 3), and a failing result holds the property name, the level id, the seed and a shrunk action list in replay form. See it fail.
   - Implement `runConformance` with the nine properties from the design. Export it and the two samples from `kit/conformance/src/index.ts`, the only export file.
