@@ -149,19 +149,19 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run build` gives `dist/` with `/`, `/garden/`, `/runner/` and `/privacy/`, and `npm run verify:e2e` passes.
   - _Requirements: 12.1, 12.2, 12.4_
 
-- [ ] 22. Garden puzzle art
+- [x] 22. Garden puzzle art
   - Folder: `apps/garden`.
   - Put the final art files given for the garden puzzle in `apps/garden/assets/` and point `theme.ts` at them. Every file must be original work made for this repository. If no files are given, leave the placeholders and write that in the log. Run `checkTheme`, the layout test and the garden play through tests again.
   - Verify: `npm run verify:e2e` passes.
   - _Requirements: 1.2, 6.4, 9.2_
 
-- [ ] 23. Runner art
+- [x] 23. Runner art
   - Folder: `apps/runner`.
   - Do the same for the runner.
   - Verify: `npm run verify:e2e` passes.
   - _Requirements: 1.2, 6.4, 9.2_
 
-- [ ] 24. Final check and log
+- [x] 24. Final check and log
   - Folder: `docs/`.
   - Run `npm run verify:e2e` and `npm run prove -- --check`, and write the real results in the log. Name a hook in the log only if it was seen to fire.
   - Verify: both commands exit 0.
