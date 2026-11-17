@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 // These tests read the built files. `npm run build:apps` makes them, and `npm run verify` runs it first.
 const dist = (name: string): string => fileURLToPath(new URL(`../dist/${name}`, import.meta.url));
 
-describe('the built files', () => {
+// Importing a bundled file can take over 5 s while the whole suite runs in parallel.
+describe('the built files', { timeout: 30_000 }, () => {
   it('has dist/def.js and dist/proof.js', () => {
     expect(existsSync(dist('def.js')), 'dist/def.js is missing. Run npm run build:apps.').toBe(true);
     expect(existsSync(dist('proof.js')), 'dist/proof.js is missing. Run npm run build:apps.').toBe(true);
