@@ -80,7 +80,7 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run verify` passes.
   - _Requirements: 8.3_
 
-- [ ] 14. Kiro plays two levels
+- [x] 14. Kiro plays two levels
   - Build the app. With the `playtester` agent, play `g01` and `g07` to a won status through the `garden` tools. Do not read the proof files first. If the `garden` tools do not load in the session, write in the log that this task did not run, and do not write a transcript.
   - Compare the number of actions used with par from `proofs/garden/index.json` and write both in the log with the list of tool calls.
   - If anything in play differs from this spec, save the replay, add it under `tests/replays/` with a test, and fix the rules or the spec.
