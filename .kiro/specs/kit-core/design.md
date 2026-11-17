@@ -170,6 +170,18 @@ export function runConformance<S extends Json, A>(def: GameDef<S, A>, options?: 
 8. **Undo.** On a turn game, `apply` then `undo` gives the hash from before the `apply`. (2.8)
 9. **View and observation are safe.** After every action, `view` returns a scene with no problem from `validateScene`, and `observe` returns a summary of at most 120 characters and a text map whose rows have equal length. (6.1, 6.5, 1.5)
 
+10. **Session start.** `createSession` returns a session whose state hashes like `def.init(level, seed)` and whose tick is 0. An unknown level id throws `KitError` `unknown_level`. A seed that is not an integer from 0 to 2147483647 throws `bad_seed`. (2.1, 2.2)
+11. **Apply is step.** For a legal text, `apply` makes the state equal to `def.step(state, action)`, adds 1 to the tick, and returns that state's hash and status. (2.3)
+12. **Refusal codes.** A text that does not decode gives `bad_action_text`. A text that decodes to an action missing from `def.actions(state)` gives `illegal_action`. Neither changes the hash or the tick. (2.4, 2.5)
+13. **Legal order.** `legal()` equals `def.actions(state)` encoded, in the same order. (2.7)
+14. **Undo limits.** `undo()` returns `false` and changes nothing on a tick game and on a fresh turn game. After 600 applies on a turn game, exactly 500 undos succeed. (2.8)
+15. **Hash shape and key order.** For any plain value, `hashState` is 16 lower case hex characters and is the same when every object is rebuilt with its keys in reverse order. (3.1, 3.2)
+16. **Bad data names its path.** An `undefined`, function, `NaN`, `Infinity`, `Map`, `Set` or `Date` at any depth makes `hashState` throw `KitError` `not_plain_data` with the path, for example `$.outer[2].key`, in `path` and in the message. (3.3)
+17. **Run length form.** `expandActions(compressActions(list))` equals `list`. Every `*n` has n from 2 to 3600, a run of any length is split and its counts add up to the run length, and a text with `*` is refused by `compressActions`. (4.2)
+18. **Replay failures.** A bad action gives the error for its cause with `mismatchAt` equal to its index after expansion (`game_over` after a finished run, even for text that does not decode). A malformed `*` item gives `bad_action_text`. A changed final hash or phase gives `hash_mismatch` or `phase_mismatch`. A wrong game, rules version, level or seed gives `wrong_game`, `rules_changed`, `unknown_level` or `bad_seed` before any action runs. `runReplay` does not throw for any field value, including an object without a prototype. (4.4 to 4.7)
+19. **Random range and repeat.** `nextRandom` and `randomInt` return integers in range, and the same start gives the same results. (5.1, 5.2, 5.3)
+20. **Painter.** `paintSvg` gives one document with items in layer order then list order, escapes `&`, `<`, `>` and `"` in text and in sprite names, and draws a missing sprite as a box with a `title`. (6.2, 6.3, 6.4)
+21. **Checks name the problem.** `validateScene` names a repeated id, a negative size and an item fully outside. `validateDef` names `id`, `levels`, `kind` and `ticksPerSecond` when each is bad. (6.5, 1.3)
 ## Decisions and Alternatives
 
 - Pure functions over a class with hidden state. Chosen because a prover and a property test need to copy and compare states freely.

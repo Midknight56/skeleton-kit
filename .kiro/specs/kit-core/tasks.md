@@ -71,7 +71,7 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test -- conformance` passes. Record the duration that Vitest prints. The 60 second limit is a target, and the log row states the printed duration or says it was not measured.
   - _Requirements: 1.5, 7.1, 7.2, 7.3, 7.4, 8.3_
 
-- [ ] 12. Property tests from the spec
+- [x] 12. Property tests from the spec
   - In the Kiro IDE, open this spec and use the spec correctness feature to generate property tests from the acceptance criteria.
   - Compare the generated properties with the nine in `kit/conformance`. Keep each generated property that checks something new in `kit/core/src/spec-properties.test.ts`. Remove none of the nine.
   - Write in the log which properties were added and any failure they found.
