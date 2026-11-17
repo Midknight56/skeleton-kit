@@ -4,7 +4,7 @@ A kit for small web games that a program can play as well as a person. It holds 
 
 Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from five specs, with five steering files, three hooks, three MCP servers and two custom agents.
 
-Play: https://marionette-site.midknight-ent-llc.workers.dev (no login, no account)
+Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
 ## Judging criteria at a glance
 
