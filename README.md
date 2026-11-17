@@ -6,6 +6,8 @@ Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code f
 
 Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
+Video: https://youtu.be/AU-yrIBvsuA
+
 ## Judging criteria at a glance
 
 **Potential Impact.** Solo developers and small studios have nobody to replay every level after each change, and an AI coding tool writes game code it cannot play. With this kit, `npm run prove -- --check` replays a proof for every level after each change and fails with the exact replay file when a level breaks. Each run is free: the proof is a plain search, not a model. Today it proves 12 garden levels (2 to 16 actions) and 6 runner courses (687 to 1851 actions).
