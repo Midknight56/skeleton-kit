@@ -64,6 +64,31 @@ async function check(page: Page, name: string, viewport: { width: number; height
   expect(problems, `layout at ${viewport.width}x${viewport.height}`).toEqual([]);
 }
 
+// Every lesson chip on the open screen sits 16 px inside the screen and overlaps no other chip.
+async function checkChips(page: Page, name: string, viewport: { width: number; height: number }): Promise<void> {
+  const chips = await page.evaluate(() =>
+    Array.from(document.querySelectorAll<HTMLElement>('[data-hint]')).map((el) => {
+      const r = el.getBoundingClientRect();
+      return { id: el.dataset.hint as string, x: r.left, y: r.top, w: r.width, h: r.height };
+    }),
+  );
+  const problems: string[] = [];
+  for (const c of chips) {
+    if (c.x < 16) problems.push(`${name}: chip ${c.id} starts at x ${c.x}, left limit is 16`);
+    if (c.y < 16) problems.push(`${name}: chip ${c.id} starts at y ${c.y}, top limit is 16`);
+    if (c.x + c.w > viewport.width - 16) problems.push(`${name}: chip ${c.id} ends at x ${c.x + c.w}, right limit is ${viewport.width - 16}`);
+    if (c.y + c.h > viewport.height - 16) problems.push(`${name}: chip ${c.id} ends at y ${c.y + c.h}, bottom limit is ${viewport.height - 16}`);
+  }
+  for (let i = 0; i < chips.length; i++) {
+    for (let j = i + 1; j < chips.length; j++) {
+      const a = chips[i]!;
+      const b = chips[j]!;
+      if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) problems.push(`${name}: chips ${a.id} and ${b.id} overlap`);
+    }
+  }
+  expect(problems, `chips at ${viewport.width}x${viewport.height}`).toEqual([]);
+}
+
 // Each game gets to its results screen in its own way. The garden puzzle is won in two actions.
 // The runner is a tick game, so its clock is a fake one that the test moves by hand.
 const GAMES = [
@@ -140,7 +165,8 @@ for (const game of GAMES) {
       await expect(screen(page, 'play')).toBeVisible();
       await game.afterPlayStart(page);
       await check(page, 'play', viewport);
-
+      await expect(page.locator('[data-hint]').first()).toBeVisible();
+      await checkChips(page, 'play', viewport);
       await page.evaluate(() => window.dispatchEvent(new Event('blur')));
       await expect(screen(page, 'pause')).toBeVisible();
       await check(page, 'pause', viewport);

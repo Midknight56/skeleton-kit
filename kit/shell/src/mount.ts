@@ -218,7 +218,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       const shown = lessonsToShow(store, input.lessons, levelIndex === 0);
       painter = makePainter(view);
       painter.setScene(play.scene(), 0);
-      hints = showHints(doc, view.root, shown, (anchor) => boxForAnchor(view.root, play.scene(), anchor));
+      hints = showHints(doc, view.root, shown, (anchor) => boxForAnchor(view.root, play.scene(), anchor), { width: W, height: H, safe, fontSize: theme.typeScale.small });
     } else {
       active.play.setViewport(viewport);
       painter = makePainter(view);

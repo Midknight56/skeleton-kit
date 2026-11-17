@@ -4,7 +4,11 @@ export { checkTheme } from './theme';
 export type { SoundName, SoundRecipe, Theme } from './theme';
 export { checkControls } from './layout';
 export type { ControlBox, Rect } from './layout';
-export { itemIdsAt } from './painter';
+export { itemIdsAt, sceneBoxes } from './painter';
+export { playLayout } from './layout';
+export { showHints } from './lessons';
+export type { Hints, HintArea } from './lessons';
+export { buttonWidth } from './screens/play-screen';
 export type {
   GameTexts,
   InputButton,

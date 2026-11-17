@@ -24,9 +24,60 @@ export function runnerLayout(viewport: Viewport): RunnerLayout {
   };
 }
 
+// Fractions of the free area for the stars: across the width and down from the bar.
+const STARS: [number, number][] = [
+  [0.1, 0.1],
+  [0.3, 0.22],
+  [0.52, 0.07],
+  [0.62, 0.3],
+  [0.18, 0.42],
+  [0.88, 0.4],
+  [0.42, 0.5],
+];
+
+/** The night sky behind the course. Static: it does not depend on the state. All items are in the back layer. */
+function backdrop(viewport: Viewport): SceneItem[] {
+  const { width, safe } = viewport;
+  const { groundY } = runnerLayout(viewport);
+  const availW = width - safe.left - safe.right;
+  const top = safe.top + BAR;
+  const area = Math.max(1, groundY - top);
+  const items: SceneItem[] = [{ kind: 'sprite', id: 'back-sky', layer: 'back', x: 0, y: 0, w: width, h: groundY, sprite: 'sky' }];
+  const starSize = Math.max(8, Math.round(availW * 0.03));
+  STARS.forEach(([fx, fy], i) => {
+    items.push({
+      kind: 'sprite',
+      id: `back-star-${i + 1}`,
+      layer: 'back',
+      x: safe.left + Math.round(fx * (availW - starSize)),
+      y: top + Math.round(fy * (area - starSize)),
+      w: starSize,
+      h: starSize,
+      sprite: 'star',
+      opacity: i % 2 === 0 ? 1 : 0.6,
+    });
+  });
+  const moon = Math.max(24, Math.round(availW * 0.14));
+  items.push({
+    kind: 'sprite',
+    id: 'back-moon',
+    layer: 'back',
+    x: safe.left + availW - moon - Math.round(availW * 0.1),
+    y: top + Math.round(area * 0.08),
+    w: moon,
+    h: moon,
+    sprite: 'moon',
+  });
+  const far = Math.round(area * 0.3);
+  const near = Math.round(area * 0.17);
+  items.push({ kind: 'sprite', id: 'back-hills-far', layer: 'back', x: 0, y: groundY - far, w: width, h: far, sprite: 'hills_far' });
+  items.push({ kind: 'sprite', id: 'back-hills-near', layer: 'back', x: 0, y: groundY - near, w: width, h: near, sprite: 'hills_near' });
+  return items;
+}
+
 export function view(state: RunnerState, viewport: Viewport): Scene {
   const { tile, scale, playerLeft, groundY } = runnerLayout(viewport);
-  const items: SceneItem[] = [];
+  const items: SceneItem[] = backdrop(viewport);
   const left = (column: number): number => playerLeft + (column * TILE - state.x) * scale;
   const inside = (column: number): boolean => left(column) < viewport.width && left(column) + tile > 0;
   const below = Math.max(1, viewport.height - groundY);

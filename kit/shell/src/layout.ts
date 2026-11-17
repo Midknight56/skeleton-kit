@@ -40,6 +40,39 @@ export function playLayout(
   };
 }
 
+// Where a text chip of size `size` goes next to `anchor`. The chip stays 16 px inside the screen
+// and the safe area. Candidates in order: above the anchor, below it, right of it, left of it,
+// then above and below shifted by whole chip heights. The first one that overlaps neither the
+// anchor nor a chip in `placed` wins. A chip too wide for the screen is pinned to the left limit.
+export function placeChip(
+  anchor: Rect,
+  size: { w: number; h: number },
+  area: { width: number; height: number; safe: Viewport['safe'] },
+  placed: Rect[],
+): { x: number; y: number } {
+  const minX = area.safe.left + MARGIN;
+  const minY = area.safe.top + MARGIN;
+  const maxX = Math.max(minX, area.width - area.safe.right - MARGIN - size.w);
+  const maxY = Math.max(minY, area.height - area.safe.bottom - MARGIN - size.h);
+  const clamp = (x: number, y: number) => ({ x: Math.min(Math.max(x, minX), maxX), y: Math.min(Math.max(y, minY), maxY) });
+  const gap = 4;
+  const above = anchor.y - size.h - gap;
+  const below = anchor.y + anchor.h + gap;
+  const step = size.h + gap;
+  const candidates = [
+    clamp(anchor.x, above),
+    clamp(anchor.x, below),
+    clamp(anchor.x + anchor.w + gap, anchor.y),
+    clamp(anchor.x - size.w - gap, anchor.y),
+  ];
+  for (let k = 1; k <= 8; k++) candidates.push(clamp(anchor.x, above - k * step), clamp(anchor.x, below + k * step));
+  for (const c of candidates) {
+    const rect = { x: c.x, y: c.y, w: size.w, h: size.h };
+    if (!overlaps(rect, anchor) && !placed.some((p) => overlaps(rect, p))) return c;
+  }
+  return candidates[0]!;
+}
+
 // Returns one line for each layout problem. An empty list means every control fits.
 export function checkControls(boxes: ControlBox[], viewport: Viewport, playArea?: Rect): string[] {
   const problems: string[] = [];

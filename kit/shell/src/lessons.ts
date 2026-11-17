@@ -1,4 +1,5 @@
-import type { Rect } from './layout';
+import type { Viewport } from '@kit/core';
+import { placeChip, type Rect } from './layout';
 import type { ProgressStore } from './storage';
 import type { Lesson } from './types';
 
@@ -35,10 +36,20 @@ export function lessonProblems(lessons: Lesson[]): string[] {
 
 export interface Hints { remove(): void }
 
+// The screen a hint sits on: its size, its safe insets and the small type size of the theme.
+export interface HintArea { width: number; height: number; safe: Viewport['safe']; fontSize: number }
+
+// A chip size from its text, for a page that has no layout (a letter is 0.7 em, padding 8 px a side).
+export function estimateChip(text: string, fontSize: number): { w: number; h: number } {
+  return { w: Math.ceil(text.length * fontSize * 0.7) + 16, h: Math.ceil(fontSize * 1.4) + 8 };
+}
+
 // Puts one hint box beside the box of each lesson anchor. A hint takes no pointer events.
-// A lesson whose anchor has no box is skipped.
-export function showHints(doc: Document, container: HTMLElement, lessons: Lesson[], boxFor: (anchor: string) => Rect | null): Hints {
+// A lesson whose anchor has no box is skipped. Each hint keeps 16 px from the screen and the
+// safe area, and does not overlap another hint. The text keeps its size; the box moves.
+export function showHints(doc: Document, container: HTMLElement, lessons: Lesson[], boxFor: (anchor: string) => Rect | null, area: HintArea): Hints {
   const made: HTMLElement[] = [];
+  const placed: Rect[] = [];
   for (const lesson of lessons) {
     const box = boxFor(lesson.anchor);
     if (!box) continue;
@@ -47,9 +58,15 @@ export function showHints(doc: Document, container: HTMLElement, lessons: Lesson
     hint.textContent = lesson.text;
     hint.style.position = 'absolute';
     hint.style.pointerEvents = 'none';
-    hint.style.left = `${box.x}px`;
-    hint.style.top = `${Math.max(0, box.y - 32)}px`;
+    hint.style.left = '0px';
+    hint.style.top = '0px';
     container.append(hint);
+    const measured = hint.getBoundingClientRect();
+    const size = measured.width > 0 && measured.height > 0 ? { w: measured.width, h: measured.height } : estimateChip(lesson.text, area.fontSize);
+    const at = placeChip(box, size, area, placed);
+    hint.style.left = `${at.x}px`;
+    hint.style.top = `${at.y}px`;
+    placed.push({ x: at.x, y: at.y, w: size.w, h: size.h });
     made.push(hint);
   }
   return {

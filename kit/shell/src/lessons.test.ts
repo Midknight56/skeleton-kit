@@ -77,6 +77,7 @@ describe('lessonProblems', () => {
 });
 
 describe('showHints', () => {
+  const area = { width: 360, height: 640, safe: { top: 0, right: 0, bottom: 0, left: 0 }, fontSize: 14 };
   const boxes: Record<string, { x: number; y: number; w: number; h: number } | undefined> = {
     'item-1': { x: 100, y: 200, w: 40, h: 40 },
     'btn-1': { x: 16, y: 580, w: 44, h: 44 },
@@ -84,7 +85,7 @@ describe('showHints', () => {
 
   it('puts one hint box next to the box of each anchor and takes no pointer events', () => {
     const container = document.createElement('div');
-    const hints = showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null);
+    const hints = showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null, area);
     const els = Array.from(container.querySelectorAll<HTMLElement>('[data-hint]'));
     expect(els.map((e) => e.textContent)).toEqual(['Tap here', 'Then wait']);
     expect(els.map((e) => e.dataset.hint)).toEqual(['tap-one', 'then-wait']);
@@ -96,13 +97,13 @@ describe('showHints', () => {
 
   it('skips a lesson whose anchor has no box', () => {
     const container = document.createElement('div');
-    showHints(document, container, lessons, (anchor) => (anchor === 'item-1' ? boxes['item-1']! : null));
+    showHints(document, container, lessons, (anchor) => (anchor === 'item-1' ? boxes['item-1']! : null), area);
     expect(container.querySelectorAll('[data-hint]').length).toBe(1);
   });
 
   it('removes every hint at the first applied action', () => {
     const container = document.createElement('div');
-    const hints = showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null);
+    const hints = showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null, area);
     expect(container.querySelectorAll('[data-hint]').length).toBe(2);
     hints.remove();
     expect(container.querySelectorAll('[data-hint]').length).toBe(0);

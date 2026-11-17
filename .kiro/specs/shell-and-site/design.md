@@ -139,7 +139,7 @@ A new action in a turn game while a 120 ms move still runs ends that move at onc
 
 **Sounds.** `tap` plays on a button press. `move` plays for each applied action of a turn game. `pickup` plays when the score rises in a tick game. `win` and `lose` play when the results screen opens.
 
-**Lessons.** At the start of the first level the shell shows each lesson with a count under 3 as a hint box next to the box of its anchor, adds 1 to its count, and removes all hints at the first applied action. A hint box does not take pointer events. A retry of the first level is a new level start.
+**Lessons.** At the start of the first level the shell shows each lesson with a count under 3 as a hint box next to the box of its anchor, adds 1 to its count, and removes all hints at the first applied action. A hint box does not take pointer events. A hint box is a text chip: the shell measures it, keeps its text at the theme's small size, and places it above its anchor, left edges equal. If that would put it less than 16 px from the screen or the safe area, or over its anchor or another chip, the shell clamps it inward and then tries below, right of and left of the anchor, and then shifted by whole chip heights. A retry of the first level is a new level start. A test measures every chip of every garden level at the seven layout viewports and fails when a chip is closer than 16 px to an edge or overlaps another chip, and the layout e2e test measures the chips of the first level in a browser.
 
 ## Data Models
 

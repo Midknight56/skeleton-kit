@@ -8,8 +8,13 @@ import candle from './assets/candle.svg';
 import gapEdge from './assets/gap_edge.svg';
 import gate from './assets/gate.svg';
 import ground from './assets/ground.svg';
+import hillsFar from './assets/hills_far.svg';
+import hillsNear from './assets/hills_near.svg';
+import moon from './assets/moon.svg';
 import post from './assets/post.svg';
 import pumpkin from './assets/pumpkin.svg';
+import sky from './assets/sky.svg';
+import star from './assets/star.svg';
 
 const sprites: Record<string, string> = {
   ground,
@@ -20,6 +25,11 @@ const sprites: Record<string, string> = {
   candle,
   broom,
   broom_down: broomDown,
+  sky,
+  moon,
+  star,
+  hills_far: hillsFar,
+  hills_near: hillsNear,
 };
 
 const sound = (wave: SoundRecipe['wave'], gain: number, ...notes: [number, number][]): SoundRecipe => ({
