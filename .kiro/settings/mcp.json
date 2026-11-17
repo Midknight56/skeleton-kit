@@ -25,7 +25,7 @@
         "apps/runner"
       ],
       "env": {},
-      "disabled": true,
+      "disabled": false,
       "autoApprove": [
         "new_game",
         "act",

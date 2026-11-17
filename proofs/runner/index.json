@@ -1,0 +1,29 @@
+{
+  "game": "runner",
+  "levels": [
+    {
+      "actions": 687,
+      "id": "r01"
+    },
+    {
+      "actions": 920,
+      "id": "r02"
+    },
+    {
+      "actions": 1152,
+      "id": "r03"
+    },
+    {
+      "actions": 1385,
+      "id": "r04"
+    },
+    {
+      "actions": 1618,
+      "id": "r05"
+    },
+    {
+      "actions": 1851,
+      "id": "r06"
+    }
+  ]
+}

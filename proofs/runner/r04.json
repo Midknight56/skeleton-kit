@@ -1,0 +1,64 @@
+{
+  "checks": [
+    {
+      "detail": "120 columns, 9 obstacles",
+      "name": "length_ok",
+      "passed": true
+    },
+    {
+      "detail": "solved in 1385 ticks",
+      "name": "finishable",
+      "passed": true
+    },
+    {
+      "detail": "at least 4 plain columns between obstacles and before the gate",
+      "name": "spacing_ok",
+      "passed": true
+    },
+    {
+      "detail": "smallest window 6 ticks, the plan needs 6",
+      "name": "window_ok",
+      "passed": true
+    }
+  ],
+  "format": 1,
+  "game": "runner",
+  "kind": "tick",
+  "level": "r04",
+  "replay": {
+    "actions": [
+      "none*128",
+      "jump",
+      "none*100",
+      "jump",
+      "none*96",
+      "jump",
+      "none*99",
+      "jump",
+      "none*85",
+      "jump",
+      "none*111",
+      "jump",
+      "none*96",
+      "jump",
+      "none*100",
+      "jump",
+      "none*119",
+      "jump",
+      "none*442"
+    ],
+    "finalHash": "45832496773dfa9b",
+    "finalPhase": "won",
+    "format": 1,
+    "game": "runner",
+    "level": "r04",
+    "rulesVersion": "1",
+    "seed": 1
+  },
+  "rulesVersion": "1",
+  "seed": 1,
+  "stats": {
+    "actions": 1385,
+    "nodes": 589591
+  }
+}
