@@ -15,11 +15,18 @@ export interface RunnerLayout {
 export function runnerLayout(viewport: Viewport): RunnerLayout {
   const { width, height, safe } = viewport;
   const availW = width - safe.left - safe.right;
-  const tile = Math.max(1, Math.floor(availW / 15));
+  const availH = height - safe.top - safe.bottom;
+  // A screen taller than wide fits the course to its height, so the rider and the ground are big enough
+  // to see. The tile is also at most 14 percent of the width, which keeps 5 tiles of course in view
+  // right of the rider, who stands a fifth of the way in. Other screens fit the course to the width.
+  const tile =
+    height > width
+      ? Math.max(1, Math.min(Math.floor(availH / 12), Math.floor(availW * 0.14)))
+      : Math.max(1, Math.floor(availW / 15));
   return {
     tile,
     scale: tile / TILE,
-    playerLeft: safe.left + Math.floor(availW / 4),
+    playerLeft: safe.left + Math.floor(availW / (height > width ? 5 : 4)),
     groundY: safe.top + BAR + Math.floor(((height - safe.top - BAR - safe.bottom) * 3) / 4),
   };
 }

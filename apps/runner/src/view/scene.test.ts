@@ -7,6 +7,7 @@ import { step, type RunnerAction } from '../rules/step';
 import { runnerLayout, view } from './scene';
 
 const portrait: Viewport = { width: 360, height: 640, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
+const wide: Viewport = { width: 1920, height: 1080, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
 const viewports: Viewport[] = [
   portrait,
   { width: 1920, height: 1080, safe: { top: 0, right: 0, bottom: 0, left: 0 } },
@@ -68,41 +69,80 @@ describe('scene is valid', () => {
   });
 });
 
-describe('scene numbers at 360 by 640', () => {
+describe('scene numbers at 360 by 640, a screen taller than wide', () => {
   const layout = runnerLayout(portrait);
 
-  it('has tile 24, scale 0.046875, player left 90 and ground at 494', () => {
-    expect(layout.tile).toBe(24);
-    expect(layout.scale).toBe(0.046875);
-    expect(layout.playerLeft).toBe(90);
+  it('scales by height: tile 50, scale 0.09765625, player left 72 and ground at 494', () => {
+    expect(layout.tile).toBe(50);
+    expect(layout.scale).toBe(0.09765625);
+    expect(layout.playerLeft).toBe(72);
     expect(layout.groundY).toBe(494);
   });
 
-  it('draws the player 15 by 21 px, with its right edge at 105 and its feet on the ground', () => {
+  it('draws the player 31.25 by 43.75 px with its feet on the ground', () => {
     const player = view(initState(fixtureB), portrait).items.find((item) => item.id === 'player');
-    expect(player).toMatchObject({ x: 90, w: 15, h: 21 });
-    expect(player && 'y' in player ? player.y + 21 : 0).toBe(494);
+    expect(player).toMatchObject({ x: 72, w: 31.25, h: 43.75 });
+    expect(player && 'y' in player ? player.y + 43.75 : 0).toBe(494);
+  });
+
+  it('shows more than 5 tiles of course right of the player at tick 0 and fewer than 10 tiles in all', () => {
+    const items = view(initState(fixtureA), portrait).items;
+    const player = items.find((item) => item.id === 'player') as { x: number; w: number };
+    expect((portrait.width - (player.x + player.w)) / layout.tile).toBeGreaterThanOrEqual(5);
+    expect(portrait.width / layout.tile).toBeLessThan(10);
+    expect(items.some((item) => item.id === 'ground-5')).toBe(true);
+    expect(items.some((item) => item.id === 'ground-9')).toBe(false);
+  });
+
+  it('keeps 5 tiles ahead and a rider of 40 px or more at the sizes of the shell, with and without safe insets', () => {
+    const sizes: Viewport[] = [
+      { width: 360, height: 568, safe: { top: 0, right: 0, bottom: 0, left: 0 } },
+      { width: 390, height: 772, safe: { top: 47, right: 0, bottom: 0, left: 0 } },
+      { width: 412, height: 830, safe: { top: 0, right: 0, bottom: 0, left: 0 } },
+      { width: 768, height: 941, safe: { top: 0, right: 0, bottom: 0, left: 0 } },
+      { width: 400, height: 720, safe: { top: 0, right: 20, bottom: 0, left: 20 } },
+    ];
+    for (const viewport of sizes) {
+      const l = runnerLayout(viewport);
+      const player = view(initState(fixtureA), viewport).items.find((item) => item.id === 'player') as { x: number; w: number; h: number };
+      expect(player.h, `${viewport.width} by ${viewport.height}`).toBeGreaterThanOrEqual(40);
+      expect((viewport.width - viewport.safe.right - (player.x + player.w)) / l.tile, `${viewport.width} by ${viewport.height}`).toBeGreaterThanOrEqual(5);
+    }
+  });
+});
+
+describe('scene numbers at 1920 by 1080, a screen wider than tall', () => {
+  const layout = runnerLayout(wide);
+
+  it('keeps the width rule: tile 128, scale 0.25, player left 480 and ground at 824', () => {
+    expect(layout.tile).toBe(128);
+    expect(layout.scale).toBe(0.25);
+    expect(layout.playerLeft).toBe(480);
+    expect(layout.groundY).toBe(824);
+  });
+
+  it('draws the player 80 by 112 px, with its feet on the ground', () => {
+    const player = view(initState(fixtureB), wide).items.find((item) => item.id === 'player');
+    expect(player).toMatchObject({ x: 480, w: 80, h: 112 });
+    expect(player && 'y' in player ? player.y + 112 : 0).toBe(824);
   });
 
   it('shows 10 whole tiles ahead of the player at tick 0, columns 1 to 10, and column 11 partly', () => {
-    const items = view(initState(fixtureA), portrait).items;
+    const items = view(initState(fixtureA), wide).items;
     const ground = (column: number): SceneItem | undefined => items.find((item) => item.id === `ground-${column}`);
     for (let column = 1; column <= 10; column++) {
       const item = ground(column) as { x: number; w: number };
-      expect(item.x, `column ${column}`).toBe(90 + 24 * column);
-      expect(item.x + item.w, `column ${column}`).toBeLessThanOrEqual(354 + 0.0001);
+      expect(item.x, `column ${column}`).toBe(480 + 128 * column);
+      expect(item.x + item.w, `column ${column}`).toBeLessThanOrEqual(1888 + 0.0001);
     }
-    expect((ground(1) as { x: number }).x).toBe(114);
-    expect((ground(10) as { x: number }).x).toBe(330);
-    expect((ground(11) as { x: number; w: number }).x).toBe(354);
-    expect((ground(11) as { x: number; w: number }).x + 24).toBeGreaterThan(360);
+    expect((ground(11) as { x: number; w: number }).x + 128).toBeGreaterThan(1920);
     expect(ground(12)).toBeUndefined();
   });
 
   it('moves the course left by one unit scale for each unit of x', () => {
     const state = after(fixtureB, none(10));
-    const left = (view(state, portrait).items.find((item) => item.id === 'pumpkin-10') as { x: number }).x;
-    expect(left).toBeCloseTo(90 + (10 * 512 - 440) * 0.046875, 9);
+    const left = (view(state, wide).items.find((item) => item.id === 'pumpkin-10') as { x: number }).x;
+    expect(left).toBeCloseTo(480 + (10 * 512 - 440) * 0.25, 9);
   });
 });
 
@@ -142,21 +182,21 @@ describe('scene layers and ids', () => {
   });
 
   it('names items player, ground, pumpkin, post, gate, candle and hud-score', () => {
-    const ids = idsOf(view(initState(fixtureD1), portrait).items);
+    const ids = idsOf(view(initState(fixtureD1), wide).items);
     expect(ids).toContain('player');
     expect(ids).toContain('hud-score');
     expect(ids).toContain('candle-10-1');
-    expect(idsOf(view(initState(fixtureD2), portrait).items)).toContain('candle-10-2');
-    expect(idsOf(view(initState(fixtureB), portrait).items)).toContain('pumpkin-10');
-    expect(idsOf(view(initState(fixtureG), portrait).items)).toContain('post-10');
+    expect(idsOf(view(initState(fixtureD2), wide).items)).toContain('candle-10-2');
+    expect(idsOf(view(initState(fixtureB), wide).items)).toContain('pumpkin-10');
+    expect(idsOf(view(initState(fixtureG), wide).items)).toContain('post-10');
     const nearGate = after(fixtureA, none(400));
-    expect(idsOf(view(nearGate, portrait).items)).toContain('gate-39');
+    expect(idsOf(view(nearGate, wide).items)).toContain('gate-39');
   });
 
   it('leaves out a taken candle and a column that is wholly outside the scene', () => {
     const taken = after(fixtureD1, [...none(110), 'jump', ...none(2)]);
-    expect(idsOf(view(taken, portrait).items)).not.toContain('candle-10-1');
-    const ids = idsOf(view(initState(fixtureA), portrait).items);
+    expect(idsOf(view(taken, wide).items)).not.toContain('candle-10-1');
+    const ids = idsOf(view(initState(fixtureA), wide).items);
     expect(ids).not.toContain('ground-12');
     expect(ids).not.toContain('gate-39');
   });

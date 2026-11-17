@@ -195,6 +195,27 @@ describe('tick input', () => {
   });
 });
 
+describe('hud scale', () => {
+  const hudGame: GameDef<TurnState, string> = {
+    ...turnGame,
+    view: (s, v) => ({
+      width: v.width,
+      height: v.height,
+      items: [{ kind: 'text', id: 'hud-turn', layer: 'hud', x: 100, y: v.safe.top + 36, text: `Total ${s.total}`, size: 24, fill: '#ffffff', align: 'center' }],
+    }),
+  };
+  const text = (scale?: number) => {
+    const play = createPlay({ def: hudGame, input: turnInput, levelId: 'lv-1', viewport, ...(scale === undefined ? {} : { hudScale: scale }) });
+    return play.scene().items[0] as { size: number; y: number };
+  };
+  it('leaves the scene as the game made it with no scale', () => {
+    expect(text()).toMatchObject({ size: 24, y: 36 });
+  });
+  it('gives hud text of 48 px at scale 2', () => {
+    expect(text(2)).toMatchObject({ size: 48, y: 72 });
+  });
+});
+
 describe('turn game', () => {
   it('applies a legal action at once and counts the tick', () => {
     const applied: string[] = [];

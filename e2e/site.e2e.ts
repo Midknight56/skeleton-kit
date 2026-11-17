@@ -36,6 +36,26 @@ for (const size of SIZES) {
   });
 }
 
+test('landing page at 1920x1080: the frame is half the column, with the tool calls beside it', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto('/');
+  const frame = await page.locator('iframe[data-frame="watch"]').boundingBox();
+  const calls = await page.locator('[data-calls]').boundingBox();
+  expect(frame, 'the frame has a box').not.toBeNull();
+  expect(calls, 'the calls have a box').not.toBeNull();
+  expect(frame!.width).toBeGreaterThanOrEqual(520);
+  expect(calls!.x, 'the calls are right of the frame').toBeGreaterThanOrEqual(frame!.x + frame!.width);
+  expect(frame!.y + frame!.height).toBeLessThanOrEqual(1080);
+});
+
+test('landing page at 360x640: the calls stay under the frame', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto('/');
+  const frame = await page.locator('iframe[data-frame="watch"]').boundingBox();
+  const calls = await page.locator('[data-calls]').boundingBox();
+  expect(calls!.y).toBeGreaterThanOrEqual(frame!.y + frame!.height);
+});
+
 test('landing page: the tool calls come from the proof of g03', async ({ page }) => {
   await page.goto('/');
   const calls = page.locator('[data-calls] li');

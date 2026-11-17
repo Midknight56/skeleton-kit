@@ -1,6 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import type { Scene, SceneItem } from '@kit/core';
-import { createPainter, hudTextBoxes, itemIdsAt, sceneBoxes, type CanvasLike, type Ctx2D } from './painter';
+import { createPainter, hudTextBoxes, itemIdsAt, scaleHud, sceneBoxes, type CanvasLike, type Ctx2D } from './painter';
+
+describe('scaleHud', () => {
+  const scene: Scene = {
+    width: 400,
+    height: 300,
+    items: [
+      { kind: 'rect', id: 'r', layer: 'world', x: 5, y: 6, w: 7, h: 8, fill: '#112233' },
+      { kind: 'text', id: 'hud-a', layer: 'hud', x: 200, y: 36, text: 'Turn 0 of 6', size: 24, fill: '#ffffff', align: 'center' },
+      { kind: 'text', id: 'note', layer: 'fx', x: 10, y: 50, text: 'x', size: 10, fill: '#ffffff', align: 'left' },
+    ],
+  };
+  it('returns the same scene at scale 1', () => {
+    expect(scaleHud(scene, 1, 0)).toBe(scene);
+  });
+  it('scales the size of hud text and its drop from the top edge, and nothing else', () => {
+    const out = scaleHud(scene, 2, 10);
+    expect(out.items[0]).toEqual(scene.items[0]);
+    expect(out.items[2]).toEqual(scene.items[2]);
+    const t = out.items[1] as Extract<SceneItem, { kind: 'text' }>;
+    expect(t.size).toBe(48);
+    expect(t.y).toBe(10 + (36 - 10) * 2);
+    expect(t.x).toBe(200);
+    // The top of the text stays at the same distance from the edge or lower.
+    expect(t.y - t.size).toBeGreaterThanOrEqual(36 - 24);
+  });
+});
 
 type Call = [string, ...unknown[]];
 

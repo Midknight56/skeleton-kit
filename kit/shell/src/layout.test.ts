@@ -1,6 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import type { Viewport } from '@kit/core';
-import { checkControls, placeChip, type ControlBox, type Rect } from './layout';
+import { checkControls, placeChip, playLayout, stripHeight, uiScale, type ControlBox, type Rect } from './layout';
+
+describe('uiScale and the play strip', () => {
+  const none = { top: 0, right: 0, bottom: 0, left: 0 };
+  it('is 1 up to 360 by 640 and 2 at 1920 by 1080, the same as the menu unit', () => {
+    expect(uiScale(360, 640)).toBe(1);
+    expect(uiScale(320, 240)).toBe(1);
+    expect(uiScale(1920, 1080)).toBe(2);
+    expect(uiScale(3000, 2000)).toBe(2);
+    expect(uiScale(768, 1024)).toBeCloseTo(1 + 408 / 1560, 5);
+  });
+  it('keeps the 72 px strip and the 44 px control at scale 1', () => {
+    expect(stripHeight(1, 0)).toBe(72);
+    expect(stripHeight(1, 34)).toBe(106);
+    const l = playLayout(360, 640, none, [44, 64]);
+    expect(l.controls).toEqual([{ x: 16, y: 580, w: 44, h: 44 }, { x: 72, y: 580, w: 64, h: 44 }]);
+  });
+  it('makes a control 88 px high at scale 2 with 16 px below it and 12 px between neighbours', () => {
+    const l = playLayout(1920, 1080, none, [88, 88], 2);
+    expect(l.controls[0]).toEqual({ x: 16, y: 1080 - 16 - 88, w: 88, h: 88 });
+    expect(l.controls[1]!.x - (l.controls[0]!.x + l.controls[0]!.w)).toBe(12);
+    expect(l.strip.h).toBe(stripHeight(2, 0));
+    expect(l.canvas.h + l.strip.h).toBe(1080);
+    expect(l.controls[0]!.y).toBeGreaterThanOrEqual(l.strip.y + 12);
+  });
+});
 
 const viewport: Viewport = { width: 360, height: 640, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
 const box = (over: Partial<ControlBox> = {}): ControlBox => ({ screen: 'play', id: 'ctl-1', x: 16, y: 580, w: 44, h: 44, ...over });

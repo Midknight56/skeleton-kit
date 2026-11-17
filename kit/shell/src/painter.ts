@@ -44,6 +44,19 @@ export function hudTextBoxes(scene: Scene): Box[] {
   }
   return out;
 }
+// The scene with its hud text drawn `scale` times as large. The drop of the text from the top edge
+// of the safe area grows by the same factor, so the top of a line never moves above where the game put it.
+// Other items are not changed. At scale 1 the same scene is returned.
+export function scaleHud(scene: Scene, scale: number, safeTop: number): Scene {
+  if (scale === 1) return scene;
+  return {
+    ...scene,
+    items: scene.items.map((item) =>
+      item.kind === 'text' && item.layer === 'hud' ? { ...item, size: item.size * scale, y: safeTop + (item.y - safeTop) * scale } : item,
+    ),
+  };
+}
+
 // Ids of the items under a point, top item first. Skips fx, hud and text items.
 export function itemIdsAt(scene: Scene, x: number, y: number): string[] {
   const hits: { id: string; layer: number; order: number }[] = [];

@@ -84,6 +84,17 @@ describe('showHints', () => {
     'btn-1': { x: 16, y: 580, w: 44, h: 44 },
   };
 
+  it('sets the text size of a chip from the scale of the area, and leaves it to the page style at scale 1', () => {
+    const container = document.createElement('div');
+    showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null, { ...area, fontSize: 14, scale: 2 });
+    const els = Array.from(container.querySelectorAll<HTMLElement>('[data-hint]'));
+    expect(els.length).toBeGreaterThan(0);
+    for (const el of els) expect(el.style.fontSize).toBe('28px');
+    const plain = document.createElement('div');
+    showHints(document, plain, lessons, (anchor) => boxes[anchor] ?? null, { ...area, scale: 1 });
+    for (const el of Array.from(plain.querySelectorAll<HTMLElement>('[data-hint]'))) expect(el.style.fontSize).toBe('');
+  });
+
   it('puts one hint box next to the box of each anchor and takes no pointer events', () => {
     const container = document.createElement('div');
     const hints = showHints(document, container, lessons, (anchor) => boxes[anchor] ?? null, area);

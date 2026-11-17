@@ -11,6 +11,8 @@ export interface PlayScreenProps {
   buttons: InputButton[];
   // The body type size of the theme, in px. It sets the width of a labelled button.
   fontSize?: number;
+  // The size of one px of the play screen, 1 to 2. See `uiScale`. Default 1.
+  scale?: number;
   on: { pause(): void; undo(): void; button(action: string): void };
 }
 
@@ -22,28 +24,31 @@ export interface PlayScreenView {
   setStatus(info: { tick: number; phase: string; hash: string }): void;
 }
 
-// Width of a strip button: 44 px at least, and room for the label plus 8 px padding on each side.
+// Width of a strip button: `minWidth` (44 px) at least, and room for the label plus 8 px padding on each side.
 // A letter is taken as 0.7 em wide. A browser measured about 0.6 em, so the rest is spare room.
-export function buttonWidth(label: string, fontSize = 16): number {
-  return Math.max(44, 16 + Math.ceil(label.length * fontSize * 0.7));
+export function buttonWidth(label: string, fontSize = 16, minWidth = 44): number {
+  return Math.max(minWidth, 16 + Math.ceil(label.length * fontSize * 0.7));
 }
 
 export function playScreen(doc: Document, props: PlayScreenProps): PlayScreenView {
   const root = screenRoot(doc, 'play');
+  const scale = props.scale ?? 1;
+  const side = Math.round(44 * scale);
+  const labelSize = Math.round((props.fontSize ?? 16) * scale);
   const items: { control: HTMLButtonElement; width: number }[] = [];
-  items.push({ control: button(doc, 'pause', '❚❚', props.on.pause), width: 44 });
+  items.push({ control: button(doc, 'pause', '❚❚', props.on.pause), width: side });
   items[0]!.control.setAttribute('aria-label', 'Pause');
   if (props.kind === 'turn') {
     const undo = button(doc, 'undo', '↶', props.on.undo);
     undo.setAttribute('aria-label', 'Undo');
-    items.push({ control: undo, width: 44 });
+    items.push({ control: undo, width: side });
   }
   if (props.kind === 'turn') {
     for (const spec of props.buttons) {
-      items.push({ control: button(doc, spec.id, spec.label, () => props.on.button(spec.action)), width: buttonWidth(spec.label, props.fontSize) });
+      items.push({ control: button(doc, spec.id, spec.label, () => props.on.button(spec.action)), width: buttonWidth(spec.label, labelSize, side) });
     }
   }
-  const layout = playLayout(props.width, props.height, props.safe, items.map((i) => i.width));
+  const layout = playLayout(props.width, props.height, props.safe, items.map((i) => i.width), scale);
 
   const canvas = doc.createElement('canvas');
   canvas.style.position = 'absolute';
@@ -69,6 +74,7 @@ export function playScreen(doc: Document, props: PlayScreenProps): PlayScreenVie
     s.width = `${box.w}px`;
     s.height = `${box.h}px`;
     s.padding = '0 8px';
+    s.fontSize = `${labelSize}px`;
     root.append(item.control);
   });
   root.style.width = `${props.width}px`;

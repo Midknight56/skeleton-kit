@@ -2,7 +2,7 @@ import type { GameDef, Json, Scene, Viewport } from '@kit/core';
 import { createAudio } from './audio';
 import { createBeacon } from './beacon';
 import { lessonsToShow, showHints, type Hints } from './lessons';
-import type { Rect } from './layout';
+import { stripHeight, uiScale, type Rect } from './layout';
 import type { Lesson } from './types';
 import { createPainter, hudTextBoxes, sceneBoxes, type CanvasLike, type Painter } from './painter';
 import { createPlay, type PlayController } from './play';
@@ -167,6 +167,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     const W = win2.innerWidth;
     const H = win2.innerHeight;
     const safe = readSafe(doc);
+    const scale = uiScale(W, H);
     const view = playScreen(doc, {
       width: W,
       height: H,
@@ -174,6 +175,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       kind: def.kind,
       buttons: input.buttons,
       fontSize: theme.typeScale.body,
+      scale,
       on: {
         pause: () => router.go('pause'),
         undo: () => {
@@ -184,7 +186,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         },
       },
     });
-    const canvasHeight = H - 72 - safe.bottom;
+    const canvasHeight = H - stripHeight(scale, safe.bottom);
     const viewport: Viewport = { width: W, height: canvasHeight, safe: { top: safe.top, right: safe.right, bottom: 0, left: safe.left } };
     let hints: Hints | null = null;
     let shown: Lesson[] = [];
@@ -197,6 +199,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         input,
         levelId,
         viewport,
+        hudScale: scale,
         onApplied: () => {
           hints?.remove();
           hints = null;
@@ -262,6 +265,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         height: H,
         safe,
         fontSize: theme.typeScale.small,
+        scale,
         top: Math.max(0, ...hud.map((b) => b.y + b.h)),
         bottom: parseFloat(view.strip.style.top),
         avoid: [...hud, ...buttons],

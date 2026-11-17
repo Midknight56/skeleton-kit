@@ -17,24 +17,40 @@ function overlaps(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 }
 
-// The play screen: a strip of controls under the play area. The strip is 72 px high plus the
-// bottom safe inset. A control is 44 px high, its top is at H - sb - 60 and its bottom at H - sb - 16.
+// The size of one px of the play screen, from the window size. It is 1 up to 360 px wide (or 640 px
+// high) and grows to 2 at 1920 by 1080, whichever of width and height gives the smaller value. The
+// menus use the same rule in CSS (`--u`).
+export function uiScale(width: number, height: number): number {
+  const s = 1 + Math.min((width - 360) / 1560, (height - 640) / 440);
+  return Math.min(2, Math.max(1, s));
+}
+
+// Height of the control strip: a control, 16 px below it, 12 px above it, and the bottom safe inset.
+// At scale 1 that is 72 px plus the inset.
+export function stripHeight(scale: number, safeBottom: number): number {
+  return 28 + Math.round(MIN_SIZE * scale) + safeBottom;
+}
+
+// The play screen: a strip of controls under the play area. A control is 44 px high times the scale,
+// its bottom is at H - sb - 16, and neighbours are 12 px apart at every scale.
 export function playLayout(
   width: number,
   height: number,
   safe: Viewport['safe'],
   controlWidths: number[],
+  scale = 1,
 ): { strip: Rect; canvas: Rect; controls: Rect[] } {
-  const stripHeight = 72 + safe.bottom;
-  const stripTop = height - stripHeight;
+  const stripH = stripHeight(scale, safe.bottom);
+  const stripTop = height - stripH;
+  const controlH = Math.round(MIN_SIZE * scale);
   const controls: Rect[] = [];
   let x = safe.left + MARGIN;
   for (const w of controlWidths) {
-    controls.push({ x, y: height - safe.bottom - 60, w, h: MIN_SIZE });
+    controls.push({ x, y: height - safe.bottom - MARGIN - controlH, w, h: controlH });
     x += w + MIN_GAP;
   }
   return {
-    strip: { x: 0, y: stripTop, w: width, h: stripHeight },
+    strip: { x: 0, y: stripTop, w: width, h: stripH },
     canvas: { x: 0, y: 0, w: width, h: stripTop },
     controls,
   };

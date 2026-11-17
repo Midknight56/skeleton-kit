@@ -136,6 +136,29 @@ describe('play strip', () => {
     expect(view.canvas.style.height).toBe('568px');
   });
 
+  it('at scale 2 makes the buttons 88 px high, the labels twice as big, and keeps 16 px, 8 px and 12 px', () => {
+    const view = playScreen(document, {
+      width: 1920,
+      height: 1080,
+      safe: { top: 0, right: 0, bottom: 0, left: 0 },
+      kind: 'turn',
+      buttons: [{ id: 'wait', label: 'Wait', action: 'wait' }],
+      fontSize: 18,
+      scale: 2,
+      on: { pause: noop, undo: noop, button: noop },
+    });
+    const box = (id: string) => view.root.querySelector<HTMLElement>(`[data-control="${id}"]`)!;
+    const wait = box('wait');
+    expect(wait.style.height).toBe('88px');
+    expect(wait.style.top).toBe(`${1080 - 16 - 88}px`);
+    expect(wait.style.fontSize).toBe('36px');
+    expect(wait.style.padding).toBe('0px 8px');
+    expect(box('pause').style.width).toBe('88px');
+    expect(parseFloat(box('undo').style.left) - (parseFloat(box('pause').style.left) + 88)).toBe(12);
+    expect(parseFloat(wait.style.width)).toBeGreaterThanOrEqual(buttonWidth('Wait', 36));
+    expect(view.canvas.style.height).toBe(`${1080 - 28 - 88}px`);
+  });
+
   it('has no undo button for a tick game', () => {
     const view = playScreen(document, {
       width: 360,

@@ -1,6 +1,6 @@
 import { createSession } from '@kit/core';
 import type { GameDef, Json, Scene, Session, Status, Viewport } from '@kit/core';
-import { itemIdsAt } from './painter';
+import { itemIdsAt, scaleHud } from './painter';
 import type { InputEvent, InputMap } from './types';
 
 // Every level starts with seed 1, the seed of the prover, so a proof replay is valid here.
@@ -13,6 +13,8 @@ export interface PlayOptions<S extends Json, A> {
   levelId: string;
   // The play area: the page without the strip.
   viewport: Viewport;
+  // How many times larger the hud text is drawn. Default 1. The game's own scene is not changed.
+  hudScale?: number;
   // Called once when the phase leaves `playing`.
   onPhase?: (status: Status) => void;
   // Called for each applied action, with its text.
@@ -80,7 +82,7 @@ export function createPlay<S extends Json, A>(options: PlayOptions<S, A>): PlayC
   }
 
   function scene(): Scene {
-    return def.view(session.state, viewport);
+    return scaleHud(def.view(session.state, viewport), options.hudScale ?? 1, viewport.safe.top);
   }
 
   return {
