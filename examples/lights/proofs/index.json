@@ -1,0 +1,29 @@
+{
+  "game": "lights",
+  "levels": [
+    {
+      "actions": 1,
+      "id": "l1"
+    },
+    {
+      "actions": 2,
+      "id": "l2"
+    },
+    {
+      "actions": 3,
+      "id": "l3"
+    },
+    {
+      "actions": 4,
+      "id": "l4"
+    },
+    {
+      "actions": 5,
+      "id": "l5"
+    },
+    {
+      "actions": 4,
+      "id": "l6"
+    }
+  ]
+}

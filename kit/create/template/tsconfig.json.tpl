@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["game.config.ts", "theme.ts", "src/**/*.ts"]
+}

@@ -9,7 +9,7 @@ import { creditsScreen } from './credits';
 import { howScreen } from './how';
 import { levelLocks, levelsScreen } from './levels';
 import { pauseScreen } from './pause';
-import { playScreen } from './play-screen';
+import { buttonWidth, playScreen } from './play-screen';
 import { resultsScreen } from './results';
 import { settingsScreen } from './settings';
 import { titleScreen } from './title';
@@ -161,6 +161,16 @@ describe('play strip', () => {
     expect(seen).toEqual(['wait', 'undo']);
     view.setStatus({ tick: 4, phase: 'playing', hash: 'abcd' });
     expect([view.root.dataset.tick, view.root.dataset.phase, view.root.dataset.hash]).toEqual(['4', 'playing', 'abcd']);
+  });
+});
+
+describe('strip button width', () => {
+  it('leaves 8 px each side of a label that is 0.6 em wide for each letter, at the font size of the theme', () => {
+    // A real browser measured Wait and Back at about 0.6 em for each letter. The width keeps room beyond that.
+    expect(buttonWidth('Wait', 18)).toBeGreaterThanOrEqual(16 + Math.ceil(4 * 18 * 0.6) + 4);
+    expect(buttonWidth('Back', 16)).toBeGreaterThanOrEqual(16 + Math.ceil(4 * 16 * 0.6) + 4);
+    expect(buttonWidth('Wait', 18)).toBeGreaterThan(buttonWidth('Wait', 14));
+    expect(buttonWidth('', 16)).toBe(44);
   });
 });
 

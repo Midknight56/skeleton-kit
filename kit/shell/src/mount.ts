@@ -86,6 +86,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   let proofIndex: ProofIndex | null = null;
   let destroyed = false;
   let noticeShown = false;
+  // True while the visit to the title screen that showed the notice goes on, so a redraw keeps it.
+  let noticeOnTitle = false;
   let active: ActivePlay<S, A> | null = null;
   let stopLoop: (() => void) | null = null;
   const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -150,6 +152,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       safe,
       kind: def.kind,
       buttons: input.buttons,
+      fontSize: theme.typeScale.body,
       on: {
         pause: () => router.go('pause'),
         undo: () => {
@@ -285,6 +288,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       safe,
       kind: def.kind,
       buttons: input.buttons,
+      fontSize: theme.typeScale.body,
       on: {
         back: () => router.go('title'),
         speed: (n) => {
@@ -330,10 +334,12 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   function render(route: Route): void {
     leavePlay();
+    if (route.screen !== 'title') noticeOnTitle = false;
     switch (route.screen) {
       case 'title': {
-        const showNotice = !store.persistent && !noticeShown;
+        const showNotice = !store.persistent && (!noticeShown || noticeOnTitle);
         if (showNotice) noticeShown = true;
+        noticeOnTitle = showNotice;
         show(
           titleScreen(doc, {
             title: def.title,

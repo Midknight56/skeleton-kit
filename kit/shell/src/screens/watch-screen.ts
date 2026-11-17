@@ -11,6 +11,8 @@ export interface WatchScreenProps {
   kind: 'turn' | 'tick';
   // The buttons of the game, shown as they are in play but not pressable.
   buttons: InputButton[];
+  // The body type size of the theme, in px. It sets the width of a labelled button.
+  fontSize?: number;
   on: { back(): void; speed(speed: 1 | 4): void };
 }
 
@@ -33,13 +35,13 @@ export function watchScreen(doc: Document, props: WatchScreenProps): WatchScreen
   const controls: { el: HTMLButtonElement; width: number }[] = [
     { el: speed1, width: 44 },
     { el: speed4, width: 44 },
-    { el: back, width: buttonWidth('Back') },
+    { el: back, width: buttonWidth('Back', props.fontSize) },
   ];
   if (props.kind === 'turn') {
     for (const spec of props.buttons) {
       const shown = button(doc, spec.id, spec.label, () => undefined);
       shown.disabled = true;
-      controls.push({ el: shown, width: buttonWidth(spec.label) });
+      controls.push({ el: shown, width: buttonWidth(spec.label, props.fontSize) });
     }
   }
   const layout = playLayout(props.width, props.height, props.safe, controls.map((c) => c.width));

@@ -1,0 +1,19 @@
+{
+  "name": "@app/__ID__",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@kit/conformance": "*",
+    "@kit/core": "*",
+    "@kit/shell": "*",
+    "@kit/solver": "*"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

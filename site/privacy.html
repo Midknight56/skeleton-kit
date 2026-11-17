@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Privacy</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #14182b; color: #ffffff; font: 17px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      a { color: #ffd23f; }
+      a:focus-visible { outline: 3px solid #ff7a59; outline-offset: 2px; }
+      main { max-width: 760px; margin: 0 auto; padding: 16px; }
+      h1 { margin: 0 0 8px; font-size: 28px; }
+      h2 { margin: 24px 0 8px; font-size: 20px; }
+      table { width: 100%; border-collapse: collapse; font-size: 15px; }
+      th, td { padding: 8px; border-bottom: 1px solid #3a4272; text-align: left; vertical-align: top; }
+      code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+      .back { display: inline-block; min-height: 44px; padding: 10px 8px 10px 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="../">Back</a>
+      <h1>Privacy</h1>
+      <p>The games have no account, no login and no personal data. They load no font, script or image from another site.</p>
+
+      <h2>What the page keeps on your device</h2>
+      <p>Progress and settings are kept in the <code>localStorage</code> of your browser. There is one key for each game:</p>
+      <ul>
+        <!--STORAGE_KEYS-->
+      </ul>
+      <p>The page does not send this data anywhere. Clear it in the settings of the game with Reset progress, or in your browser.</p>
+
+      <h2>The usage beacon</h2>
+      <p><!--BEACON_STATE--></p>
+      <p>These are all the events, and every field of each one. No user id, no time of day and no other data is sent.</p>
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Fields</th><th>When</th></tr>
+        </thead>
+        <tbody>
+          <!--BEACON_ROWS-->
+        </tbody>
+      </table>
+      <p>The server that receives these events sees the address of the request, as any server does.</p>
+    </main>
+  </body>
+</html>

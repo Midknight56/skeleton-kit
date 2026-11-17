@@ -9,6 +9,8 @@ export interface PlayScreenProps {
   safe: Viewport['safe'];
   kind: 'turn' | 'tick';
   buttons: InputButton[];
+  // The body type size of the theme, in px. It sets the width of a labelled button.
+  fontSize?: number;
   on: { pause(): void; undo(): void; button(action: string): void };
 }
 
@@ -21,8 +23,9 @@ export interface PlayScreenView {
 }
 
 // Width of a strip button: 44 px at least, and room for the label plus 8 px padding on each side.
-export function buttonWidth(label: string): number {
-  return Math.max(44, 16 + Math.ceil(label.length * 9));
+// A letter is taken as 0.7 em wide. A browser measured about 0.6 em, so the rest is spare room.
+export function buttonWidth(label: string, fontSize = 16): number {
+  return Math.max(44, 16 + Math.ceil(label.length * fontSize * 0.7));
 }
 
 export function playScreen(doc: Document, props: PlayScreenProps): PlayScreenView {
@@ -37,7 +40,7 @@ export function playScreen(doc: Document, props: PlayScreenProps): PlayScreenVie
   }
   if (props.kind === 'turn') {
     for (const spec of props.buttons) {
-      items.push({ control: button(doc, spec.id, spec.label, () => props.on.button(spec.action)), width: buttonWidth(spec.label) });
+      items.push({ control: button(doc, spec.id, spec.label, () => props.on.button(spec.action)), width: buttonWidth(spec.label, props.fontSize) });
     }
   }
   const layout = playLayout(props.width, props.height, props.safe, items.map((i) => i.width));

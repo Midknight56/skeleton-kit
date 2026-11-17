@@ -96,6 +96,28 @@ describe('mountGame', () => {
     vi.restoreAllMocks();
   });
 
+  it('keeps the notice on the title screen when the proof index loads after the first paint, and drops it on the next visit', async () => {
+    const root = document.getElementById('root')!;
+    vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const slow: ProofSet = {
+      loadIndex: () => Promise.resolve({ game: 'fake-game', levels: [{ id: 'lv-1', actions: 2 }] }),
+      load: () => Promise.reject(new Error('none')),
+    };
+    const handle = mountGame(root, { ...options(), proofs: slow });
+    expect(root.querySelector('[data-notice]')).not.toBeNull();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(root.querySelector('[data-control="watch"]'), 'the title was drawn again').not.toBeNull();
+    expect(root.querySelector('[data-notice]')?.textContent).toBe('Progress will not be saved.');
+    root.querySelector<HTMLElement>('[data-control="credits"]')?.click();
+    root.querySelector<HTMLElement>('[data-control="back"]')?.click();
+    expect(root.querySelector('[data-notice]')).toBeNull();
+    handle.destroy();
+    vi.restoreAllMocks();
+  });
+
   it('removes the DOM and every listener on destroy', () => {
     const root = document.getElementById('root')!;
     const added: [string, unknown][] = [];

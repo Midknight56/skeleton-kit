@@ -84,7 +84,7 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test -- theme` passes and `npm run typecheck` passes.
   - _Requirements: 1.1, 9.1, 9.2_
 
-- [ ] 13. Build tooling
+- [x] 13. Build tooling
   - Folder: root files and `tools/`.
   - Write a test first for `tools/check-versions.mjs` (a fixture with 0.9.9 passes, 1.0.0 and 1.2.0 fail with the file name). See it fail.
   - Write `vite.config.ts`, `tools/build.mjs` (builds `site/` to `dist/`, and each app that has an `index.html` to `dist/<id>/` with a relative base, copies `proofs/` to `dist/proofs/`, runs the version guard), and `tools/build-apps.mjs` (builds every app of `kit.config.json` that is under `apps/` with its own `build` script). Replace the root scripts `build` and `build:apps`. The `build:apps` change must keep both `garden` and `runner` built, and the `runner` build exists only after `broom-runner` task 9.
@@ -92,7 +92,7 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run build` gives `dist/garden/index.html`, and `npm test -- check-versions build` passes.
   - _Requirements: 1.3, 11.2, 12.5_
 
-- [ ] 14. Garden puzzle play through tests
+- [x] 14. Garden puzzle play through tests
   - Folder: `e2e/`, and root files.
   - Write `playwright.config.ts` (headless, `testMatch` `**/*.e2e.ts`, a web server that serves `dist/`). Write `e2e/layout.e2e.ts` (all nine screens at the seven viewports, the control padding, no control outside the viewport), `e2e/garden-good-path.e2e.ts`, `e2e/garden-bad-path.e2e.ts` and `e2e/garden-keyboard.e2e.ts` with the steps of requirement 10, a fixture that fails a test on any page error or console error, and the `data-` attributes of the design. Run them and fix every named control in the owner folder of that control.
   - Add the root scripts `e2e` (Playwright) and `verify:e2e` (`npm run verify`, then `npm run e2e`).
@@ -100,20 +100,20 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run verify:e2e` passes.
   - _Requirements: 6.4, 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 15. Garden puzzle watch address
+- [x] 15. Garden puzzle watch address
   - Folder: `apps/garden`.
   - Write `src/watch-url.test.ts` first: `main.ts` hands the search text of the page address to `mountGame`, and `g03` is a level of the game, so that `?watch=g03` starts watch mode. See it fail, then change `main.ts`.
   - Verify: `npm test -- watch-url` passes.
   - _Requirements: 8.4, 12.2_
 
-- [ ] 16. Runner input, lessons and texts
+- [x] 16. Runner input, lessons and texts
   - Folder: `apps/runner`. Start only after `broom-runner` tasks 1 to 12 are checked, so that `src/def.ts`, `src/proof.ts` and `proofs/runner/` exist. If `levelPlans` is not exported from `src/proof.ts`, stop and say so, and do not change that file.
   - Write `src/input.test.ts` first: the input cases of requirement 14.1 and 14.2, the two lessons of requirement 15.2 (unique, at most 2 words, anchors `player` and `hud-score` exist in `view` of the start state of `r01`), the star cases of the design (4 candles, 3 candles, 0 candles), `fairTicks` equal to the `minWindow` of each plan (9, 9, 6, 6, 4, 4) and null for an unknown level, and the reason texts. See it fail.
   - Write `src/input.ts` and `src/results.ts`. Check that the page bundle of the runner holds no solver code. If `proof.ts` pulls it in, copy the six numbers into `results.ts` and keep a test that they equal `levelPlans`.
   - Verify: `npm test -- input` passes.
   - _Requirements: 3.3, 4.2, 14.1, 14.2, 14.3, 14.4, 14.5, 15.2, 15.3, 15.4_
 
-- [ ] 17. Runner theme and page
+- [x] 17. Runner theme and page
   - Folder: `apps/runner`.
   - Write `theme.ts` (a palette, button radius and signature shape that differ from the garden theme), `index.html` and `src/main.ts`, and the credits lines. Write `src/theme.test.ts` first: `checkTheme` has no problem, and every `text` item of the first scene of `r01` has a contrast of at least 4.5 on the theme background. See it fail.
   - Write `tools/themes.test.ts` (folder `tools/`, a second file in this task) that imports both `theme.ts` files and checks that `palette.primary`, `buttonRadius` and `signature` differ.
@@ -121,27 +121,27 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm test -- theme` passes and `npm run build` gives `dist/runner/index.html`.
   - _Requirements: 1.1, 9.1, 9.2, 9.3_
 
-- [ ] 18. Runner play through tests
+- [x] 18. Runner play through tests
   - Folder: `e2e/`.
   - Add the runner to `e2e/layout.e2e.ts`. Write `e2e/runner-good-path.e2e.ts` (with `page.clock.install()` and 16 ms frames as in the design, after checking that the fake clock calls the frame callback every 16 ms), `e2e/runner-bad-path.e2e.ts` (a lost level with `Fell in a gap` or `Hit an obstacle`) and `e2e/runner-keyboard.e2e.ts`.
   - Verify: `npm run verify:e2e` passes.
   - _Requirements: 6.4, 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 19. New game scaffold
+- [x] 19. New game scaffold
   - Folder: `kit/create`, and root files.
   - Write `kit/create/src/new-game.test.ts` first, for the three cases of requirement 11, with the printed commands, no byte order mark and no CR in created files, and the copy of the repository linked with a junction. See it fail.
   - Implement the template (`.tpl` files, with the rules of `sample-lights`, three levels, tests, `build.mjs`, `theme.ts`, `input.ts`, `results.ts`, `index.html` and `main.ts`) and the command. Replace the root `new:game` script. The template has no game word of the repository.
   - Verify: the test passes, and in the temporary copy `npm run new:game -- lights`, then `npm run prove`, then `npm run verify` all exit 0.
   - _Requirements: 11.1, 11.2, 11.3, 11.4_
 
-- [ ] 20. A third game written from a spec
+- [x] 20. A third game written from a spec
   - Folder: `examples/lights/`, and a temporary copy of the repository outside it.
   - In a temporary copy, run `npm run new:game -- lights`. Ask Kiro to write a short spec for a 4 by 4 version of the lights game with 6 levels and to implement it there. Copy the result into `examples/lights/` with its proof files and the spec text. Remove the temporary copy. Do not make a branch or a commit.
   - Record in the log: the spec text, what Kiro did, and the result of `runConformance` and `npm run prove` for the new game. Leave the Credits cell empty. If Kiro cannot run in the copy, write that and stop.
   - Verify: `npm run verify` passes in the repository.
   - _Requirements: 11.2_
 
-- [ ] 21. Site and privacy page
+- [x] 21. Site and privacy page
   - Folder: `site/`, with `tools/build.mjs`.
   - Build `site/index.html` and `site/landing.ts`: one sentence on who the kit is for, a frame that loads `garden/?watch=g03`, the tool calls from `proofs/garden/g03.json` beside it (`new_game` with level `g03` and seed 1, `act` with the actions of the replay, `replay`), two cards that open the games, and a link to the repository.
   - Build `site/privacy.html` with a place for the beacon events. `tools/build.mjs` fills it from `kit/shell/src/beacon-events.ts` and writes the storage key and the line about the address of the request.

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Skeleton kit</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #14182b; color: #ffffff; font: 17px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      a { color: #ffd23f; }
+      main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+      h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; }
+      h2 { margin: 0 0 8px; font-size: 18px; }
+      p { margin: 0 0 12px; }
+      .hero { display: grid; grid-template-columns: 1fr; gap: 16px; }
+      .frame { width: 100%; max-width: 360px; height: min(56vh, 420px); min-height: 260px; border: 2px solid #3a4272; border-radius: 12px; background: #1b1636; }
+      .calls { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .calls li { padding: 8px 12px; border-radius: 8px; background: #1f2547; overflow-wrap: anywhere; font-size: 14px; }
+      .calls code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+      .calls .name { color: #ffd23f; font-weight: 600; }
+      .cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
+      .card { display: block; min-height: 44px; padding: 12px 16px; border: 2px solid #ffd23f; border-radius: 12px; color: #ffffff; text-decoration: none; background: #1f2547; }
+      .card:focus-visible, a:focus-visible { outline: 3px solid #ff7a59; outline-offset: 2px; }
+      .card strong { display: block; color: #ffd23f; }
+      footer { margin-top: 16px; font-size: 15px; }
+      footer a { display: inline-block; min-height: 44px; padding: 10px 8px 10px 0; }
+      @media (min-width: 900px) {
+        .hero { grid-template-columns: 360px 1fr; align-items: start; }
+        .frame { height: min(68vh, 560px); }
+      }
+    </style>
+    <script type="module" src="./landing.ts"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Skeleton kit</h1>
+      <p data-landing="who">A kit for solo developers and small studios with nobody to test a build. Every game made with it can also be played by a program.</p>
+      <section class="hero" aria-label="A level playing by itself">
+        <iframe class="frame" data-frame="watch" src="./garden/?watch=g03" title="A level of the garden puzzle playing by itself"></iframe>
+        <div>
+          <h2>The calls that play this level</h2>
+          <ol class="calls" data-calls>
+            <li>Loading the calls.</li>
+          </ol>
+        </div>
+      </section>
+      <nav class="cards" aria-label="The two games">
+        <a class="card" data-card="garden" href="./garden/"><strong>The garden puzzle</strong>Light one lantern. Each moth must reach a flower.</a>
+        <a class="card" data-card="runner" href="./runner/"><strong>The runner</strong>Tap to jump. Reach the gate.</a>
+      </nav>
+      <footer>
+        <a data-link="repository" href="__REPOSITORY_URL__">The repository</a>
+        <a data-link="privacy" href="./privacy/">Privacy</a>
+      </footer>
+    </main>
+  </body>
+</html>

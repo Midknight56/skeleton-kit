@@ -28,5 +28,6 @@ mountGame(element, {
   input: gardenInput,
   proofs,
   texts: gardenTexts,
+  search: window.location.search,
   credits: [def.title, 'A puzzle made with the kit of this repository.', 'The pictures are plain shapes drawn for it.', 'Every sound is made in code.'],
 });

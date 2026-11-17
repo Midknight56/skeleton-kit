@@ -1,0 +1,27 @@
+{
+  "checks": [],
+  "format": 1,
+  "game": "lights",
+  "kind": "turn",
+  "level": "l3",
+  "replay": {
+    "actions": [
+      "press:2,0",
+      "press:0,1",
+      "press:3,3"
+    ],
+    "finalHash": "4dbe9f339ea6cd65",
+    "finalPhase": "won",
+    "format": 1,
+    "game": "lights",
+    "level": "l3",
+    "rulesVersion": "1",
+    "seed": 1
+  },
+  "rulesVersion": "1",
+  "seed": 1,
+  "stats": {
+    "actions": 3,
+    "nodes": 356
+  }
+}
