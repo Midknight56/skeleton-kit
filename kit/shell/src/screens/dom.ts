@@ -26,6 +26,15 @@ export function button(doc: Document, id: string, label: string, onClick: () => 
   return b;
 }
 
+// A real link that is styled and placed like a button. It opens in the same tab.
+export function link(doc: Document, id: string, label: string, href: string): HTMLAnchorElement {
+  const a = doc.createElement('a');
+  a.dataset.control = id;
+  a.href = href;
+  a.textContent = label;
+  return a;
+}
+
 export function stars(doc: Document, count: number, label = 'stars'): HTMLElement {
   const el = doc.createElement('span');
   el.dataset.stars = String(count);

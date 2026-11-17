@@ -69,6 +69,8 @@ test('runner: title, how to play, r01 won by its proof replay, results, settings
   await control(page, 'back').click();
   await control(page, 'credits').click();
   await expect(screen(page, 'credits')).toBeVisible();
+  await expect(screen(page, 'credits')).toContainText('Made by Adrian Ferguson');
+  await expect(screen(page, 'credits')).toContainText('Every sound is made in code.');
 });
 
 // Each course, won by its proof replay. A course after r01 is open when the course before it has stars,

@@ -17,8 +17,6 @@ const proofs: ProofSet = {
   load: (levelId) => fetchJson<ProofFile>(`../proofs/lights/${encodeURIComponent(levelId)}.json`),
 };
 
-document.title = def.title;
-
 const element = document.getElementById('app');
 if (!element) throw new Error('The page has no element with the id app.');
 

@@ -58,6 +58,23 @@ test('runner: the page pauses when it loses focus, and the tick clock stops', as
   expect(after - before, 'ticks that ran while paused').toBeLessThanOrEqual(3);
 });
 
+test('runner: Retry on the pause screen asks first, Stay keeps the run, Leave starts it again', async ({ page }) => {
+  await open(page);
+  await control(page, 'play').click();
+  await page.clock.runFor(30 * FRAME_MS);
+  await page.keyboard.press('Escape');
+  await expect(screen(page, 'pause')).toBeVisible();
+  await control(page, 'retry').click();
+  await expect(page.locator('[data-dialog="confirm"]')).toContainText('Leave this run?');
+  await expect(control(page, 'cancel')).toBeFocused();
+  await control(page, 'cancel').click();
+  await expect(screen(page, 'pause')).toBeVisible();
+  await control(page, 'retry').click();
+  await control(page, 'confirm').click();
+  await page.clock.runFor(2 * FRAME_MS);
+  await expect(screen(page, 'play')).toHaveAttribute('data-tick', '0');
+});
+
 test('runner: reset progress asks first, keeps it on cancel and deletes it on confirm', async ({ page }) => {
   await open(page, true);
   await control(page, 'levels').click();

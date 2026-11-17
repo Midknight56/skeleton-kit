@@ -15,7 +15,7 @@ import { playScreen } from './screens/play-screen';
 import { resultsScreen } from './screens/results';
 import { settingsScreen } from './screens/settings';
 import { titleScreen } from './screens/title';
-import { watchScreen, type WatchScreenView } from './screens/watch-screen';
+import { watchLayout, watchScreen, type WatchScreenView } from './screens/watch-screen';
 import { parseWatchParam, createWatch } from './watch';
 import { starsFor, finishLevel } from './stars';
 import { createStore, type ProgressStore } from './storage';
@@ -41,6 +41,8 @@ interface ActivePlay<S extends Json, A> {
   start: S;
   score: number;
   result: { won: boolean; reason: string | undefined; stars: number } | null;
+  // True once a level_end was sent for this start, so a start never gets two.
+  ended: boolean;
 }
 
 const WIN_FLASH_MS = 120;
@@ -75,8 +77,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   const win = doc.defaultView as Window;
   const store: ProgressStore = createStore(def.id, openStorage(win));
   const audio = createAudio({ theme, store });
-  const beacon = createBeacon({ game: def.id });
+  const beacon = createBeacon({ game: def.id, enabled: () => store.read().settings.usage });
   const levels = def.levels();
+  doc.title = def.title;
 
   const style = doc.createElement('style');
   style.textContent = themeCss(theme);
@@ -127,12 +130,29 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   function show(node: HTMLElement, focusFirst: boolean): void {
     container.replaceChildren(node);
+    // The page shows a loading screen until the first screen of the game is drawn.
+    doc.querySelector('[data-screen="loading"]')?.remove();
     if (focusFirst) node.querySelector<HTMLElement>('[data-control]')?.focus();
   }
 
   function leavePlay(): void {
     stopLoop?.();
     stopLoop = null;
+  }
+
+  function endLevel(a: ActivePlay<S, A>, result: 'won' | 'lost' | 'left'): void {
+    if (a.ended) return;
+    a.ended = true;
+    beacon.send('level_end', { level: a.levelId, result });
+  }
+
+  // A level that is not won or lost is left when the next screen is neither its pause screen nor its
+  // own play screen going on. That covers Retry, Levels and the browser back button.
+  function leaveLevelFor(route: Route): void {
+    const a = active;
+    if (!a || a.ended) return;
+    const goesOn = route.screen === 'pause' || (route.screen === 'play' && route.params.level === a.levelId && route.params.fresh !== '1');
+    if (!goesOn) endLevel(a, 'left');
   }
 
   function firstOpenLevel(): string {
@@ -202,7 +222,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
             finishLevel(store, def.kind, levelId, stars, def.kind === 'turn' ? session.tick : status.score);
           }
           a.result = { won, reason: status.reason, stars };
-          beacon.send('level_end', { level: levelId, result: won ? 'won' : 'lost' });
+          endLevel(a, won ? 'won' : 'lost');
           const now = performance.now();
           if (won) painter.flash(now);
           else painter.shake(now);
@@ -212,7 +232,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           });
         },
       });
-      const fresh: ActivePlay<S, A> = { levelId, levelIndex, play, start: play.session.state, score: 0, result: null };
+      const fresh: ActivePlay<S, A> = { levelId, levelIndex, play, start: play.session.state, score: 0, result: null, ended: false };
       current.value = fresh;
       active = fresh;
       hints = null;
@@ -318,21 +338,31 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         },
       },
     });
-    const viewport: Viewport = { width: W, height: H - 72 - safe.bottom, safe: { top: safe.top, right: safe.right, bottom: 0, left: safe.left } };
-    const painter = makePainter(view);
     const verdict = watch.verdict;
-    view.setProof(verdict.kind === 'unproved' ? null : verdict.text);
+    const proofText = verdict.kind === 'unproved' ? null : verdict.text;
+    const rows = watchLayout(W, H, safe, proofText, theme.typeScale.body);
+    const viewport: Viewport = { width: W, height: H - 72 - safe.bottom, safe: { top: rows.sceneSafe.top, right: safe.right, bottom: 0, left: safe.left } };
+    const painter = makePainter(view);
+    view.setProof(proofText);
     show(view.root, false);
 
     let last = -1;
     let seenTick = -1;
     let seenRestarts = -1;
     let raf = 0;
+    // One watch_end for each watch_start: at the first end of the replay, or when the screen is left.
+    let watchEnded = false;
+    const endWatch = () => {
+      if (watchEnded) return;
+      watchEnded = true;
+      beacon.send('watch_end', { level: proof.level });
+    };
     const frame = (ts: number) => {
       const t = Math.round(ts);
       const dt = last < 0 ? 0 : Math.min(t - last, 1000);
       last = t;
       watch.frame(dt);
+      if (watch.finished()) endWatch();
       if (watch.session.tick !== seenTick || watch.restarts() !== seenRestarts) {
         seenTick = watch.session.tick;
         seenRestarts = watch.restarts();
@@ -345,7 +375,10 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       raf = win.requestAnimationFrame(frame);
     };
     raf = win.requestAnimationFrame(frame);
-    stopLoop = () => win.cancelAnimationFrame(raf);
+    stopLoop = () => {
+      win.cancelAnimationFrame(raf);
+      endWatch();
+    };
   }
 
   function nextLevelId(levelId: string): string | null {
@@ -355,6 +388,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   function render(route: Route): void {
     leavePlay();
+    leaveLevelFor(route);
     if (route.screen !== 'title') noticeOnTitle = false;
     switch (route.screen) {
       case 'title': {
@@ -442,7 +476,11 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         show(
           settingsScreen(doc, {
             settings: store.read().settings,
-            onToggle: (name, value) => (name === 'sound' ? audio.setSound(value) : audio.setMusic(value)),
+            onToggle: (name, value) => {
+              if (name === 'sound') audio.setSound(value);
+              else if (name === 'music') audio.setMusic(value);
+              else store.setSetting('usage', value);
+            },
             onReset: () => {
               store.reset();
               active = null;

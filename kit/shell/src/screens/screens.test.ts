@@ -13,6 +13,8 @@ import { buttonWidth, playScreen } from './play-screen';
 import { resultsScreen } from './results';
 import { settingsScreen } from './settings';
 import { titleScreen } from './title';
+import { watchLayout, watchScreen } from './watch-screen';
+import { hudTextBoxes } from '../painter';
 
 const controls = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLButtonElement>('[data-control]'));
 const ids = (root: HTMLElement) => controls(root).map((b) => b.dataset.control);
@@ -180,6 +182,79 @@ describe('pause screen', () => {
     expect(root.dataset.screen).toBe('pause');
     expect(ids(root)).toEqual(['resume', 'retry', 'levels']);
   });
+
+  function make() {
+    const seen: string[] = [];
+    const root = pauseScreen(document, { onResume: () => seen.push('resume'), onRetry: () => seen.push('retry'), onLevels: () => seen.push('levels') });
+    document.body.append(root);
+    return { root, seen };
+  }
+  const dialog = (root: HTMLElement) => root.querySelector<HTMLElement>('[data-dialog="confirm"]');
+  const labels = (root: HTMLElement) => Array.from(dialog(root)!.querySelectorAll('[data-control]')).map((b) => `${(b as HTMLElement).dataset.control}:${b.textContent}`);
+
+  it('resumes at once, with no question', () => {
+    const { root, seen } = make();
+    click(root, 'resume');
+    expect(seen).toEqual(['resume']);
+    expect(dialog(root)).toBeNull();
+    root.remove();
+  });
+
+  it.each(['retry', 'levels'])('asks Leave this run? before %s and does nothing yet', (id) => {
+    const { root, seen } = make();
+    click(root, id);
+    expect(seen).toEqual([]);
+    expect(dialog(root)?.textContent).toContain('Leave this run?');
+    expect(labels(root)).toEqual(['confirm:Leave', 'cancel:Stay']);
+    root.remove();
+  });
+
+  it('starts with the focus on Stay', () => {
+    const { root } = make();
+    click(root, 'retry');
+    expect((document.activeElement as HTMLElement).dataset.control).toBe('cancel');
+    expect(document.activeElement?.textContent).toBe('Stay');
+    root.remove();
+  });
+
+  it.each([
+    ['retry', 'retry'],
+    ['levels', 'levels'],
+  ])('runs %s once on Leave and closes the box', (id, expected) => {
+    const { root, seen } = make();
+    click(root, id);
+    click(root, 'confirm');
+    expect(seen).toEqual([expected]);
+    expect(dialog(root)).toBeNull();
+    root.remove();
+  });
+
+  it('keeps the run on Stay and gives the focus back to the button that asked', () => {
+    const { root, seen } = make();
+    click(root, 'levels');
+    click(root, 'cancel');
+    expect(seen).toEqual([]);
+    expect(dialog(root)).toBeNull();
+    expect((document.activeElement as HTMLElement).dataset.control).toBe('levels');
+    root.remove();
+  });
+
+  it('treats Escape as Stay', () => {
+    const { root, seen } = make();
+    click(root, 'retry');
+    (document.activeElement as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(seen).toEqual([]);
+    expect(dialog(root)).toBeNull();
+    root.remove();
+  });
+
+  it('opens one box at a time', () => {
+    const { root } = make();
+    click(root, 'retry');
+    click(root, 'levels');
+    expect(root.querySelectorAll('[data-dialog="confirm"]').length).toBe(1);
+    root.remove();
+  });
 });
 
 describe('results screen', () => {
@@ -229,21 +304,47 @@ describe('results screen', () => {
 });
 
 describe('settings screen and the reset box', () => {
-  function make(extra: { onReset?: () => void; onToggle?: (n: string, v: boolean) => void } = {}) {
+  function make(extra: { onReset?: () => void; onToggle?: (n: string, v: boolean) => void; usage?: boolean } = {}) {
     return settingsScreen(document, {
-      settings: { sound: true, music: false },
+      settings: { sound: true, music: false, usage: extra.usage ?? true },
       onToggle: extra.onToggle ?? noop,
       onReset: extra.onReset ?? noop,
       onBack: noop,
     });
   }
 
-  it('has a switch for sound, a switch for music, reset and back', () => {
+  it('has a switch for sound, music and usage data, a privacy link, reset and back', () => {
     const root = make();
     expect(root.dataset.screen).toBe('settings');
-    expect(ids(root)).toEqual(['sound', 'music', 'reset', 'back']);
+    expect(ids(root)).toEqual(['sound', 'music', 'usage', 'privacy', 'reset', 'back']);
     expect(root.querySelector('[data-control="sound"]')?.getAttribute('aria-pressed')).toBe('true');
     expect(root.querySelector('[data-control="music"]')?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('has the usage data switch, labelled Usage data, on by default', () => {
+    const usage = make().querySelector<HTMLElement>('[data-control="usage"]')!;
+    expect(usage.tagName).toBe('BUTTON');
+    expect(usage.textContent).toBe('Usage data');
+    expect(usage.getAttribute('aria-pressed')).toBe('true');
+    expect(make({ usage: false }).querySelector('[data-control="usage"]')?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('flips the usage data switch and reports usage with the new value', () => {
+    const seen: string[] = [];
+    const root = make({ onToggle: (n, v) => seen.push(`${n}:${v}`) });
+    click(root, 'usage');
+    expect(seen).toEqual(['usage:false']);
+    expect(root.querySelector('[data-control="usage"]')?.getAttribute('aria-pressed')).toBe('false');
+    click(root, 'usage');
+    expect(seen).toEqual(['usage:false', 'usage:true']);
+  });
+
+  it('has a Privacy link to ../privacy/ that opens in the same tab', () => {
+    const link = make().querySelector<HTMLAnchorElement>('[data-control="privacy"]')!;
+    expect(link.tagName).toBe('A');
+    expect(link.textContent).toBe('Privacy');
+    expect(link.getAttribute('href')).toBe('../privacy/');
+    expect(link.hasAttribute('target')).toBe(false);
   });
 
   it('flips a switch and reports the new value', () => {
@@ -306,7 +407,69 @@ describe('how to play and credits', () => {
   });
 });
 
+describe('watch screen proof row', () => {
+  const sizes: [number, number][] = [[360, 640], [768, 1024], [1920, 1080]];
+  const texts = ['Proved in 2 actions', 'Proved: every jump has 9 ticks or more', 'This proof is out of date'];
+  const safe = { top: 0, right: 0, bottom: 0, left: 0 };
+  const intersects = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
+    a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+  it('puts the proof line on its own row above the scene, so a HUD line of the scene never meets it', () => {
+    for (const [w, h] of sizes) {
+      for (const fontSize of [17, 18]) {
+        for (const text of texts) {
+          const layout = watchLayout(w, h, safe, text, fontSize);
+          const where = `${w}x${h} ${fontSize}px "${text}"`;
+          expect(layout.proof, where).not.toBeNull();
+          const proof = layout.proof!;
+          expect(proof.x, where).toBeGreaterThanOrEqual(16);
+          expect(proof.x + proof.w, where).toBeLessThanOrEqual(w - 16);
+          expect(proof.y + proof.h, where).toBeLessThanOrEqual(layout.sceneSafe.top);
+          // Both games draw their HUD line centred at 36 px below the top of their safe area, 24 px high.
+          const scene = { width: w, height: h, items: [{ kind: 'text' as const, id: 'hud', layer: 'hud' as const, x: w / 2, y: layout.sceneSafe.top + 36, text: 'Turn 0 of 6', size: 24, fill: '#ffffff', align: 'center' as const }] };
+          for (const hud of hudTextBoxes(scene)) expect(intersects(hud, proof), where).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('makes the row taller when the text needs two lines', () => {
+    const one = watchLayout(1920, 1080, safe, 'Proved: every jump has 9 ticks or more', 18);
+    const narrow = watchLayout(200, 640, safe, 'Proved: every jump has 9 ticks or more', 18);
+    expect(narrow.proof!.h).toBeGreaterThan(one.proof!.h);
+    expect(narrow.sceneSafe.top).toBeGreaterThan(one.sceneSafe.top);
+  });
+
+  it('keeps the scene top at the safe area when there is no proof line', () => {
+    const layout = watchLayout(360, 640, { top: 20, right: 0, bottom: 0, left: 0 }, null, 18);
+    expect(layout.proof).toBeNull();
+    expect(layout.sceneSafe.top).toBe(20);
+  });
+
+  it('draws the proof line in the box of the layout', () => {
+    const view = watchScreen(document, { width: 360, height: 640, safe, kind: 'turn', buttons: [], fontSize: 18, on: { back: noop, speed: noop } });
+    view.setProof('Proved in 2 actions');
+    const line = view.root.querySelector<HTMLElement>('[data-proof="line"]')!;
+    const box = watchLayout(360, 640, safe, 'Proved in 2 actions', 18).proof!;
+    expect([line.style.left, line.style.top, line.style.width]).toEqual([`${box.x}px`, `${box.y}px`, `${box.w}px`]);
+    expect(line.hidden).toBe(false);
+  });
+});
+
 describe('theme css', () => {
+  it('dims a disabled button, so nobody tries to press it', () => {
+    const css = themeCss(neutralTheme());
+    expect(css).toMatch(/button:disabled[^{]*\{[^}]*opacity: 0\.4[0-9]*;/);
+  });
+
+  it('scales the menu type and buttons with the viewport, from 1 at 360x640 up to 2 at 1920x1080', () => {
+    const css = themeCss(neutralTheme());
+    expect(css).toContain('--u: clamp(1px, min(calc(1px + (100vw - 360px) / 1560), calc(1px + (100vh - 640px) / 440)), 2px)');
+    expect(css).toMatch(/button, a\[data-control\] \{[^}]*min-height: calc\(44 \* var\(--u\)\)/);
+    // The play and watch screens place their controls in px, so they keep the unscaled size.
+    expect(css).toMatch(/\[data-screen="play"\], \[data-screen="watch"\] \{[^}]*--u: 1px/);
+  });
+
   it('has a visible focus mark, the button radius and the palette', () => {
     const css = themeCss(neutralTheme());
     expect(css).toContain(':focus-visible');

@@ -63,6 +63,22 @@ test('garden: the page pauses when it loses focus, and resume goes on', async ({
   await expect(screen(page, 'pause')).toBeVisible();
 });
 
+test('garden: leaving a run from the pause screen asks first, and Leave starts the level again', async ({ page }) => {
+  await page.goto('/garden/');
+  await control(page, 'play').click();
+  await clickItem(page, 'lantern-1');
+  await expect(screen(page, 'play')).toHaveAttribute('data-tick', '1');
+  await control(page, 'pause').click();
+  await control(page, 'retry').click();
+  await expect(page.locator('[data-dialog="confirm"]')).toContainText('Leave this run?');
+  await control(page, 'confirm').click();
+  await expect(screen(page, 'play')).toHaveAttribute('data-tick', '0');
+  await control(page, 'pause').click();
+  await control(page, 'levels').click();
+  await control(page, 'confirm').click();
+  await expect(screen(page, 'levels')).toBeVisible();
+});
+
 test('garden: reset progress asks first, keeps it on cancel and deletes it on confirm', async ({ page }) => {
   await page.addInitScript(
     ([key, value]) => {

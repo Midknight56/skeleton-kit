@@ -13,10 +13,10 @@ describe('storageKey', () => {
 });
 
 describe('createStore with working storage', () => {
-  it('starts empty with both switches on', () => {
+  it('starts empty with every switch on', () => {
     const store = createStore('game-a', localStorage);
     expect(store.persistent).toBe(true);
-    expect(store.read()).toEqual({ version: 1, levels: {}, settings: { sound: true, music: true }, lessons: {} });
+    expect(store.read()).toEqual({ version: 1, levels: {}, settings: { sound: true, music: true, usage: true }, lessons: {} });
   });
 
   it('saves a result under the key and reads it back in a new store', () => {
@@ -56,7 +56,24 @@ describe('createStore with working storage', () => {
     const store = createStore('game-a', localStorage);
     store.setSetting('sound', false);
     store.setSetting('music', false);
-    expect(createStore('game-a', localStorage).read().settings).toEqual({ sound: false, music: false });
+    expect(createStore('game-a', localStorage).read().settings).toEqual({ sound: false, music: false, usage: true });
+  });
+
+  it('saves the usage data switch at once and keeps it after a reload', () => {
+    createStore('game-a', localStorage).setSetting('usage', false);
+    const raw = JSON.parse(localStorage.getItem('kit.game-a.v1') ?? 'null') as { settings: Record<string, boolean> };
+    expect(raw.settings.usage).toBe(false);
+    expect(createStore('game-a', localStorage).read().settings.usage).toBe(false);
+  });
+
+  it('reads a file from before the usage switch as usage on', () => {
+    localStorage.setItem('kit.game-a.v1', JSON.stringify({ version: 1, levels: {}, settings: { sound: false, music: true }, lessons: {} }));
+    expect(createStore('game-a', localStorage).read().settings).toEqual({ sound: false, music: true, usage: true });
+  });
+
+  it('ignores a usage value that is not a boolean', () => {
+    localStorage.setItem('kit.game-a.v1', JSON.stringify({ version: 1, levels: {}, settings: { usage: 'no' }, lessons: {} }));
+    expect(createStore('game-a', localStorage).read().settings.usage).toBe(true);
   });
 
   it('counts lessons and keeps the count', () => {
@@ -86,8 +103,15 @@ describe('createStore with working storage', () => {
     store.setSetting('sound', false);
     store.bumpLesson('tap');
     store.reset();
-    expect(store.read()).toEqual({ version: 1, levels: {}, settings: { sound: true, music: true }, lessons: {} });
+    expect(store.read()).toEqual({ version: 1, levels: {}, settings: { sound: true, music: true, usage: true }, lessons: {} });
     expect(createStore('game-a', localStorage).read().levels).toEqual({});
+  });
+
+  it('reset keeps the usage data switch off, so a reset never turns the beacon back on', () => {
+    const store = createStore('game-a', localStorage);
+    store.setSetting('usage', false);
+    store.reset();
+    expect(store.read().settings.usage).toBe(false);
   });
 });
 

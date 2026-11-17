@@ -1,19 +1,24 @@
 import { confirmBox } from './confirm';
-import { button, heading, screenRoot } from './dom';
+import { button, heading, link, screenRoot } from './dom';
+
+export type SettingName = 'sound' | 'music' | 'usage';
 
 export interface SettingsProps {
-  settings: { sound: boolean; music: boolean };
-  onToggle(name: 'sound' | 'music', value: boolean): void;
+  settings: { sound: boolean; music: boolean; usage: boolean };
+  onToggle(name: SettingName, value: boolean): void;
   onReset(): void;
   onBack(): void;
 }
+
+// Where the privacy page sits, seen from a game page such as /garden/.
+export const PRIVACY_HREF = '../privacy/';
 
 export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement {
   const root = screenRoot(doc, 'settings');
   const values = { ...props.settings };
   root.append(heading(doc, 'Settings'));
 
-  const toggle = (name: 'sound' | 'music', label: string) => {
+  const toggle = (name: SettingName, label: string) => {
     const b = button(doc, name, label, () => {
       values[name] = !values[name];
       b.setAttribute('aria-pressed', String(values[name]));
@@ -39,6 +44,13 @@ export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement
     box.querySelector<HTMLElement>('[data-control="cancel"]')?.focus();
   });
 
-  root.append(toggle('sound', 'Sound'), toggle('music', 'Music'), reset, button(doc, 'back', 'Back', props.onBack));
+  root.append(
+    toggle('sound', 'Sound'),
+    toggle('music', 'Music'),
+    toggle('usage', 'Usage data'),
+    link(doc, 'privacy', 'Privacy', PRIVACY_HREF),
+    reset,
+    button(doc, 'back', 'Back', props.onBack),
+  );
   return root;
 }

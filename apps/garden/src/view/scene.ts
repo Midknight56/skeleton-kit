@@ -2,14 +2,18 @@ import type { Scene, SceneItem, Viewport } from '@kit/core';
 import type { GardenState } from '../rules/state';
 
 const BAR = 56;
+// Each side of the board stays this far inside the screen, or inside the safe area when that is wider.
+const EDGE = 16;
 
 /** Where the board sits. Pure, so that the shell can map a tap to a cell. */
 export function boardLayout(state: GardenState, viewport: Viewport): { cell: number; left: number; top: number } {
   const { width, height, safe } = viewport;
-  const availW = width - safe.left - safe.right;
+  const sideLeft = Math.max(safe.left, EDGE);
+  const sideRight = Math.max(safe.right, EDGE);
+  const availW = width - sideLeft - sideRight;
   const availH = height - safe.top - BAR - safe.bottom;
   const cell = Math.max(1, Math.floor(Math.min(availW / state.w, availH / state.h)));
-  const left = safe.left + Math.floor((availW - cell * state.w) / 2);
+  const left = sideLeft + Math.floor((availW - cell * state.w) / 2);
   const top = safe.top + BAR + Math.floor((availH - cell * state.h) / 2);
   return { cell, left, top };
 }

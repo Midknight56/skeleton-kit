@@ -72,6 +72,27 @@ describe('beacon with a url', () => {
     expect(await body('watch_start', { level: 'lv-3' })).toBe('{"game":"game-a","event":"watch_start","level":"lv-3"}');
   });
 
+  it('sends watch_end with the level and nothing else', async () => {
+    expect(await body('watch_end', { level: 'lv-3' })).toBe('{"game":"game-a","event":"watch_end","level":"lv-3"}');
+    expect(await body('watch_end', { level: 'lv-3', result: 'won' })).toBe('{"game":"game-a","event":"watch_end","level":"lv-3"}');
+  });
+
+  it('sends nothing for a watch_end without a level', () => {
+    const { sent, nav } = fakeNavigator();
+    createBeacon({ game: 'game-a', url, navigator: nav }).send('watch_end');
+    expect(sent).toEqual([]);
+  });
+
+  it('sends level_end with the result left', async () => {
+    expect(await body('level_end', { level: 'lv-3', result: 'left' })).toBe('{"game":"game-a","event":"level_end","level":"lv-3","result":"left"}');
+  });
+
+  it('sends nothing for a level_end with a result that is not won, lost or left', () => {
+    const { sent, nav } = fakeNavigator();
+    createBeacon({ game: 'game-a', url, navigator: nav }).send('level_end', { level: 'lv-3', result: 'quit' } as never);
+    expect(sent).toEqual([]);
+  });
+
   it('sends level_end with the level and the result', async () => {
     expect(await body('level_end', { level: 'lv-3', result: 'won' })).toBe('{"game":"game-a","event":"level_end","level":"lv-3","result":"won"}');
     expect(await body('level_end', { level: 'lv-3', result: 'lost' })).toBe('{"game":"game-a","event":"level_end","level":"lv-3","result":"lost"}');
@@ -98,10 +119,34 @@ describe('beacon with a url', () => {
   });
 });
 
+describe('beacon with the usage switch off', () => {
+  const url = 'https://example.invalid/b';
+
+  it('sends nothing at all while the switch is off, and sends again when it is on', () => {
+    const { sent, nav } = fakeNavigator();
+    let on = false;
+    const beacon = createBeacon({ game: 'game-a', url, navigator: nav, enabled: () => on });
+    beacon.send('open');
+    beacon.send('level_start', { level: 'lv-1' });
+    beacon.send('watch_end', { level: 'lv-1' });
+    beacon.send('level_end', { level: 'lv-1', result: 'left' });
+    expect(sent).toEqual([]);
+    on = true;
+    beacon.send('open');
+    expect(sent.length).toBe(1);
+  });
+});
+
 describe('beacon events list', () => {
-  it('lists four events and the fields of each, as plain data', () => {
-    expect(BEACON_EVENTS.map((e) => e.event)).toEqual(['open', 'level_start', 'watch_start', 'level_end']);
-    expect(BEACON_EVENTS.map((e) => e.fields)).toEqual([['game'], ['game', 'level'], ['game', 'level'], ['game', 'level', 'result']]);
+  it('lists five events and the fields of each, as plain data', () => {
+    expect(BEACON_EVENTS.map((e) => e.event)).toEqual(['open', 'level_start', 'watch_start', 'watch_end', 'level_end']);
+    expect(BEACON_EVENTS.map((e) => e.fields)).toEqual([['game'], ['game', 'level'], ['game', 'level'], ['game', 'level'], ['game', 'level', 'result']]);
+  });
+
+  it('tells the privacy page about watch_end and the three results', () => {
+    const says = (name: string) => BEACON_EVENTS.find((e) => e.event === name)?.says ?? '';
+    expect(says('watch_end')).not.toBe('');
+    expect(says('level_end')).toContain('won, lost or left');
     expect(JSON.parse(JSON.stringify(BEACON_EVENTS))).toEqual(BEACON_EVENTS);
   });
 });

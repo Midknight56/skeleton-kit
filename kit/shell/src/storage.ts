@@ -2,7 +2,7 @@ export interface LevelProgress { stars: number; best: number }
 export interface StoredData {
   version: 1;
   levels: Record<string, LevelProgress>;
-  settings: { sound: boolean; music: boolean };
+  settings: { sound: boolean; music: boolean; usage: boolean };
   lessons: Record<string, number>;
 }
 
@@ -13,7 +13,7 @@ export interface ProgressStore {
   // kind 'turn': a lower best is better. kind 'tick': a higher best is better. Stars only rise.
   recordResult(levelId: string, result: LevelProgress, kind: 'turn' | 'tick'): void;
   isFinished(levelId: string): boolean;
-  setSetting(name: 'sound' | 'music', value: boolean): void;
+  setSetting(name: 'sound' | 'music' | 'usage', value: boolean): void;
   lessonCount(lessonId: string): number;
   bumpLesson(lessonId: string): void;
   reset(): void;
@@ -24,7 +24,7 @@ export function storageKey(gameId: string): string {
 }
 
 function empty(): StoredData {
-  return { version: 1, levels: {}, settings: { sound: true, music: true }, lessons: {} };
+  return { version: 1, levels: {}, settings: { sound: true, music: true, usage: true }, lessons: {} };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -50,6 +50,7 @@ function parse(text: string | null): StoredData | null {
   if (isRecord(raw.settings)) {
     if (typeof raw.settings.sound === 'boolean') data.settings.sound = raw.settings.sound;
     if (typeof raw.settings.music === 'boolean') data.settings.music = raw.settings.music;
+    if (typeof raw.settings.usage === 'boolean') data.settings.usage = raw.settings.usage;
   }
   if (isRecord(raw.lessons)) {
     for (const [id, n] of Object.entries(raw.lessons)) if (typeof n === 'number') data.lessons[id] = n;
@@ -115,7 +116,10 @@ export function createStore(gameId: string, backend: Storage | null): ProgressSt
       save(data);
     },
     reset() {
-      save(empty());
+      // The usage data switch is a privacy choice, not progress, so a reset keeps it.
+      const fresh = empty();
+      fresh.settings.usage = load().settings.usage;
+      save(fresh);
     },
   };
 }

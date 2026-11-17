@@ -17,8 +17,6 @@ const proofs: ProofSet = {
   load: (levelId) => fetchJson<ProofFile>(`../proofs/runner/${encodeURIComponent(levelId)}.json`),
 };
 
-document.title = def.title;
-
 const element = document.getElementById('app');
 if (!element) throw new Error('The page has no element with the id app.');
 
@@ -29,5 +27,5 @@ mountGame(element, {
   proofs,
   texts: runnerTexts,
   search: window.location.search,
-  credits: [def.title, 'A one button runner made with the kit of this repository.', 'The pictures are plain shapes drawn for it.', 'Every sound is made in code.'],
+  credits: [def.title, 'Made by Adrian Ferguson, Midknight Entertainment', 'A one button runner made with the kit of this repository.', 'The pictures are plain shapes drawn for it.', 'Every sound is made in code.'],
 });

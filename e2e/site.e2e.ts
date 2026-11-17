@@ -69,7 +69,9 @@ test('the other three pages answer', async ({ page, request }) => {
   }
   await page.goto('/privacy/');
   await expect(page.locator('h1')).toBeVisible();
-  await expect(page.locator('tr[data-event]')).toHaveCount(4);
+  await expect(page.locator('tr[data-event]')).toHaveCount(5);
+  await expect(page.locator('tr[data-event="watch_end"]')).toBeVisible();
+  await expect(page.locator('tr[data-event="level_end"]')).toContainText('won, lost or left');
   await expect(page.locator('main')).toContainText('sees the address of the request');
   await page.goto('/runner/');
   await expect(page.locator('[data-screen="title"]')).toBeVisible();

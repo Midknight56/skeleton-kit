@@ -45,12 +45,15 @@ test('garden: title, how to play, every level won by its proof replay, settings 
   await expect(control(page, 'sound')).toHaveAttribute('aria-pressed', 'true');
   await control(page, 'sound').click();
   await control(page, 'music').click();
+  await control(page, 'usage').click();
   await expect(control(page, 'sound')).toHaveAttribute('aria-pressed', 'false');
   await expect(control(page, 'music')).toHaveAttribute('aria-pressed', 'false');
+  await expect(control(page, 'usage')).toHaveAttribute('aria-pressed', 'false');
   await page.reload();
   await control(page, 'settings').click();
   await expect(control(page, 'sound')).toHaveAttribute('aria-pressed', 'false');
   await expect(control(page, 'music')).toHaveAttribute('aria-pressed', 'false');
+  await expect(control(page, 'usage')).toHaveAttribute('aria-pressed', 'false');
   // Progress is kept too.
   await control(page, 'back').click();
   await control(page, 'levels').click();
@@ -60,4 +63,6 @@ test('garden: title, how to play, every level won by its proof replay, settings 
   await control(page, 'back').click();
   await control(page, 'credits').click();
   await expect(screen(page, 'credits')).toBeVisible();
+  await expect(screen(page, 'credits')).toContainText('Made by Adrian Ferguson');
+  await expect(screen(page, 'credits')).toContainText('Every sound is made in code.');
 });

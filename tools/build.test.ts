@@ -84,6 +84,44 @@ describe('the build output', () => {
     expect(html).toContain('VITE_BEACON_URL');
   });
 
+  it('names watch_end, the three results of level_end and the usage data switch on the privacy page', () => {
+    const html = readFileSync(join(dist, 'privacy', 'index.html'), 'utf8');
+    expect(html).toContain('<tr data-event="watch_end">');
+    expect(html).toContain('won, lost or left');
+    expect(html).toContain('Usage data');
+  });
+
+  it.each(['garden', 'runner'])('has a loading screen in the %s page before its script runs', (game) => {
+    const html = readFileSync(join(dist, game, 'index.html'), 'utf8');
+    const config = readFileSync(fileURLToPath(new URL(`../apps/${game}/game.config.ts`, import.meta.url)), 'utf8');
+    const title = /title:\s*'([^']+)'/.exec(config)?.[1] ?? '';
+    expect(title).not.toBe('');
+    const body = /<body>([\s\S]*)<\/body>/.exec(html)?.[1] ?? '';
+    const loading = /<div[^>]*data-screen="loading"[^>]*>[\s\S]*?<\/div>/.exec(body)?.[0] ?? '';
+    expect(loading, 'the loading element in the body').not.toBe('');
+    expect(body).toContain(title);
+    // The style is inline, so the first frame has the colours of the game and no blank page. The build
+    // minifies the style, so the patterns allow both forms.
+    expect(html).toMatch(/<style>[\s\S]*\[data-screen="?loading"?\][\s\S]*@keyframes[\s\S]*<\/style>/);
+    expect(html).toMatch(/html,\s*body\s*\{[^}]*background:\s*#[0-9a-f]{6}/);
+    expect(html).not.toMatch(/background:\s*#(?:000000|ffffff|000|fff)\b/i);
+    // The colours are the ones of the theme of the game.
+    const theme = readFileSync(fileURLToPath(new URL(`../apps/${game}/theme.ts`, import.meta.url)), 'utf8');
+    for (const name of ['background', 'primary']) {
+      const colour = new RegExp(`${name}: '(#[0-9a-f]{6})'`).exec(theme)?.[1] ?? '';
+      expect(colour, `${name} of the theme`).not.toBe('');
+      expect(html, `${name} colour`).toContain(colour);
+    }
+  });
+
+  it('has the loading screen in the source page of the lights example too', () => {
+    const html = readFileSync(fileURLToPath(new URL('../examples/lights/index.html', import.meta.url)), 'utf8');
+    expect(html).toMatch(/<body>[\s\S]*<div[^>]*data-screen="loading"[^>]*><h1>__GAME_TITLE__<\/h1>/);
+    expect(html).toMatch(/@keyframes/);
+    const theme = readFileSync(fileURLToPath(new URL('../examples/lights/theme.ts', import.meta.url)), 'utf8');
+    expect(html).toContain(/background: '(#[0-9a-f]{6})'/.exec(theme)?.[1] ?? 'none');
+  });
+
   it('has dist/runner/index.html', () => {
     expect(existsSync(join(dist, 'runner', 'index.html')), 'dist/runner/index.html is missing. Run npm run build.').toBe(true);
   });

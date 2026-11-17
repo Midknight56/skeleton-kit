@@ -27,6 +27,28 @@ export interface WatchScreenView {
   setSpeed(speed: 1 | 4): void;
 }
 
+const PROOF_PAD = 8;
+const SIDE = 16;
+
+// The proof line sits on its own row at the top. The scene of the game is drawn below that row: its
+// safe area starts at the bottom of the row, so the HUD line of the game never meets the proof line.
+// A letter is taken as 0.7 em wide, as for the strip buttons, so the line count errs on the large side.
+export function watchLayout(
+  width: number,
+  _height: number,
+  safe: Viewport['safe'],
+  proofText: string | null,
+  fontSize = 16,
+): { proof: Rect | null; lineHeight: number; sceneSafe: Viewport['safe'] } {
+  const lineHeight = Math.ceil(fontSize * 1.3);
+  if (proofText === null) return { proof: null, lineHeight, sceneSafe: { ...safe } };
+  const left = safe.left + SIDE;
+  const w = Math.max(1, width - safe.right - SIDE - left);
+  const lines = Math.max(1, Math.ceil((proofText.length * fontSize * 0.7) / w));
+  const proof = { x: left, y: safe.top + PROOF_PAD, w, h: lines * lineHeight };
+  return { proof, lineHeight, sceneSafe: { ...safe, top: proof.y + proof.h + PROOF_PAD } };
+}
+
 export function watchScreen(doc: Document, props: WatchScreenProps): WatchScreenView {
   const root = screenRoot(doc, 'watch');
   const speed1 = button(doc, 'speed-1', '1x', () => props.on.speed(1));
@@ -57,7 +79,7 @@ export function watchScreen(doc: Document, props: WatchScreenProps): WatchScreen
   const proof = doc.createElement('p');
   proof.dataset.proof = 'line';
   proof.hidden = true;
-  proof.style.cssText = `position:absolute;left:0;top:${props.safe.top + 8}px;width:${props.width}px;margin:0;text-align:center;pointer-events:none`;
+  proof.style.cssText = `position:absolute;margin:0;text-align:center;pointer-events:none;font-size:${props.fontSize ?? 16}px`;
 
   const mark = doc.createElement('div');
   mark.dataset.pointerMark = 'on';
@@ -97,6 +119,13 @@ export function watchScreen(doc: Document, props: WatchScreenProps): WatchScreen
     setProof(text) {
       proof.hidden = text === null;
       proof.textContent = text ?? '';
+      const box = watchLayout(props.width, props.height, props.safe, text, props.fontSize);
+      if (box.proof) {
+        proof.style.left = `${box.proof.x}px`;
+        proof.style.top = `${box.proof.y}px`;
+        proof.style.width = `${box.proof.w}px`;
+        proof.style.lineHeight = `${box.lineHeight}px`;
+      }
     },
     setMark(box) {
       mark.hidden = box === null;

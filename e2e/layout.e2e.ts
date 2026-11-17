@@ -170,6 +170,10 @@ for (const game of GAMES) {
       await page.evaluate(() => window.dispatchEvent(new Event('blur')));
       await expect(screen(page, 'pause')).toBeVisible();
       await check(page, 'pause', viewport);
+      await control(page, 'retry').click();
+      await expect(page.locator('[data-dialog="confirm"]')).toBeVisible();
+      await check(page, 'pause-confirm', viewport, '[data-dialog="confirm"]');
+      await control(page, 'cancel').click();
       await control(page, 'resume').click();
       await game.afterPlayStart(page);
 

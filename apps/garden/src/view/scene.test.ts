@@ -59,6 +59,27 @@ describe('boardLayout', () => {
     });
   });
 
+  it('keeps every board item at least 16 px inside the screen on 360x640, 768x1024 and 1920x1080, for every level', () => {
+    // The play area is the screen above the 72 px control strip.
+    const screens: [number, number][] = [[360, 640], [768, 1024], [1920, 1080]];
+    const problems: string[] = [];
+    for (const level of gardenDef.levels()) {
+      const state = gardenDef.init(level.id, 1);
+      for (const [w, h] of screens) {
+        const viewport: Viewport = { width: w, height: h - 72, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
+        for (const item of view(state, viewport).items) {
+          if (item.kind !== 'sprite' && item.kind !== 'rect') continue;
+          const where = `${level.id} at ${w}x${h}: ${item.id}`;
+          if (item.x < 16) problems.push(`${where} starts at x ${item.x}`);
+          if (item.y < 16) problems.push(`${where} starts at y ${item.y}`);
+          if (item.x + item.w > w - 16) problems.push(`${where} ends at x ${item.x + item.w}, limit ${w - 16}`);
+          if (item.y + item.h > h - 16) problems.push(`${where} ends at y ${item.y + item.h}, limit ${h - 16}`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
   it('gives a cell of at least 1 on a tiny viewport', () => {
     const tiny: Viewport = { width: 10, height: 10, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
     expect(boardLayout(start(fixtureD), tiny).cell).toBe(1);

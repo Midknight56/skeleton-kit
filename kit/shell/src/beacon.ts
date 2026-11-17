@@ -1,11 +1,13 @@
-import { BEACON_EVENTS, type BeaconEventName } from './beacon-events';
+import { BEACON_EVENTS, BEACON_RESULTS, type BeaconEventName, type BeaconResult } from './beacon-events';
 
-export interface BeaconFields { level?: string; result?: 'won' | 'lost' }
+export interface BeaconFields { level?: string; result?: BeaconResult }
 
 export interface BeaconOptions {
   game: string;
   // The build variable VITE_BEACON_URL. With no value nothing is ever sent.
   url?: string | undefined;
+  // The usage data switch of the settings. Asked at each send. While it answers false nothing is sent.
+  enabled?: () => boolean;
   navigator?: { sendBeacon?: (url: string, data: Blob) => boolean };
 }
 
@@ -21,6 +23,7 @@ export function createBeacon(options: BeaconOptions): Beacon {
   return {
     send(event, fields = {}) {
       if (!url) return;
+      if (options.enabled && !options.enabled()) return;
       const spec = BEACON_EVENTS.find((e) => e.event === event);
       if (!spec) return;
       const body: Record<string, string> = { game: options.game, event };
@@ -29,7 +32,7 @@ export function createBeacon(options: BeaconOptions): Beacon {
         body.level = fields.level;
       }
       if (spec.fields.includes('result')) {
-        if (fields.result !== 'won' && fields.result !== 'lost') return;
+        if (fields.result === undefined || !BEACON_RESULTS.includes(fields.result)) return;
         body.result = fields.result;
       }
       const nav = options.navigator ?? (typeof navigator === 'undefined' ? undefined : navigator);

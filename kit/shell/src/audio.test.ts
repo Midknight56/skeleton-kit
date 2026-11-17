@@ -120,7 +120,7 @@ describe('the two switches', () => {
     expect(audio.musicOn()).toBe(true);
     audio.setSound(false);
     audio.setMusic(false);
-    expect(store.read().settings).toEqual({ sound: false, music: false });
+    expect(store.read().settings).toEqual({ sound: false, music: false, usage: true });
   });
 
   it('are kept by the next audio object on the same storage', () => {
