@@ -34,6 +34,7 @@ function garlandPicture(doc: Document, props: GarlandProps): HTMLElement {
     item.setAttribute('data-garland-item', '');
     item.dataset.lit = String(done);
     item.dataset.ring = String(i === next);
+    item.style.setProperty('--i', String(i));
     const picture = doc.createElement('span');
     picture.className = 'picture';
     picture.innerHTML = done ? props.lit : props.unlit;

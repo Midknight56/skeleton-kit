@@ -3,6 +3,7 @@ import type { ProofFile, ProofIndex, ProofSet } from '@kit/shell';
 import { gardenTheme } from '../theme';
 import def from './def';
 import { gardenInput } from './input';
+import { createGardenEffects } from './view/effects';
 import { gardenTexts } from './results';
 
 // The proof files sit next to the page in the built site: /proofs/garden/ from /garden/.
@@ -27,6 +28,7 @@ mountGame(element, {
   proofs,
   texts: gardenTexts,
   search: window.location.search,
+  effects: createGardenEffects,
   tagline: 'Light one lantern. Each moth must reach a flower.',
   credits: [
     def.title,

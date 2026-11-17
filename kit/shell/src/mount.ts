@@ -3,6 +3,7 @@ import { expandActions } from '@kit/core';
 import { createAudio } from './audio';
 import { createBeacon } from './beacon';
 import { createBackdrop } from './screens/backdrop';
+import type { EffectFactory } from './effects';
 import { watchMessage } from './watch-message';
 import { lessonsToShow, showHints, type Hints } from './lessons';
 import { stripHeight, uiScale, type Rect } from './layout';
@@ -37,6 +38,8 @@ export interface MountOptions<S extends Json, A> {
   tagline?: string;
   // The search text of the page address, such as "?watch=g03". Nothing is read from the page itself.
   search?: string;
+  // Optional effects of the game. They only draw, so the rules, the state and the replays do not change.
+  effects?: EffectFactory;
 }
 
 interface ActivePlay<S extends Json, A> {
@@ -51,6 +54,8 @@ interface ActivePlay<S extends Json, A> {
 }
 
 const WIN_FLASH_MS = 120;
+// The old menu card lifts out in this time.
+const LIFT_OUT_MS = 300;
 const LOSE_SHAKE_MS = 240;
 
 function readSafe(doc: Document): Viewport['safe'] {
@@ -135,10 +140,35 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     timers.add(handle);
   }
 
+  function liftGhost(card: HTMLElement): HTMLElement {
+    const rect = card.getBoundingClientRect();
+    const style = win.getComputedStyle(card);
+    const ghost = doc.createElement('div');
+    ghost.setAttribute('data-lift', '');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.cssText = `left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;border-radius:${style.borderRadius};border-color:${style.borderColor}`;
+    // The two strings run from the top of the page to the card.
+    for (const side of ['left', 'right']) {
+      const string = doc.createElement('i');
+      string.dataset.side = side;
+      string.style.height = `${Math.max(0, rect.top)}px`;
+      ghost.append(string);
+    }
+    return ghost;
+  }
+
   function show(node: HTMLElement, focusFirst: boolean): void {
     const name = node.dataset.screen;
+    const leaving = container.querySelector<HTMLElement>('[data-screen][data-card]');
+    // The card that leaves lifts out as a hollow outline. It holds no text and no control, so the page
+    // never has two screens, and a test can click the new screen at once.
+    const ghost = leaving && leaving.dataset.screen !== 'title' && leaving.dataset.screen !== name && !reducedMotion() ? liftGhost(leaving) : null;
     backdrop.setLook(name === 'title' ? 'title' : name === 'play' || name === 'watch' ? 'play' : 'menu');
     container.replaceChildren(backdrop.sky, backdrop.rail, node);
+    if (ghost) {
+      container.append(ghost);
+      later(LIFT_OUT_MS, () => ghost.remove());
+    }
     backdrop.keepClear(node);
     // The page shows a loading screen until the first screen of the game is drawn.
     doc.querySelector('[data-screen="loading"]')?.remove();
@@ -239,7 +269,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           const now = performance.now();
           if (won) painter.flash(now);
           else painter.shake(now);
-          later(reducedMotion() ? 0 : won ? WIN_FLASH_MS : LOSE_SHAKE_MS, () => {
+          // A game with effects says how long its win flourish or crash burst needs before the results screen.
+          const hold = painter.hold();
+          later(reducedMotion() ? 0 : hold ? (won ? hold.won : hold.lost) : won ? WIN_FLASH_MS : LOSE_SHAKE_MS, () => {
             audio.play(won ? 'win' : 'lose');
             router.go('results', { level: levelId });
           });
@@ -317,6 +349,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       devicePixelRatio: win.devicePixelRatio || 1,
       reducedMotion,
       animate: def.kind === 'turn',
+      ...(options.effects ? { effects: options.effects() } : {}),
       sprite: (name) => {
         const image = images.get(name);
         return image && image.complete && image.naturalWidth > 0 ? image : undefined;
@@ -387,6 +420,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       watch.frame(dt);
       if (watch.finished()) endWatch();
       if (watch.session.tick !== seenTick || watch.restarts() !== seenRestarts) {
+        // A run that starts again is a fresh start, so the effects do not carry their last picture over.
+        if (seenRestarts !== -1 && watch.restarts() !== seenRestarts) painter.reset();
         seenTick = watch.session.tick;
         seenRestarts = watch.restarts();
         tellParent(watch.session.tick, watch.restarts());

@@ -3,6 +3,7 @@ import type { ProofFile, ProofIndex, ProofSet } from '@kit/shell';
 import { runnerTheme } from '../theme';
 import def from './def';
 import { runnerInput } from './input';
+import { createRunnerEffects } from './view/effects';
 import { runnerTexts } from './results';
 
 // The proof files sit next to the page in the built site: /proofs/runner/ from /runner/.
@@ -27,6 +28,7 @@ mountGame(element, {
   proofs,
   texts: runnerTexts,
   search: window.location.search,
+  effects: createRunnerEffects,
   tagline: 'Tap to jump. Reach the gate.',
   credits: [
     def.title,

@@ -1,5 +1,6 @@
 import { fontFaceCss, FONT_TEXT } from './fonts';
 import { lookCss } from './look';
+import { motionCss } from './motion';
 import type { Theme } from './theme';
 
 // The page style of a game, built from its theme. The two fonts of the look are loaded from the site itself
@@ -42,5 +43,6 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 canvas { display: block; touch-action: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: ${u(12)}; justify-content: center; max-width: ${u(480)}; }
 .tiles button { width: ${u(88)}; }
+${motionCss()}
 ${lookCss(theme)}`;
 }

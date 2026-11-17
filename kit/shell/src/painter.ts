@@ -1,4 +1,5 @@
 import type { Layer, Scene, SceneItem } from '@kit/core';
+import type { EffectCtx, EffectLayer, Pose } from './effects';
 
 const LAYERS: Layer[] = ['back', 'world', 'actors', 'fx', 'hud'];
 const MOVE_MS = 120;
@@ -112,10 +113,16 @@ export interface PainterOptions {
   // True for a turn game: an item that keeps its id glides to its new place.
   animate: boolean;
   sprite: (name: string) => CanvasImageSource | undefined;
+  // Optional effects of the game. They only draw. With reduced motion they are not called at all.
+  effects?: EffectLayer;
 }
 
 export interface Painter {
   setScene(scene: Scene, now: number): void;
+  // The next scene is a fresh start, not a move from the one before. The effect layer starts over.
+  reset(): void;
+  // How long to hold the play screen on a win and on a loss, or null when no effect is on.
+  hold(): { won: number; lost: number } | null;
   paint(now: number): void;
   isMoving(now: number): boolean;
   shake(now: number): void;
@@ -152,6 +159,10 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
   let moveStart = 0;
   let shakeStart: number | null = null;
   let flashStart: number | null = null;
+  // The scene before, as the effect layer sees it. A reset clears it.
+  let fxPrev: Scene | null = null;
+  let lastBoxes = '';
+  const fxOn = (): EffectLayer | null => (options.effects && !options.reducedMotion() ? options.effects : null);
 
   const isMoving = (now: number): boolean => moves.size > 0 && now - moveStart < MOVE_MS;
   const isShaking = (now: number): boolean => !options.reducedMotion() && shakeStart !== null && now - shakeStart < SHAKE_MS;
@@ -162,13 +173,51 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
     const t = Math.min(1, Math.max(0, (now - moveStart) / MOVE_MS));
     return scene.items.map((item) => {
       const move = moves.get(item.id);
-      if (!move) return item;
+      if (!move || options.effects?.owns(item.id)) return item;
       return moved(item, move.fromX + (move.toX - move.fromX) * t, move.fromY + (move.toY - move.fromY) * t);
     });
   }
 
-  function drawItem(ctx: Ctx2D, item: SceneItem): void {
-    ctx.globalAlpha = item.kind === 'text' ? 1 : (item.opacity ?? 1);
+  function centreOf(item: SceneItem): { x: number; y: number } {
+    switch (item.kind) {
+      case 'circle':
+        return { x: item.cx, y: item.cy };
+      case 'text':
+        return { x: item.x, y: item.y };
+      default:
+        return { x: item.x + item.w / 2, y: item.y + item.h / 2 };
+    }
+  }
+
+  // An item as the effect layer poses it. The scene is not changed: only the drawing is.
+  function drawPosed(ctx: Ctx2D, item: SceneItem, pose: Pose, width: number): void {
+    if (item.kind === 'text') {
+      drawItem(ctx, item);
+      return;
+    }
+    if (pose.wrap !== undefined && pose.wrap > 0 && item.kind === 'sprite') {
+      const strip = pose.wrap;
+      const shift = (((pose.dx ?? 0) % (2 * strip)) + 2 * strip) % (2 * strip);
+      for (let i = -2; i <= 2; i++) {
+        const x = item.x + shift + i * strip;
+        if (x >= width || x + item.w <= 0) continue;
+        const mirrored = Math.abs(i) % 2 === 1;
+        drawItem(ctx, { ...item, x, flipX: mirrored ? item.flipX !== true : item.flipX === true }, pose.alpha ?? 1);
+      }
+      return;
+    }
+    const c = centreOf(item);
+    ctx.save();
+    ctx.translate(c.x + (pose.dx ?? 0), c.y + (pose.dy ?? 0));
+    if (pose.turn) (ctx as EffectCtx).rotate(pose.turn);
+    ctx.scale(pose.sx ?? 1, pose.sy ?? 1);
+    ctx.translate(-c.x, -c.y);
+    drawItem(ctx, item, pose.alpha ?? 1);
+    ctx.restore();
+  }
+
+  function drawItem(ctx: Ctx2D, item: SceneItem, alphaMul = 1): void {
+    ctx.globalAlpha = item.kind === 'text' ? 1 : (item.opacity ?? 1) * alphaMul;
     switch (item.kind) {
       case 'rect':
         ctx.fillStyle = item.fill;
@@ -222,16 +271,32 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
         moveStart = now;
       }
       target = scene;
+      const fx = fxOn();
+      if (fx) fx.change(fxPrev, scene, now);
+      fxPrev = scene;
+    },
+    reset() {
+      fxPrev = null;
+      options.effects?.reset();
+    },
+    hold() {
+      const fx = fxOn();
+      return fx?.hold ?? null;
     },
     paint(now) {
       if (!target) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       const dpr = options.devicePixelRatio;
-      canvas.width = Math.round(target.width * dpr);
-      canvas.height = Math.round(target.height * dpr);
-      canvas.style.width = `${target.width}px`;
-      canvas.style.height = `${target.height}px`;
+      // The backing store is cleared and rebuilt when its size is written, so write it only on a change.
+      const pixelW = Math.round(target.width * dpr);
+      const pixelH = Math.round(target.height * dpr);
+      if (canvas.width !== pixelW) canvas.width = pixelW;
+      if (canvas.height !== pixelH) canvas.height = pixelH;
+      const cssW = `${target.width}px`;
+      const cssH = `${target.height}px`;
+      if (canvas.style.width !== cssW) canvas.style.width = cssW;
+      if (canvas.style.height !== cssH) canvas.style.height = cssH;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, target.width, target.height);
       ctx.save();
@@ -240,9 +305,18 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
         const amp = SHAKE_PX * (1 - t / SHAKE_MS);
         ctx.translate(amp * Math.sin(t / 8), amp * Math.cos(t / 11));
       }
+      const fx = fxOn();
+      const fxCtx = ctx as EffectCtx;
+      fx?.paint(fxCtx, now, 'start');
       const items = shown(target, now);
       for (const layer of LAYERS) {
-        for (const item of items) if (item.layer === layer) drawItem(ctx, item);
+        for (const item of items) {
+          if (item.layer !== layer) continue;
+          const pose = fx ? fx.pose(item, now) : null;
+          if (pose) drawPosed(ctx, item, pose, target.width);
+          else drawItem(ctx, item);
+        }
+        fx?.paint(fxCtx, now, layer);
       }
       ctx.restore();
       if (isFlashing(now) && flashStart !== null) {
@@ -251,7 +325,17 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
         ctx.fillRect(0, 0, target.width, target.height);
       }
       ctx.globalAlpha = 1;
-      canvas.dataset.scene = JSON.stringify(sceneBoxes(target));
+      // The boxes are the ones the rules give. A pose or a particle never changes them.
+      const boxes = JSON.stringify(sceneBoxes(target));
+      if (boxes !== lastBoxes || canvas.dataset.scene === undefined) {
+        lastBoxes = boxes;
+        canvas.dataset.scene = boxes;
+      }
+      if (options.effects) {
+        const counts = fx ? fx.counts(now) : {};
+        canvas.dataset.effects = String(Object.values(counts).reduce((sum, n) => sum + n, 0));
+        canvas.dataset.effectKinds = JSON.stringify(counts);
+      }
     },
     isMoving,
     shake(now) {

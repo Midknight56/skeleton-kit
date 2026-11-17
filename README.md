@@ -12,7 +12,7 @@ Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
 **Technological Implementation.** Five Kiro specs (`kit-core`, `tool-door-and-prover`, `garden-puzzle`, `broom-runner`, `shell-and-site`) with 78 tasks, all done. Five steering files set the rules (determinism, kit boundary, game standards, claims, product). Three hooks: `protect-proofs` blocks any direct write to `proofs/` (seen to block a real write, logged), `verify-on-stop` is set to run the full check when the agent finishes a turn, and `typecheck-on-save` is set to check types on save. Three MCP servers give Kiro each game's tool door, and two custom agents (`playtester`, `runner-playtester`) played levels to a won state through them. A property test found a real bug (a replay whose game field was an object with no prototype threw a TypeError); the fix is in `kit/core/src/replay.ts`. Every task is logged in `docs/kiro-log.md`.
 
-**Design.** Both games are complete: title, level select with locks and stars, play, pause (also when the page loses focus), results with Next, Retry and Levels, settings with a confirm box before a reset, how to play, credits, a watch mode that plays any level from its proof, a loading screen and a privacy page. Every menu sits in a card drawn in the game's own colours: a lantern glow for the garden, a moon for the runner. The art is SVG drawn in code and every sound is made in code. Headless browser tests measure every control at 360x640, 768x1024 and 1920x1080: 16 px from the screen edge, 12 px between neighbours, nothing overlapping.
+**Design.** Both games are complete: title, level select with locks and stars, play, pause (also when the page loses focus), results with Next, Retry and Levels, settings with a confirm box before a reset, how to play, credits, a watch mode that plays any level from its proof, a loading screen and a privacy page. Every screen hangs cut paper puppets on strings under one moon: a lantern and moths for the garden, the witch on her broom for the runner. Moths flap, lanterns glow, the broom leaves sparks and dust, and the reduced motion setting turns every effect off. The effects are drawing only, so every proof still replays. The art is SVG drawn in code and every sound is made in code. Headless browser tests measure every control at 360x640, 768x1024 and 1920x1080: 16 px from the screen edge, 12 px between neighbours, nothing overlapping.
 
 **Innovation/Idea.** The same game code runs in three places: the browser, the prover and the tool door. One draw list feeds a canvas painter for players and an SVG text painter for tools and tests, so the picture a program gets is the picture a player sees. A turn puzzle and a real time runner at 60 ticks a second share one contract, which shows the kit is not tied to one kind of game. For the runner the prover also measures how forgiving each jump is: every jump has a window of at least 9 ticks on the first two courses, 6 on the middle two and 4 on the last two (at 60 ticks a second, 150 ms down to 67 ms).
 
@@ -40,7 +40,7 @@ A third small game, `examples/lights`, was made with `npm run new:game` to show 
 
 ## How Kiro was used
 
-**Kiro CLI, IDE and Crew.** Almost all the code came from the Kiro CLI 3.3.0 run with no person at the keyboard (`kiro-cli chat --no-interactive`, model Auto): one prompt per spec review, group of spec tasks or fix, each told to write the test first, run `npm run verify` and add a row to `docs/kiro-log.md` for each task. The log holds 83 such rows, including a review of each spec before any code was written. One task, kit-core task 12, ran in the Kiro IDE to try its spec correctness feature. The two playtester agents ran on the CLI's v2 engine, because the v3 engine loaded no MCP tools in a run with no person at the keyboard. Kiro Crew runs the `playcheck` app (see below). Kiro Web was not used.
+**Kiro CLI, IDE and Crew.** Almost all the code came from the Kiro CLI 3.3.0 run with no person at the keyboard (`kiro-cli chat --no-interactive`, model Auto): one prompt per spec review, group of spec tasks or fix, each told to write the test first, run `npm run verify` and add a row to `docs/kiro-log.md` for each task. The log holds 86 such rows, including a review of each spec before any code was written. One task, kit-core task 12, ran in the Kiro IDE to try its spec correctness feature. The two playtester agents ran on the CLI's v2 engine, because the v3 engine loaded no MCP tools in a run with no person at the keyboard. Kiro Crew runs the `playcheck` app (see below). Kiro Web was not used.
 
 **Spec driven development.** Each of the five specs has requirements, a design and a task list (78 tasks in all). The kit was split so that each spec could be built and checked on its own: `kit-core` first (the contract, replays and hashes), then the tool door and prover, then each game, then the shell and site. A task was done only when its tests passed and the proof check passed. When a fault showed up later (for example, a hint chip over a moth on a wide screen), it went back to Kiro as a new task with a failing test first, not as a loose request. Compared with loose requests, the specs kept every run in line with one contract, and each run had to pass the same `npm run verify` before its work was kept.
 
@@ -66,7 +66,7 @@ npm run verify
 npm run e2e
 ```
 
-`npm run verify` runs the type check, lint, build, 1068 unit tests and the proof check. `npm run e2e` runs 90 headless browser tests.
+`npm run verify` runs the type check, lint, build, 1205 unit tests and the proof check. `npm run e2e` runs 126 headless browser tests.
 
 Play a game through its tool door:
 
@@ -85,3 +85,5 @@ No account, no login, no personal data. Progress stays in your browser. The usag
 ## Licence
 
 MIT. Made by Adrian Ferguson.
+
+The fonts Bricolage Grotesque and Sometype Mono are in `assets/fonts` under the SIL Open Font License 1.1 (licence files beside them).

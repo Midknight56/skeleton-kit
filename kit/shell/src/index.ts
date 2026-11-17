@@ -1,6 +1,8 @@
 export { mountGame } from './mount';
 export type { MountOptions } from './mount';
 export { checkTheme } from './theme';
+export { clamp01, createEffectRandom, createParticles, drawGlow, easeInOut, easeOut } from './effects';
+export type { EffectCtx, EffectFactory, EffectLayer, ParticleSeed, Particles, Pose, Slot } from './effects';
 export { TOKENS } from './tokens';
 export { WATCH_MESSAGE, watchMessage } from './watch-message';
 export type { WatchMessage } from './watch-message';
