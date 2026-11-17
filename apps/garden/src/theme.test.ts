@@ -23,6 +23,16 @@ describe('garden theme', () => {
     expect(checkTheme(gardenTheme)).toEqual([]);
   });
 
+  it('has a soft lantern glow at the top of the menu card, in the lantern colours', () => {
+    const art = gardenTheme.cardArt ?? '';
+    expect(art).toMatch(/radial-gradient\(/);
+    expect(art).toMatch(/at 50% 0%/);
+    // The lit lantern sprite uses these two colours.
+    expect(art.toLowerCase()).toContain('#ffb627');
+    expect(art.toLowerCase()).toContain('#fff3c4');
+    expect(art).not.toMatch(/url\(/);
+  });
+
   it('has the leaf signature and a button radius', () => {
     expect(gardenTheme.signature).toBe('leaf');
     expect(gardenTheme.buttonRadius).toBeGreaterThan(0);

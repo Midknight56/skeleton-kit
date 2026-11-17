@@ -269,6 +269,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         top: Math.max(0, ...hud.map((b) => b.y + b.h)),
         bottom: parseFloat(view.strip.style.top),
         avoid: [...hud, ...buttons],
+        obstacles: sceneBoxes(current.play.scene()).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
       });
     }
 

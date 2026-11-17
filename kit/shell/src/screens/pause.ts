@@ -1,11 +1,11 @@
 import { confirmBox } from './confirm';
-import { button, heading, screenRoot } from './dom';
+import { button, heading, menuColumn, menuRoot } from './dom';
 
 export interface PauseProps { onResume(): void; onRetry(): void; onLevels(): void }
 
 // Retry and Levels throw the run away, so each asks first. Resume does not.
 export function pauseScreen(doc: Document, props: PauseProps): HTMLElement {
-  const root = screenRoot(doc, 'pause');
+  const root = menuRoot(doc, 'pause');
 
   const askFirst = (id: string, label: string, action: () => void) => {
     const opener = button(doc, id, label, () => {
@@ -32,9 +32,12 @@ export function pauseScreen(doc: Document, props: PauseProps): HTMLElement {
 
   root.append(
     heading(doc, 'Paused'),
-    button(doc, 'resume', 'Resume', props.onResume),
-    askFirst('retry', 'Retry', props.onRetry),
-    askFirst('levels', 'Levels', props.onLevels),
+    menuColumn(
+      doc,
+      button(doc, 'resume', 'Resume', props.onResume),
+      askFirst('retry', 'Retry', props.onRetry),
+      askFirst('levels', 'Levels', props.onLevels),
+    ),
   );
   return root;
 }

@@ -1,4 +1,4 @@
-import { button, heading, paragraph, screenRoot, stars } from './dom';
+import { button, heading, menuColumn, menuRoot, paragraph, stars } from './dom';
 
 export interface ResultsProps {
   won: boolean;
@@ -11,7 +11,7 @@ export interface ResultsProps {
 }
 
 export function resultsScreen(doc: Document, props: ResultsProps): HTMLElement {
-  const root = screenRoot(doc, 'results');
+  const root = menuRoot(doc, 'results');
   root.dataset.phase = props.won ? 'won' : 'lost';
   root.append(heading(doc, props.won ? 'Done' : 'Lost'));
   if (props.reason !== undefined) {
@@ -21,7 +21,9 @@ export function resultsScreen(doc: Document, props: ResultsProps): HTMLElement {
     root.append(line);
   }
   if (props.won) root.append(stars(doc, props.stars));
-  if (props.won && props.hasNext) root.append(button(doc, 'next', 'Next', props.on.next));
-  root.append(button(doc, 'retry', 'Retry', props.on.retry), button(doc, 'levels', 'Levels', props.on.levels));
+  const column = menuColumn(doc);
+  if (props.won && props.hasNext) column.append(button(doc, 'next', 'Next', props.on.next));
+  column.append(button(doc, 'retry', 'Retry', props.on.retry), button(doc, 'levels', 'Levels', props.on.levels));
+  root.append(column);
   return root;
 }

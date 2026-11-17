@@ -1,4 +1,4 @@
-import { button, heading, paragraph, screenRoot } from './dom';
+import { button, heading, menuColumn, menuRoot, paragraph } from './dom';
 
 export interface TitleProps {
   title: string;
@@ -9,20 +9,21 @@ export interface TitleProps {
 }
 
 export function titleScreen(doc: Document, props: TitleProps): HTMLElement {
-  const root = screenRoot(doc, 'title');
+  const root = menuRoot(doc, 'title');
   root.append(heading(doc, props.title));
   if (props.showNotice) {
     const notice = paragraph(doc, 'Progress will not be saved.');
     notice.dataset.notice = 'storage';
     root.append(notice);
   }
-  root.append(button(doc, 'play', 'Play', props.on.play));
-  if (props.on.watch) root.append(button(doc, 'watch', 'Watch', props.on.watch));
-  root.append(
+  const column = menuColumn(doc, button(doc, 'play', 'Play', props.on.play));
+  if (props.on.watch) column.append(button(doc, 'watch', 'Watch', props.on.watch));
+  column.append(
     button(doc, 'levels', 'Levels', props.on.levels),
     button(doc, 'how', 'How to play', props.on.how),
     button(doc, 'settings', 'Settings', props.on.settings),
     button(doc, 'credits', 'Credits', props.on.credits),
   );
+  root.append(column);
   return root;
 }

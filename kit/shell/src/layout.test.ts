@@ -154,3 +154,52 @@ describe('placeChip with limits', () => {
     expect(at.y + size.h).toBeLessThanOrEqual(150 - 12);
   });
 });
+
+describe('placeChip with obstacles', () => {
+  const area = { width: 1920, height: 1080, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
+  const size = { w: 130, h: 40 };
+  const hits = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+  it('never overlaps an obstacle or its own anchor, and picks the free left side of the anchor', () => {
+    const anchor: Rect = { x: 167, y: 56, w: 317, h: 317 };
+    // Above: the top bar. Right: an actor. Below: a plant.
+    const obstacles: Rect[] = [{ x: 484, y: 56, w: 317, h: 317 }, { x: 167, y: 373, w: 317, h: 317 }];
+    const at = placeChip(anchor, size, area, [], { top: 43, bottom: 1008, avoid: [], obstacles });
+    const rect = { ...at, ...size };
+    expect(hits(rect, anchor)).toBe(false);
+    for (const o of obstacles) expect(hits(rect, o)).toBe(false);
+    expect(at.x + size.w).toBeLessThanOrEqual(anchor.x);
+  });
+
+  it('slides along a side when the aligned spot is taken', () => {
+    const anchor: Rect = { x: 100, y: 300, w: 60, h: 60 };
+    const placed: Rect = { x: 100, y: 252, w: 130, h: 40 };
+    const at = placeChip(anchor, size, { ...area, width: 360, height: 640 }, [placed], { top: 43, bottom: 560, avoid: [], obstacles: [] });
+    const rect = { ...at, ...size };
+    expect(hits(rect, anchor)).toBe(false);
+    expect(hits(rect, placed)).toBe(false);
+  });
+
+  it('goes beyond 12 px from the anchor when every nearer spot is taken', () => {
+    const anchor: Rect = { x: 500, y: 500, w: 100, h: 100 };
+    const obstacles: Rect[] = [
+      { x: 380, y: 380, w: 340, h: 120 },
+      { x: 380, y: 600, w: 340, h: 120 },
+      { x: 380, y: 500, w: 120, h: 100 },
+      { x: 600, y: 500, w: 120, h: 100 },
+    ];
+    const at = placeChip(anchor, size, area, [], { top: 43, bottom: 1008, avoid: [], obstacles });
+    const rect = { ...at, ...size };
+    for (const o of [anchor, ...obstacles]) expect(hits(rect, o)).toBe(false);
+  });
+
+  it('keeps 12 px from the boxes to avoid', () => {
+    const anchor: Rect = { x: 800, y: 400, w: 100, h: 100 };
+    const avoid: Rect[] = [{ x: 800, y: 330, w: 100, h: 50 }];
+    const at = placeChip(anchor, size, area, [], { top: 43, bottom: 1008, avoid, obstacles: [] });
+    const rect = { ...at, ...size };
+    const gapY = Math.max(avoid[0]!.y - (rect.y + rect.h), rect.y - (avoid[0]!.y + avoid[0]!.h), 0);
+    const gapX = Math.max(avoid[0]!.x - (rect.x + rect.w), rect.x - (avoid[0]!.x + avoid[0]!.w), 0);
+    expect(Math.hypot(gapX, gapY)).toBeGreaterThanOrEqual(12);
+  });
+});

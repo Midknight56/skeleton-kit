@@ -29,6 +29,18 @@ describe('checkTheme', () => {
     expect(problems.some((p) => p.includes('text'))).toBe(true);
   });
 
+  it('passes a theme with card art made of gradients', () => {
+    const art = 'radial-gradient(circle at 50% 0%, #ffffff 0%, transparent 70%)';
+    expect(checkTheme({ ...neutralTheme(), cardArt: art })).toEqual([]);
+  });
+
+  it('fails card art that loads a file or breaks out of its rule', () => {
+    for (const art of ['url(x.png)', 'linear-gradient(red, blue); color: red', 'red } body { color: red', '@import "x"']) {
+      const problems = checkTheme({ ...neutralTheme(), cardArt: art });
+      expect(problems.some((p) => p.includes('cardArt')), art).toBe(true);
+    }
+  });
+
   it('fails a grey theme on every count', () => {
     const grey = neutralTheme({ primary: '#888888', secondary: '#999999', background: '#aaaaaa', text: '#bbbbbb' });
     expect(checkTheme(grey).length).toBeGreaterThanOrEqual(3);

@@ -8,12 +8,15 @@ export function themeCss(theme: Theme): string {
   const p = theme.palette;
   const t = theme.typeScale;
   const u = (n: number) => `calc(${n} * var(--u))`;
+  // The art of the theme, if any, goes over the card colour.
+  const art = theme.cardArt ? `${theme.cardArt}, ` : '';
   return `
 :root { color-scheme: dark; --u: clamp(1px, min(calc(1px + (100vw - 360px) / 1560), calc(1px + (100vh - 640px) / 440)), 2px); }
 html, body { margin: 0; height: 100%; background: ${p.background}; color: ${p.text}; font: ${t.body}px system-ui, -apple-system, "Segoe UI", sans-serif; }
 [data-screen] { position: relative; box-sizing: border-box; min-height: 100vh; min-height: 100dvh; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: ${u(12)}; background: ${p.background}; font-size: ${u(t.body)}; }
-[data-screen] > h1:first-child { margin-bottom: auto; }
-[data-screen] > :last-child { margin-bottom: auto; }
+[data-kit-root] { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; display: flex; align-items: safe center; justify-content: safe center; }
+[data-card] { box-sizing: border-box; position: relative; margin: 16px; width: fit-content; min-height: 0; max-width: calc(100vw - 32px); padding: ${u(56)} ${u(16)} ${u(24)}; gap: ${u(12)}; border: 2px solid color-mix(in srgb, ${p.primary} 45%, transparent); border-radius: ${theme.buttonRadius + 8}px; background: ${art}color-mix(in srgb, ${p.surface} 70%, ${p.background}); }
+[data-column] { display: grid; gap: ${u(12)}; justify-items: stretch; width: max-content; max-width: 100%; }
 [data-screen="play"], [data-screen="watch"] { --u: 1px; }
 [data-screen="play"] { display: block; padding: 0; overflow: hidden; }
 h1, h2 { margin: 0; font-size: ${u(t.title)}; color: ${p.primary}; text-align: center; }
@@ -27,11 +30,12 @@ button[aria-pressed="true"], button.primary { background: ${p.primary}; color: $
 button[aria-disabled="true"] { opacity: 0.5; cursor: default; }
 button:disabled, button:disabled:hover { opacity: 0.4; border-style: dashed; cursor: default; }
 button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.accent}; outline-offset: 2px; }
-[data-dialog="confirm"] { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: ${u(12)}; background: ${p.background}; padding: 16px; }
+[data-dialog="confirm"] { position: fixed; inset: 0; z-index: 1; display: flex; align-items: safe center; justify-content: safe center; overflow: auto; background: ${p.background}; }
 [data-notice] { color: ${p.accent}; font-size: ${u(t.small)}; }
 [data-reason] { color: ${p.danger}; font-size: ${u(t.body)}; }
 [data-hint] { position: absolute; padding: 4px 8px; border-radius: ${theme.buttonRadius}px; background: ${p.accent}; color: ${p.background}; font-size: ${t.small}px; pointer-events: none; }
 canvas { display: block; touch-action: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: ${u(12)}; justify-content: center; max-width: ${u(480)}; }
+.tiles button { width: ${u(88)}; }
 `;
 }

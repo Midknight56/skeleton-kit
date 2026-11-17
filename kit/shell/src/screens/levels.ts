@@ -1,5 +1,5 @@
 import type { LevelRef } from '@kit/core';
-import { button, heading, screenRoot, stars } from './dom';
+import { button, heading, menuColumn, menuRoot, stars } from './dom';
 
 // A level is locked when an earlier level is not finished. The first unfinished level is open.
 export function levelLocks(levels: LevelRef[], isFinished: (id: string) => boolean): boolean[] {
@@ -19,7 +19,7 @@ export interface LevelsProps {
 }
 
 export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
-  const root = screenRoot(doc, 'levels');
+  const root = menuRoot(doc, 'levels');
   root.append(heading(doc, 'Levels'));
   const grid = doc.createElement('div');
   grid.className = 'tiles';
@@ -39,6 +39,6 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
     tile.append(name, doc.createElement('br'), stars(doc, earned));
     grid.append(tile);
   });
-  root.append(grid, button(doc, 'back', 'Back', props.onBack));
+  root.append(grid, menuColumn(doc, button(doc, 'back', 'Back', props.onBack)));
   return root;
 }

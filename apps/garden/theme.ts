@@ -45,6 +45,10 @@ export const gardenTheme: Theme = {
   buttonRadius: 24,
   typeScale: { small: 14, body: 18, title: 34 },
   signature: 'leaf',
+  // A soft lantern glow at the top of the menu card: the warm core and the amber of the lit lantern sprite.
+  cardArt:
+    'radial-gradient(ellipse 85% 60% at 50% 0%, #fff3c433 0%, #ffb62724 40%, #ffb62700 100%), ' +
+    'radial-gradient(ellipse 45% 28% at 50% 0%, #fff3c44d 0%, #fff3c400 100%)',
   sprites,
   sounds: {
     tap: sound('sine', 0.15, [660, 50]),

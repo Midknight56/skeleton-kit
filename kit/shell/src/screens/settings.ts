@@ -1,5 +1,5 @@
 import { confirmBox } from './confirm';
-import { button, heading, link, screenRoot } from './dom';
+import { button, heading, link, menuColumn, menuRoot } from './dom';
 
 export type SettingName = 'sound' | 'music' | 'usage';
 
@@ -14,7 +14,7 @@ export interface SettingsProps {
 export const PRIVACY_HREF = '../privacy/';
 
 export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement {
-  const root = screenRoot(doc, 'settings');
+  const root = menuRoot(doc, 'settings');
   const values = { ...props.settings };
   root.append(heading(doc, 'Settings'));
 
@@ -45,12 +45,15 @@ export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement
   });
 
   root.append(
-    toggle('sound', 'Sound'),
-    toggle('music', 'Music'),
-    toggle('usage', 'Usage data'),
-    link(doc, 'privacy', 'Privacy', PRIVACY_HREF),
-    reset,
-    button(doc, 'back', 'Back', props.onBack),
+    menuColumn(
+      doc,
+      toggle('sound', 'Sound'),
+      toggle('music', 'Music'),
+      toggle('usage', 'Usage data'),
+      link(doc, 'privacy', 'Privacy', PRIVACY_HREF),
+      reset,
+      button(doc, 'back', 'Back', props.onBack),
+    ),
   );
   return root;
 }

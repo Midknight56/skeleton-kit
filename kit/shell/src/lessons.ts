@@ -39,8 +39,8 @@ export interface Hints { remove(): void }
 // The screen a hint sits on: its size, its safe insets and the small type size of the theme.
 // `top` is the bottom of the top bar and `bottom` the top of the control strip. `avoid` lists boxes that
 // a chip keeps 12 px away from (counter text, buttons). With any of the three, a chip also stays
-// touching its anchor or within 12 px of it.
-export interface HintArea { width: number; height: number; safe: Viewport['safe']; fontSize: number; scale?: number; top?: number; bottom?: number; avoid?: Rect[] }
+// touching its anchor or within 12 px of it. obstacles lists the boxes of the scene items: a chip never overlaps one.
+export interface HintArea { width: number; height: number; safe: Viewport['safe']; fontSize: number; scale?: number; top?: number; bottom?: number; avoid?: Rect[]; obstacles?: Rect[] }
 
 // A chip size from its text, for a page that has no layout (a letter is 0.7 em, padding 8 px a side).
 export function estimateChip(text: string, fontSize: number): { w: number; h: number } {
@@ -79,8 +79,8 @@ export function showHints(doc: Document, container: HTMLElement, lessons: Lesson
     } else {
       size = estimateChip(lesson.text, area.fontSize * scale);
     }
-    const limited = area.top !== undefined || area.bottom !== undefined || area.avoid !== undefined;
-    const at = placeChip(box, size, area, placed, limited ? { top: area.top, bottom: area.bottom, avoid: area.avoid } : undefined);
+    const limited = area.top !== undefined || area.bottom !== undefined || area.avoid !== undefined || area.obstacles !== undefined;
+    const at = placeChip(box, size, area, placed, limited ? { top: area.top, bottom: area.bottom, avoid: area.avoid, obstacles: area.obstacles } : undefined);
     hint.style.left = `${at.x}px`;
     hint.style.top = `${at.y}px`;
     placed.push({ x: at.x, y: at.y, w: size.w, h: size.h });

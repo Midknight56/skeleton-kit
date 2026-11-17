@@ -23,6 +23,15 @@ describe('runner theme', () => {
     expect(checkTheme(runnerTheme)).toEqual([]);
   });
 
+  it('has a small moon in the top right corner of the menu card, in the colours of the moon sprite', () => {
+    const art = runnerTheme.cardArt ?? '';
+    expect(art).toMatch(/radial-gradient\(/);
+    expect(art).toContain('calc(100% - ');
+    expect(art.toLowerCase()).toContain('#f2f6a0');
+    expect(art.toLowerCase()).toContain('#e8f04a');
+    expect(art).not.toMatch(/url\(/);
+  });
+
   it('has a button radius and a signature shape', () => {
     expect(runnerTheme.buttonRadius).toBeGreaterThanOrEqual(0);
     expect(['leaf', 'star', 'notch', 'wave']).toContain(runnerTheme.signature);

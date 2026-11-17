@@ -59,11 +59,64 @@ export function playLayout(
 // Limits for a chip next to an anchor. `top` and `bottom` bound the chip's y range: the bottom of the
 // top bar and the top of the control strip. `avoid` lists boxes (counter text, buttons) that the chip
 // keeps 12 px away from. With limits, the chip also stays touching its anchor or within 12 px of it.
-export interface ChipLimits { top?: number; bottom?: number; avoid?: Rect[] }
+// `obstacles` lists boxes the chip must never overlap, such as the items of a scene. With it, the chip also
+// keeps off its own anchor. It takes the first free spot on a side of the anchor (above, below, right,
+// left, touching or 12 px away, aligned or slid along the side). If no side has room it takes the free
+// spot nearest to the anchor.
+export interface ChipLimits { top?: number; bottom?: number; avoid?: Rect[]; obstacles?: Rect[] }
 
 const NEAR = 12;
 // Float slack for a gap that is exactly 12 by construction.
 const EPS = 1e-6;
+
+function placeAmongObstacles(
+  anchor: Rect,
+  size: { w: number; h: number },
+  bounds: { minX: number; maxX: number; minY: number; maxY: number },
+  placed: Rect[],
+  limits: ChipLimits,
+): { x: number; y: number } | null {
+  const rectOf = (x: number, y: number): Rect => ({ x, y, w: size.w, h: size.h });
+  const free = (x: number, y: number): boolean => {
+    if (x < bounds.minX - EPS || x > bounds.maxX + EPS || y < bounds.minY - EPS || y > bounds.maxY + EPS) return false;
+    const rect = rectOf(x, y);
+    if (overlaps(rect, anchor)) return false;
+    if ((limits.obstacles ?? []).some((o) => overlaps(rect, o))) return false;
+    if (placed.some((p) => overlaps(rect, p))) return false;
+    return !(limits.avoid ?? []).some((a) => gapBetween(rect, a) < NEAR - EPS);
+  };
+  const STEP = 8;
+  const near: { x: number; y: number }[] = [];
+  for (const gap of [4, NEAR]) {
+    const acrossX = [anchor.x, anchor.x + anchor.w - size.w, anchor.x + (anchor.w - size.w) / 2];
+    const acrossY = [anchor.y, anchor.y + anchor.h - size.h, anchor.y + (anchor.h - size.h) / 2];
+    for (let x = anchor.x - size.w; x <= anchor.x + anchor.w; x += STEP) acrossX.push(x);
+    for (let y = anchor.y - size.h; y <= anchor.y + anchor.h; y += STEP) acrossY.push(y);
+    for (const x of acrossX) near.push({ x, y: anchor.y - size.h - gap });
+    for (const x of acrossX) near.push({ x, y: anchor.y + anchor.h + gap });
+    for (const y of acrossY) near.push({ x: anchor.x + anchor.w + gap, y });
+    for (const y of acrossY) near.push({ x: anchor.x - size.w - gap, y });
+  }
+  for (const c of near) {
+    const x = Math.min(Math.max(c.x, bounds.minX), bounds.maxX);
+    const y = Math.min(Math.max(c.y, bounds.minY), bounds.maxY);
+    if (free(x, y) && gapBetween(rectOf(x, y), anchor) <= NEAR + EPS) return { x, y };
+  }
+  // No side has room: the free spot nearest to the anchor.
+  let best: { x: number; y: number } | null = null;
+  let bestGap = Infinity;
+  for (let y = bounds.minY; y <= bounds.maxY; y += 4) {
+    for (let x = bounds.minX; x <= bounds.maxX; x += 4) {
+      if (!free(x, y)) continue;
+      const g = gapBetween(rectOf(x, y), anchor);
+      if (g < bestGap) {
+        best = { x, y };
+        bestGap = g;
+      }
+    }
+  }
+  return best;
+}
 
 // Where a text chip of size `size` goes next to `anchor`. The chip stays 16 px inside the screen
 // and the safe area. Candidates in order: above the anchor, below it, right of it, left of it,
@@ -95,6 +148,10 @@ export function placeChip(
     clamp(anchor.x - size.w - gap, anchor.y),
   ];
   if (limits) {
+    if (limits.obstacles !== undefined) {
+      const found = placeAmongObstacles(anchor, size, { minX, maxX, minY, maxY }, placed, limits);
+      if (found) return found;
+    }
     const right = anchor.x + anchor.w - size.w;
     candidates.push(
       clamp(anchor.x, anchor.y - size.h - NEAR),

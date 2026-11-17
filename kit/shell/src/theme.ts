@@ -20,6 +20,10 @@ export interface Theme {
   buttonRadius: number;
   typeScale: { small: number; body: number; title: number };
   signature: 'leaf' | 'star' | 'notch' | 'wave';
+  // Optional art of the menu card: one or more CSS background layers (gradients), painted over the card
+  // colour. Sizes and places use var(--u), the size of one px of the menu screens. No url(). A game that
+  // leaves it out gets a plain card.
+  cardArt?: string;
   sprites: Record<string, string>;
   sounds: Record<SoundName, SoundRecipe>;
   music: SoundRecipe;
@@ -62,6 +66,9 @@ export function checkTheme(theme: Theme): string[] {
   const problems: string[] = [];
   for (const [name, value] of Object.entries(theme.palette)) {
     if (!HEX.test(value)) problems.push(`palette.${name} is "${value}", not #rrggbb`);
+  }
+  if (theme.cardArt !== undefined && /url\(|[{};@]|\\/.test(theme.cardArt)) {
+    problems.push('cardArt must be CSS background layers only: no url(), braces, semicolon, at-rule or backslash');
   }
   if (problems.length > 0) return problems;
   const { palette } = theme;

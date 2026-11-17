@@ -38,6 +38,13 @@ const sound = (wave: SoundRecipe['wave'], gain: number, ...notes: [number, numbe
   notes: notes.map(([hz, ms]) => ({ hz, ms })),
 });
 
+// One disc of the moon, as a gradient layer. The centre of the moon is 34 menu px from the top and the
+// right edge of the card, so it grows with `--u`. `dx` and `dy` move a disc from that centre, in menu px.
+const disc = (dx: number, dy: number, colour: string, radius: number): string => {
+  const at = (n: number) => `calc(${n} * var(--u))`;
+  return `radial-gradient(circle ${at(radius)} at calc(100% - ${at(34 - dx)}) ${at(34 + dy)}, ${colour} 88%, ${colour.slice(0, 7)}00 100%)`;
+};
+
 export const runnerTheme: Theme = {
   name: 'dusk run',
   palette: {
@@ -53,6 +60,16 @@ export const runnerTheme: Theme = {
   buttonRadius: 6,
   typeScale: { small: 14, body: 17, title: 38 },
   signature: 'notch',
+  // A small moon in the top right corner of the menu card, the moon of the play scene: a pale disc with
+  // two halo rings and three craters.
+  cardArt: [
+    disc(-4, -3, '#b9c02a8c', 2.1),
+    disc(3, 3, '#b9c02a8c', 1.6),
+    disc(-1, 5, '#b9c02a8c', 1),
+    disc(0, 0, '#f2f6a0', 9.5),
+    disc(0, 0, '#e8f04a2e', 12),
+    disc(0, 0, '#e8f04a1a', 15.5),
+  ].join(', '),
   sprites,
   sounds: {
     tap: sound('square', 0.08, [520, 40]),
