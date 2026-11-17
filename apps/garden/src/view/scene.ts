@@ -51,20 +51,6 @@ export function view(state: GardenState, viewport: Viewport): Scene {
     items.push({ kind: 'sprite', id: `moth-${moth.id}`, layer: 'actors', ...at(moth.x, moth.y), sprite });
   }
 
-  const lit = lanterns.find((lantern) => lantern.id === state.lit);
-  if (lit !== undefined) {
-    items.push({
-      kind: 'circle',
-      id: 'glow',
-      layer: 'fx',
-      cx: left + lit.x * cell + cell / 2,
-      cy: top + lit.y * cell + cell / 2,
-      r: 1.5 * cell,
-      fill: '#ffffff',
-      opacity: 0.35,
-    });
-  }
-
   items.push({
     kind: 'text',
     id: 'hud-turn',

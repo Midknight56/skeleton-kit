@@ -124,14 +124,14 @@ describe('view', () => {
     expect(ids).toEqual(['flower-2-2', 'flower-3-0', 'hedge-1-0', 'hud-turn', 'lantern-1', 'lantern-2', 'moth-1', 'moth-2', 'web-2-0'].sort());
   });
 
-  it('draws the glow only for a lit lantern, centred on it with radius 1.5 cells', () => {
+  it('draws no glow disc and no moon, lit lantern or not: the lantern sprite is the light', () => {
     const viewport = viewports[0]![1];
     const lit = play(start(fixtureD), ['light:2']);
-    const scene = view(lit, viewport);
-    const glow = scene.items.find((item) => item.id === 'glow');
-    const { cell, left, top } = boardLayout(lit, viewport);
-    expect(glow).toEqual({ kind: 'circle', id: 'glow', layer: 'fx', cx: left + 4 * cell + cell / 2, cy: top + 1 * cell + cell / 2, r: 1.5 * cell, fill: '#ffffff', opacity: 0.35 });
-    expect(view(start(fixtureD), viewport).items.some((item) => item.id === 'glow')).toBe(false);
+    for (const state of [lit, start(fixtureD)]) {
+      const items = view(state, viewport).items;
+      expect(items.filter((item) => /glow|moon/i.test(item.id))).toEqual([]);
+      expect(items.filter((item) => item.kind === 'circle')).toEqual([]);
+    }
   });
 
   it('uses the sprite names of the design', () => {

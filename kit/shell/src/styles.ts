@@ -1,6 +1,9 @@
+import { fontFaceCss, FONT_TEXT } from './fonts';
+import { lookCss } from './look';
 import type { Theme } from './theme';
 
-// The page style of a game, built from its theme. System fonts only, no url() and no import.
+// The page style of a game, built from its theme. The two fonts of the look are loaded from the site itself
+// with a relative url (see fonts.ts), and a system font follows each of them. No import, no other host.
 // `--u` is the size of one px of the menu screens. It is 1px up to 360 px wide (or 640 px high) and
 // grows to 2px at 1920 by 1080, whichever of width and height gives the smaller value. The play and
 // watch screens place their controls in px from the layout, so there `--u` stays 1px.
@@ -11,8 +14,9 @@ export function themeCss(theme: Theme): string {
   // The art of the theme, if any, goes over the card colour.
   const art = theme.cardArt ? `${theme.cardArt}, ` : '';
   return `
+${fontFaceCss()}
 :root { color-scheme: dark; --u: clamp(1px, min(calc(1px + (100vw - 360px) / 1560), calc(1px + (100vh - 640px) / 440)), 2px); }
-html, body { margin: 0; height: 100%; background: ${p.background}; color: ${p.text}; font: ${t.body}px system-ui, -apple-system, "Segoe UI", sans-serif; }
+html, body { margin: 0; height: 100%; background: ${p.background}; color: ${p.text}; font: ${t.body}px ${FONT_TEXT}; }
 [data-screen] { position: relative; box-sizing: border-box; min-height: 100vh; min-height: 100dvh; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: ${u(12)}; background: ${p.background}; font-size: ${u(t.body)}; }
 [data-kit-root] { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; display: flex; align-items: safe center; justify-content: safe center; }
 [data-card] { box-sizing: border-box; position: relative; margin: 16px; width: fit-content; min-height: 0; max-width: calc(100vw - 32px); padding: ${u(56)} ${u(16)} ${u(24)}; gap: ${u(12)}; border: 2px solid color-mix(in srgb, ${p.primary} 45%, transparent); border-radius: ${theme.buttonRadius + 8}px; background: ${art}color-mix(in srgb, ${p.surface} 70%, ${p.background}); }
@@ -38,5 +42,5 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 canvas { display: block; touch-action: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: ${u(12)}; justify-content: center; max-width: ${u(480)}; }
 .tiles button { width: ${u(88)}; }
-`;
+${lookCss(theme)}`;
 }

@@ -138,6 +138,44 @@ describe('the build output', () => {
     expect(existsSync(join(dist, 'proofs', 'garden', 'index.json')), 'dist/proofs/garden/index.json is missing.').toBe(true);
   });
 
+  it('copies both fonts and their licences to dist/fonts, one path for every page', () => {
+    for (const file of ['BricolageGrotesque.ttf', 'SometypeMono.ttf', 'OFL-BricolageGrotesque.txt', 'OFL-SometypeMono.txt']) {
+      expect(existsSync(join(dist, 'fonts', file)), `dist/fonts/${file} is missing. Run npm run build.`).toBe(true);
+    }
+    expect(readFileSync(join(dist, 'fonts', 'OFL-SometypeMono.txt'), 'utf8')).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/i);
+  });
+
+  it('loads each font from a relative url that reaches a file of dist, on every page', () => {
+    const pages: [string, string][] = [['index.html', './fonts/'], ['privacy/index.html', '../fonts/'], ['garden/index.html', '../fonts/'], ['runner/index.html', '../fonts/']];
+    for (const [page, dir] of pages) {
+      const folder = join(dist, page, '..');
+      const html = readFileSync(join(dist, page), 'utf8');
+      const assets = join(folder, 'assets');
+      const css = [html, ...(existsSync(assets) ? walk(assets) : []).filter((f) => f.endsWith('.css') || f.endsWith('.js')).map((f) => readFileSync(f, 'utf8'))].join('\n');
+      const urls = Array.from(css.matchAll(/url\(\s*\\?["']?([^"')\\]*\.ttf)/g), (m) => m[1] as string);
+      // A game page builds the url at run time from the folder and the file name, so the bundle holds the two parts.
+      if (page.startsWith('garden') || page.startsWith('runner')) {
+        expect(css, `${page} holds the font folder`).toContain(`\`${dir}\``);
+        for (const file of ['BricolageGrotesque.ttf', 'SometypeMono.ttf']) {
+          expect(css, `${page} holds ${file}`).toContain(file);
+          urls.push(`${dir}${file}`);
+        }
+      }
+      expect(urls.length, `${page} has font urls`).toBeGreaterThanOrEqual(2);
+      for (const url of urls) {
+        expect(url.startsWith(dir), `${page}: ${url}`).toBe(true);
+        expect(existsSync(join(folder, url)), `${page}: ${url} reaches no file`).toBe(true);
+      }
+    }
+  });
+
+  it('keeps every page free of a font, style or script request to another host', () => {
+    const hosts = walk(dist)
+      .filter((file) => /\.(html|css)$/.test(file) || (file.endsWith('.js') && !file.includes('proofs')))
+      .flatMap((file) => Array.from(readFileSync(file, 'utf8').matchAll(/fonts\.(googleapis|gstatic)\.com/g), (m) => `${file.slice(dist.length + 1)}: ${m[0]}`));
+    expect(hosts).toEqual([]);
+  });
+
   it('loads nothing from another site', () => {
     expect(existsSync(dist), 'dist/ is missing. Run npm run build.').toBe(true);
     const problems = walk(dist)

@@ -11,6 +11,7 @@ import moth from './assets/moth.svg';
 import mothCaught from './assets/moth_caught.svg';
 import mothHome from './assets/moth_home.svg';
 import web from './assets/web.svg';
+import { garlandLit, garlandUnlit, narrowArt, wideArt } from './src/view/puppets';
 
 const sprites: Record<string, string> = {
   hedge,
@@ -32,15 +33,16 @@ const sound = (wave: SoundRecipe['wave'], gain: number, ...notes: [number, numbe
 
 export const gardenTheme: Theme = {
   name: 'night garden',
+  // Every colour is a token of the look (kit/shell/src/tokens.ts).
   palette: {
-    background: '#1b1636',
-    surface: '#2c2457',
-    primary: '#ffb627',
-    secondary: '#7ed957',
-    accent: '#ff6f91',
-    text: '#ffffff',
-    muted: '#b9b2d9',
-    danger: '#ff5a5f',
+    background: '#141026',
+    surface: '#221a3d',
+    primary: '#ff8a1f',
+    secondary: '#b7a1ff',
+    accent: '#ff6fb5',
+    text: '#efe7d2',
+    muted: '#b5abcf',
+    danger: '#ff6fb5',
   },
   buttonRadius: 24,
   typeScale: { small: 14, body: 18, title: 34 },
@@ -49,6 +51,10 @@ export const gardenTheme: Theme = {
   cardArt:
     'radial-gradient(ellipse 85% 60% at 50% 0%, #fff3c433 0%, #ffb62724 40%, #ffb62700 100%), ' +
     'radial-gradient(ellipse 45% 28% at 50% 0%, #fff3c44d 0%, #fff3c400 100%)',
+  // The sky of the title screen glows with the lit lantern.
+  glow: '#ff8a1f4d',
+  titleArt: { wide: wideArt(), narrow: narrowArt() },
+  garland: { lit: garlandLit, unlit: garlandUnlit },
   sprites,
   sounds: {
     tap: sound('sine', 0.15, [660, 50]),

@@ -5,54 +5,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Skeleton kit</title>
     <style>
-      :root { color-scheme: dark; }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: #14182b; color: #ffffff; font: 17px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-      a { color: #ffd23f; }
-      main { max-width: 1100px; margin: 0 auto; padding: 16px; }
-      h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; }
-      h2 { margin: 0 0 8px; font-size: 18px; }
-      p { margin: 0 0 12px; }
-      .hero { display: grid; grid-template-columns: 1fr; gap: 16px; }
-      .frame { width: 100%; max-width: 360px; height: min(56vh, 420px); min-height: 260px; border: 2px solid #3a4272; border-radius: 12px; background: #1b1636; }
-      .calls { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-      .calls li { padding: 8px 12px; border-radius: 8px; background: #1f2547; overflow-wrap: anywhere; font-size: 14px; }
-      .calls code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
-      .calls .name { color: #ffd23f; font-weight: 600; }
-      .cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
-      .card { display: block; min-height: 44px; padding: 12px 16px; border: 2px solid #ffd23f; border-radius: 12px; color: #ffffff; text-decoration: none; background: #1f2547; }
-      .card:focus-visible, a:focus-visible { outline: 3px solid #ff7a59; outline-offset: 2px; }
-      .card strong { display: block; color: #ffd23f; }
-      footer { margin-top: 16px; font-size: 15px; }
-      footer a { display: inline-block; min-height: 44px; padding: 10px 8px 10px 0; }
-      @media (min-width: 900px) {
-        .hero { grid-template-columns: 1fr 1fr; align-items: start; }
-        .frame { max-width: none; height: min(68vh, 640px); }
+      /* The look of the landing page: cut paper puppets on strings under one moon. The fonts are loaded by
+         the build, from this site only (see tools/build.mjs). A system font follows each of them. */
+      :root {
+        color-scheme: dark;
+        --night: #141026; --dusk: #221a3d; --plum: #33285c; --ink: #0c0919; --bone: #efe7d2; --muted: #b5abcf;
+        --warm: #ff8a1f; --warm-deep: #b85c0a; --program: #ff6fb5; --program-fill: #2e1a3a; --violet: #7c63d9;
+        --string: rgb(239 231 210 / .38);
+        --text: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --code: "Sometype Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+        --gutter: clamp(16px, 4.2vw, 80px);
+        --rail: 10px;
       }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; color: var(--bone); font: 400 16px/1.45 var(--text); }
+      html { background: var(--night); }
+      body { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; background: transparent; }
+      a { color: inherit; }
+      a:focus-visible, iframe:focus-visible { outline: 3px solid var(--program); outline-offset: 3px; }
+
+      .sky { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse 1000px 800px at 72% 36%, #2d2357 0, transparent 64%), linear-gradient(var(--night) 0, #191231 62%, var(--dusk) 100%); }
+      .sky svg.stars { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .ground { position: fixed; left: 0; right: 0; bottom: 0; z-index: -1; width: 100%; height: min(18vh, 200px); pointer-events: none; }
+      .rail { position: fixed; top: 0; left: 0; right: 0; z-index: 5; height: var(--rail); background: var(--plum); border-bottom: 3px solid var(--ink); pointer-events: none; }
+
+      main { position: relative; max-width: 1920px; margin: 0 auto; padding: calc(var(--rail) + 16px) var(--gutter) calc(min(18vh, 200px) + 24px); display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "logo" "intro" "board" "panel" "actions" "nav" "foot"; }
+      .logo { grid-area: logo; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; justify-self: start; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
+      .logo svg { width: 32px; height: 32px; }
+      .top { grid-area: nav; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .top a, .foot a { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 16px; border-radius: 10px; background: rgb(12 9 25 / .78); text-decoration: none; font-weight: 600; font-size: 17px; }
+      .foot { grid-area: foot; display: flex; gap: 12px; }
+      .intro { grid-area: intro; }
+      .actions { grid-area: actions; display: grid; gap: 16px; align-content: start; }
+      .board { grid-area: board; min-width: 0; }
+      .panel { grid-area: panel; position: relative; min-width: 0; }
+
+      h1 { margin: 0 0 12px; font-weight: 800; font-size: 34px; line-height: 1.03; letter-spacing: -0.02em; }
+      .intro p { margin: 0; max-width: 520px; font-size: 15px; line-height: 1.45; color: var(--muted); }
+
+      .signs { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; }
+      .sign { display: inline-flex; flex: 1 1 auto; white-space: nowrap; align-items: center; justify-content: center; min-height: 52px; padding: 8px 12px; border-radius: 11px; background: var(--plum); color: var(--bone); box-shadow: 0 4px 0 var(--ink); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; text-decoration: none; transition: transform 80ms ease-out, box-shadow 80ms ease-out; }
+      .sign.primary { background: var(--warm); color: var(--night); box-shadow: 0 5px 0 var(--warm-deep); }
+      .sign.program { flex: 0 1 auto; border: 2px solid var(--program); background: var(--program-fill); color: var(--program); }
+      .sign:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+      @media (prefers-reduced-motion: reduce) { .sign { transition: none; } }
+
+      .key { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 15px; color: var(--muted); }
+      .key li { display: flex; align-items: center; gap: 12px; }
+      .key .line { flex: none; width: 28px; height: 3px; border-radius: 2px; }
+      .key .person { background: var(--warm); }
+      .key .machine { background: var(--program); }
+
+      .caption { margin: 0 0 8px; }
+      .caption small { display: block; font: 500 12px/1.4 var(--code); letter-spacing: 0.1em; text-transform: uppercase; color: var(--program); }
+      .caption strong { display: block; font-size: 17px; font-weight: 700; }
+      .hung { position: relative; padding-top: 16px; }
+      .hung .bar { position: absolute; top: 0; left: 8%; right: 8%; height: 8px; border-radius: 4px; background: var(--bone); box-shadow: 0 3px 0 var(--ink); }
+      .hung::before, .hung::after { content: ""; position: absolute; top: 6px; width: 1.5px; height: 14px; background: var(--string); }
+      .hung::before { left: 12%; }
+      .hung::after { right: 12%; }
+      .frame { display: block; width: 100%; height: 248px; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--night); box-shadow: 0 4px 0 var(--ink); }
+      .status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; font: 400 13px/1.4 var(--code); color: var(--muted); }
+      .dots { display: inline-flex; gap: 6px; align-items: center; }
+      .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--plum); }
+      .dots i[data-done="true"] { background: var(--program); }
+      .status .count { color: var(--bone); }
+
+      .card { position: relative; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--dusk); box-shadow: 0 4px 0 var(--ink); }
+      .card::before, .card::after { content: ""; position: absolute; bottom: 100%; width: 1.5px; height: 24px; background: var(--string); }
+      .card::before { left: 18%; }
+      .card::after { right: 18%; }
+      .panel .card { margin-top: 24px; }
+      .panel header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 12px 16px; border-bottom: 1.5px solid var(--plum); font: 500 13px/1.4 var(--code); }
+      .panel header span:first-child { color: var(--bone); }
+      .panel header span:last-child { color: var(--muted); }
+      .calls { margin: 0; padding: 8px 0; list-style: none; font: 500 13px/1.5 var(--code); }
+      .calls li { position: relative; padding: 6px 16px 6px 44px; border-left: 3px solid transparent; overflow-wrap: anywhere; color: var(--bone); }
+      .calls li .n { position: absolute; left: 16px; color: var(--muted); }
+      .calls li .name { font-weight: 700; }
+      .calls li .resp { display: block; color: var(--muted); }
+      .calls li[data-state="pending"] { color: var(--muted); }
+      .calls li[data-running="true"] { background: rgb(255 111 181 / .16); border-left-color: var(--program); }
+      .calls li[data-running="true"] .resp { color: var(--program); }
+      .calls code { font: inherit; }
+      .panel footer { padding: 12px 16px; border-top: 1.5px solid var(--plum); font-size: 14px; line-height: 1.4; color: var(--muted); }
+
+      .moon { display: none; pointer-events: none; }
+
+      @media (min-width: 700px) {
+        :root { --rail: 16px; }
+        h1 { font-size: 44px; }
+        .intro p { font-size: 17px; }
+        .sign { min-height: 56px; font-size: 18px; }
+        .frame { height: min(60vh, 520px); }
+        .caption strong { font-size: 20px; }
+        main { max-width: 760px; }
+      }
+
+      @media (min-width: 1100px) {
+        main { max-width: 1920px; grid-template-columns: minmax(300px, 0.9fr) minmax(320px, 1.3fr) minmax(280px, 1fr); grid-template-areas: "logo nav nav" "intro board panel" "actions board panel" "foot foot foot"; align-content: start; }
+        .top { justify-self: end; }
+        .intro { padding-top: 24px; }
+        h1 { font-size: clamp(44px, min(4.4vw, 7.8vh), 84px); }
+        .intro p { font-size: clamp(16px, min(1.15vw, 2.1vh), 22px); }
+        .sign { min-height: 64px; font-size: clamp(17px, 1.15vw, 22px); }
+        .frame { height: clamp(280px, calc(100vh - 330px), 560px); border-radius: 16px; box-shadow: 0 10px 0 var(--ink); }
+        .caption { margin-top: 56px; }
+        .caption strong { font-size: 22px; }
+        .card { border-radius: 16px; box-shadow: 0 10px 0 var(--ink); }
+        .panel .card { margin-top: 0; }
+        .calls { font-size: 14px; }
+        .panel { display: flex; flex-direction: column; }
+        .moon { display: block; order: 2; position: relative; align-self: flex-end; margin-top: 56px; flex: none; width: min(240px, 18vw); aspect-ratio: 1; border-radius: 50%; background: var(--bone); box-shadow: 0 0 0 12px rgb(239 231 210 / .05), 0 0 60px 10px rgb(239 231 210 / .14); pointer-events: none; }
+        .moon i { position: absolute; border-radius: 50%; background: #ded4b9; }
+        .moon i:nth-child(1) { left: 18%; top: 22%; width: 20%; height: 20%; }
+        .moon i:nth-child(2) { left: 56%; top: 52%; width: 28%; height: 28%; }
+        .moon i:nth-child(3) { left: 30%; top: 66%; width: 11%; height: 11%; }
+        .moon svg { position: absolute; left: 14%; top: 8%; width: 72%; height: auto; overflow: visible; filter: drop-shadow(0 3px 0 rgb(0 0 0 / .3)); }
+      }
+      @media (min-width: 1100px) and (max-height: 799px) { .moon { display: none; } }
     </style>
     <script type="module" src="./landing.ts"></script>
   </head>
   <body>
+    <div class="sky" aria-hidden="true"></div>
+    <svg class="ground" viewBox="0 0 1920 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+      <defs>
+        <g id="pk"><rect x="33.8" y="0" width="10.4" height="16.9" rx="2.6" fill="#7c63d9"/><ellipse cx="20.8" cy="40.3" rx="20.8" ry="24.7" fill="#e87210"/><ellipse cx="57.2" cy="40.3" rx="20.8" ry="24.7" fill="#e87210"/><ellipse cx="39" cy="39" rx="24.7" ry="28.6" fill="#ff8a1f"/><polygon points="28,28.6 33.8,40.3 22.1,40.3" fill="#141026"/><polygon points="50.1,28.6 55.9,40.3 44.2,40.3" fill="#141026"/><polygon points="23.4,48.1 29.6,53.1 35.9,48.1 42.1,53.1 48.4,48.1 54.6,53.1 54.6,57.2 23.4,57.2" fill="#141026"/></g>
+      </defs>
+      <ellipse cx="300" cy="420" rx="900" ry="190" fill="#1c1534"/>
+      <ellipse cx="1500" cy="440" rx="1000" ry="200" fill="#191231"/>
+      <use href="#pk" transform="translate(110 96) scale(1.15)" style="filter:drop-shadow(0 4px 0 rgb(0 0 0 / .35))"/>
+      <use href="#pk" transform="translate(490 120) scale(.77)" style="filter:drop-shadow(0 3px 0 rgb(0 0 0 / .35))"/>
+      <use href="#pk" transform="translate(1240 130) scale(.92)" style="filter:drop-shadow(0 3px 0 rgb(0 0 0 / .35))"/>
+      <use href="#pk" transform="translate(1590 100) scale(1.3)" style="filter:drop-shadow(0 5px 0 rgb(0 0 0 / .35))"/>
+    </svg>
+    <div class="rail" aria-hidden="true"></div>
     <main>
-      <h1>Skeleton kit</h1>
-      <p data-landing="who">A kit for solo developers and small studios with nobody to test a build. Every game made with it can also be played by a program.</p>
-      <section class="hero" aria-label="A level playing by itself">
-        <iframe class="frame" data-frame="watch" src="./garden/?watch=g03" title="A level of the garden puzzle playing by itself"></iframe>
-        <div>
-          <h2>The calls that play this level</h2>
+      <a class="logo" href="./" aria-label="Skeleton kit">
+        <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="3" y="12.5" width="26" height="7" rx="3.5" fill="#efe7d2"/><rect x="12.5" y="3" width="7" height="26" rx="3.5" fill="#efe7d2"/></svg>
+        Skeleton kit
+      </a>
+      <nav class="top" aria-label="Page">
+        <a href="#games">Games</a>
+        <a href="#calls">Tool calls</a>
+        <a data-link="repository" href="__REPOSITORY_URL__">Repository</a>
+      </nav>
+
+      <section class="intro" id="games">
+        <h1>Games a program can play.</h1>
+        <p data-landing="who">A kit for solo developers and small studios with nobody to test a build. Every game made with it can also be played by a program.</p>
+      </section>
+
+      <section class="board" aria-label="A level playing by itself">
+        <div class="caption">
+          <small>now playing itself</small>
+          <strong>Moth Garden, level 3</strong>
+        </div>
+        <div class="hung">
+          <div class="bar" aria-hidden="true"></div>
+          <iframe class="frame" data-frame="watch" src="./garden/?watch=g03" title="A level of the garden puzzle playing by itself"></iframe>
+        </div>
+        <div class="status" aria-hidden="true">
+          <span><span class="count" data-count>action 0 of 4</span> <span class="dots" data-dots></span></span>
+          <span>starts again when the level is won</span>
+        </div>
+      </section>
+
+      <aside class="panel" id="calls" aria-label="The tool calls">
+        <div class="moon" aria-hidden="true">
+          <i></i><i></i><i></i>
+          <svg viewBox="0 0 460 299" focusable="false"><g transform="rotate(-4 59.8 234.6)"><polygon points="119.6,225 119.6,244.8 0,276 16.7,234.6 0,193.2" fill="#ff8a1f"/></g><rect x="92" y="225.4" width="358.8" height="13.8" rx="6.9" fill="#33285c" transform="rotate(-4 92 232.3)"/><polygon points="239.2,119.6 239.2,190.4 69,220.8 126.9,166.2" fill="#5b46b0"/><polygon points="233.1,105.8 295.9,105.8 335.8,234.6 193.2,234.6" fill="#7c63d9"/><circle cx="262.2" cy="87.4" r="32.2" fill="#f7d9b5"/><ellipse cx="262.2" cy="57.5" rx="73.6" ry="11.5" fill="#7c63d9"/><g transform="rotate(-8 262.2 9.2)"><polygon points="253.9,-36.8 303.6,55.2 220.8,55.2" fill="#7c63d9"/><polygon points="229.4,31.3 290.7,31.3 298.5,46 224.2,46" fill="#ff8a1f"/></g><circle cx="342.7" cy="209.3" r="16.1" fill="#f7d9b5"/></svg>
+        </div>
+        <div class="card">
+          <header><span>MCP tool calls</span><span>the calls that play this level</span></header>
           <ol class="calls" data-calls>
             <li>Loading the calls.</li>
           </ol>
+          <footer>Five tools drive every game: new_game, act, observe, render and replay.</footer>
         </div>
-      </section>
-      <nav class="cards" aria-label="The two games">
-        <a class="card" data-card="garden" href="./garden/"><strong>The garden puzzle</strong>Light one lantern. Each moth must reach a flower.</a>
-        <a class="card" data-card="runner" href="./runner/"><strong>The runner</strong>Tap to jump. Reach the gate.</a>
-      </nav>
-      <footer>
-        <a data-link="repository" href="__REPOSITORY_URL__">The repository</a>
-        <a data-link="privacy" href="./privacy/">Privacy</a>
-      </footer>
+      </aside>
+
+      <div class="actions">
+        <nav class="signs" aria-label="The two games">
+          <a class="sign primary" data-card="garden" href="./garden/">Play Moth Garden</a>
+          <a class="sign" data-card="runner" href="./runner/">Play Broom Runner</a>
+        </nav>
+        <p class="signs"><a class="sign program" href="#calls">Read the tool calls</a></p>
+        <ul class="key">
+          <li><span class="line person"></span>a person holds the strings</li>
+          <li><span class="line machine"></span>a program holds the strings</li>
+        </ul>
+      </div>
+
+      <footer class="foot"><a data-link="privacy" href="./privacy/">Privacy</a></footer>
     </main>
   </body>
 </html>

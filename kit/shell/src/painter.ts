@@ -199,7 +199,7 @@ export function createPainter(canvas: CanvasLike, options: PainterOptions): Pain
       }
       case 'text':
         ctx.fillStyle = item.fill;
-        ctx.font = `${item.size}px system-ui, sans-serif`;
+        ctx.font = `${item.size}px "Bricolage Grotesque", system-ui, sans-serif`;
         ctx.textAlign = item.align;
         ctx.fillText(item.text, item.x, item.y);
         break;

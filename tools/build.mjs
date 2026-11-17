@@ -74,6 +74,28 @@ function repositoryUrl() {
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
+// The two fonts of the look are copied to dist/fonts/, one path that every page reaches by a relative url:
+// ./fonts/ from the landing page and ../fonts/ from the other pages. No page loads a font from another host.
+const FONTS = ['BricolageGrotesque.ttf', 'SometypeMono.ttf'];
+const FONT_LICENCES = ['OFL-BricolageGrotesque.txt', 'OFL-SometypeMono.txt'];
+function copyFonts() {
+  mkdirSync(join(dist, 'fonts'), { recursive: true });
+  for (const file of [...FONTS, ...FONT_LICENCES]) cpSync(join(root, 'assets', 'fonts', file), join(dist, 'fonts', file));
+}
+
+function fontFaces(dir) {
+  const face = (family, file, weight) =>
+    `@font-face{font-family:"${family}";src:url("${dir}${file}") format("truetype");font-weight:${weight};font-style:normal;font-display:swap}`;
+  return `<style>${face('Bricolage Grotesque', FONTS[0], '200 800')}${face('Sometype Mono', FONTS[1], '400 700')}</style>`;
+}
+
+// The page style of a site page holds the font names; this adds the faces that load the files.
+function withFonts(file, dir) {
+  const html = readFileSync(file, 'utf8');
+  if (!html.includes('</head>')) throw new Error(`${file} has no </head>.`);
+  writeFileSync(file, html.replace('</head>', () => `${fontFaces(dir)}</head>`), 'utf8');
+}
+
 // The site pages come first, because the build of a page empties its own folder only.
 const site = join(root, 'site');
 if (existsSync(join(site, 'index.html'))) {
@@ -83,6 +105,7 @@ if (existsSync(join(site, 'index.html'))) {
 
   const landing = join(dist, 'index.html');
   writeFileSync(landing, readFileSync(landing, 'utf8').replaceAll('__REPOSITORY_URL__', escapeHtml(repositoryUrl())), 'utf8');
+  withFonts(landing, './fonts/');
 
   const privacy = join(dist, 'privacy.html');
   if (existsSync(privacy)) {
@@ -90,8 +113,11 @@ if (existsSync(join(site, 'index.html'))) {
     renameSync(privacy, join(dist, 'privacy', 'index.html'));
     const page = join(dist, 'privacy', 'index.html');
     writeFileSync(page, await privacyPage(readFileSync(page, 'utf8')), 'utf8');
+    withFonts(page, '../fonts/');
   }
 }
+
+copyFonts();
 
 for (const folder of apps) {
   if (!existsSync(join(root, folder, 'index.html'))) continue;

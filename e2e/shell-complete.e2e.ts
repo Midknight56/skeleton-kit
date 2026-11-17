@@ -13,8 +13,8 @@ const SIZES = [
 ];
 
 const GAMES = [
-  { name: 'garden', path: '/garden/', title: gardenConfig.title, background: 'rgb(27, 22, 54)' },
-  { name: 'runner', path: '/runner/', title: runnerConfig.title, background: 'rgb(14, 26, 51)' },
+  { name: 'garden', path: '/garden/', title: gardenConfig.title, background: 'rgb(20, 16, 38)' },
+  { name: 'runner', path: '/runner/', title: runnerConfig.title, background: 'rgb(12, 9, 25)' },
 ];
 
 interface Box { x: number; y: number; w: number; h: number }
@@ -253,7 +253,9 @@ for (const game of GAMES) {
       for (const c of m.controls) if (c.h < 56) problems.push(`${name}: a control is ${c.h} px high, minimum 56`);
       const centre = (m.group.top + m.group.bottom) / 2;
       const spaceCentre = (m.heading.y + m.heading.h + m.bottom) / 2;
-      if (Math.abs(centre - spaceCentre) > 16) problems.push(`${name}: the column centre is ${(centre - spaceCentre).toFixed(1)} px from the centre of the space below the heading`);
+      // The title screen is the one menu that is not a centred card: its column hangs under the heading, at the
+      // left, over the scene (see e2e/look.e2e.ts). Every other menu keeps the centred column.
+      if (name !== 'title' && Math.abs(centre - spaceCentre) > 16) problems.push(`${name}: the column centre is ${(centre - spaceCentre).toFixed(1)} px from the centre of the space below the heading`);
     };
     await checkColumn('title');
     for (const name of ['levels', 'how', 'settings', 'credits']) {

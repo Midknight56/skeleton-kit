@@ -1,6 +1,9 @@
 export { mountGame } from './mount';
 export type { MountOptions } from './mount';
 export { checkTheme } from './theme';
+export { TOKENS } from './tokens';
+export { WATCH_MESSAGE, watchMessage } from './watch-message';
+export type { WatchMessage } from './watch-message';
 export type { SoundName, SoundRecipe, Theme } from './theme';
 export { checkControls } from './layout';
 export type { ChipLimits, ControlBox, Rect } from './layout';

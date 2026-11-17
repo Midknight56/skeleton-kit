@@ -15,6 +15,7 @@ import post from './assets/post.svg';
 import pumpkin from './assets/pumpkin.svg';
 import sky from './assets/sky.svg';
 import star from './assets/star.svg';
+import { narrowArt, wideArt } from './src/view/puppets';
 
 const sprites: Record<string, string> = {
   ground,
@@ -47,15 +48,16 @@ const disc = (dx: number, dy: number, colour: string, radius: number): string =>
 
 export const runnerTheme: Theme = {
   name: 'dusk run',
+  // Every colour is a token of the look (kit/shell/src/tokens.ts).
   palette: {
-    background: '#0e1a33',
-    surface: '#1d2e57',
-    primary: '#ff7a1a',
-    secondary: '#35c2c9',
-    accent: '#e8f04a',
-    text: '#ffffff',
-    muted: '#9fb0d6',
-    danger: '#ff4d6d',
+    background: '#0c0919',
+    surface: '#33285c',
+    primary: '#7c63d9',
+    secondary: '#ff8a1f',
+    accent: '#efe7d2',
+    text: '#efe7d2',
+    muted: '#b7a1ff',
+    danger: '#ff8a1f',
   },
   buttonRadius: 6,
   typeScale: { small: 14, body: 17, title: 38 },
@@ -70,6 +72,11 @@ export const runnerTheme: Theme = {
     disc(0, 0, '#e8f04a2e', 12),
     disc(0, 0, '#e8f04a1a', 15.5),
   ].join(', '),
+  // The sky of the title screen: the violet of the witch, soft.
+  glow: '#7c63d940',
+  // The scene of the course draws its own moon, so the play screen adds none.
+  sceneMoon: true,
+  titleArt: { wide: wideArt(), narrow: narrowArt() },
   sprites,
   sounds: {
     tap: sound('square', 0.08, [520, 40]),

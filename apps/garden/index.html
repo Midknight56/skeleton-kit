@@ -6,11 +6,11 @@
     <title>Loading</title>
     <!-- The loading screen, in the colours of theme.ts, so the first frame is never a blank page. -->
     <style>
-      html, body { margin: 0; height: 100%; background: #1b1636; color: #ffffff; font: 18px system-ui, -apple-system, "Segoe UI", sans-serif; }
+      html, body { margin: 0; height: 100%; background: #141026; color: #efe7d2; font: 18px system-ui, -apple-system, "Segoe UI", sans-serif; }
       [data-screen="loading"] { box-sizing: border-box; min-height: 100%; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
-      [data-screen="loading"] h1 { margin: 0; font-size: 34px; color: #ffb627; text-align: center; }
+      [data-screen="loading"] h1 { margin: 0; font-size: 34px; color: #efe7d2; text-align: center; }
       [data-screen="loading"] .cue { display: flex; gap: 12px; }
-      [data-screen="loading"] .cue span { width: 14px; height: 14px; border-radius: 50%; background: #7ed957; animation: loading-pulse 1.2s ease-in-out infinite; }
+      [data-screen="loading"] .cue span { width: 14px; height: 14px; border-radius: 50%; background: #ff8a1f; animation: loading-pulse 1.2s ease-in-out infinite; }
       [data-screen="loading"] .cue span:nth-child(2) { animation-delay: 0.2s; }
       [data-screen="loading"] .cue span:nth-child(3) { animation-delay: 0.4s; }
       @keyframes loading-pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }

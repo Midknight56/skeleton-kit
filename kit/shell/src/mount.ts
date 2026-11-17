@@ -1,6 +1,9 @@
 import type { GameDef, Json, Scene, Viewport } from '@kit/core';
+import { expandActions } from '@kit/core';
 import { createAudio } from './audio';
 import { createBeacon } from './beacon';
+import { createBackdrop } from './screens/backdrop';
+import { watchMessage } from './watch-message';
 import { lessonsToShow, showHints, type Hints } from './lessons';
 import { stripHeight, uiScale, type Rect } from './layout';
 import type { Lesson } from './types';
@@ -30,6 +33,8 @@ export interface MountOptions<S extends Json, A> {
   proofs: ProofSet;
   texts: GameTexts<S>;
   credits: string[];
+  // One short line under the title on the title screen.
+  tagline?: string;
   // The search text of the page address, such as "?watch=g03". Nothing is read from the page itself.
   search?: string;
 }
@@ -86,6 +91,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   const container = doc.createElement('div');
   container.dataset.kitRoot = def.id;
   element.append(style, container);
+  const backdrop = createBackdrop(doc, theme);
+  backdrop.setLook('menu');
 
   let proofIndex: ProofIndex | null = null;
   let destroyed = false;
@@ -129,7 +136,10 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   }
 
   function show(node: HTMLElement, focusFirst: boolean): void {
-    container.replaceChildren(node);
+    const name = node.dataset.screen;
+    backdrop.setLook(name === 'title' ? 'title' : name === 'play' || name === 'watch' ? 'play' : 'menu');
+    container.replaceChildren(backdrop.sky, backdrop.rail, node);
+    backdrop.keepClear(node);
     // The page shows a loading screen until the first screen of the game is drawn.
     doc.querySelector('[data-screen="loading"]')?.remove();
     if (focusFirst) node.querySelector<HTMLElement>('[data-control]')?.focus();
@@ -355,6 +365,14 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     let seenTick = -1;
     let seenRestarts = -1;
     let raf = 0;
+    // A page that holds this one in a frame hears how far the run is. The message goes to the same
+    // origin only and holds the numbers of the run, nothing of the state.
+    const expanded = expandActions(proof.replay.actions);
+    const total = expanded.ok ? expanded.actions.length : 0;
+    const tellParent = (applied: number, round: number): void => {
+      if (win.parent === win || win.location.origin === 'null') return;
+      win.parent.postMessage(watchMessage(proof.level, applied, total, round), win.location.origin);
+    };
     // One watch_end for each watch_start: at the first end of the replay, or when the screen is left.
     let watchEnded = false;
     const endWatch = () => {
@@ -371,6 +389,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       if (watch.session.tick !== seenTick || watch.restarts() !== seenRestarts) {
         seenTick = watch.session.tick;
         seenRestarts = watch.restarts();
+        tellParent(watch.session.tick, watch.restarts());
         painter.setScene(def.view(watch.session.state, viewport), t);
       }
       painter.paint(t);
@@ -404,6 +423,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           titleScreen(doc, {
             title: def.title,
             showNotice,
+            ...(options.tagline ? { tagline: options.tagline } : {}),
+            ...(theme.garland ? { garland: { lit: theme.garland.lit, unlit: theme.garland.unlit, finished: levels.map((l) => store.isFinished(l.id)) } } : {}),
             on: {
               play: () => router.go('play', { level: firstOpenLevel(), fresh: '1' }),
               levels: () => router.go('levels'),
@@ -508,7 +529,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           router.replace('title');
           return;
         }
-        container.replaceChildren();
+        container.replaceChildren(backdrop.sky, backdrop.rail);
         proofs.load(levelId).then(
           (proof) => {
             const now = router.current();

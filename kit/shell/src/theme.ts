@@ -24,12 +24,26 @@ export interface Theme {
   // colour. Sizes and places use var(--u), the size of one px of the menu screens. No url(). A game that
   // leaves it out gets a plain card.
   cardArt?: string;
+  // Optional puppets of the title screen: two inline SVG pictures, one for wide screens (viewBox
+  // 0 0 1920 1080, anchored top right) and one for narrow screens (viewBox 0 0 360 640, anchored top
+  // centre). Strings run up to the rail. Plain shapes only: no script, image, event handler or url that
+  // leaves the page.
+  titleArt?: { wide: string; narrow: string };
+  // Optional picture of the level garland on the title screen: the SVG of one level, lit and unlit
+  // (viewBox 0 0 34 50).
+  garland?: { lit: string; unlit: string };
+  // True when the scene of the game draws its own moon, so the play screen shows no second one.
+  sceneMoon?: boolean;
+  // Optional soft light of the sky, a '#rrggbb' or '#rrggbbaa' colour. Default is a violet from the tokens.
+  glow?: string;
   sprites: Record<string, string>;
   sounds: Record<SoundName, SoundRecipe>;
   music: SoundRecipe;
 }
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
+// A reference to a part of the same picture (url(#id), href="#id") is fine. Anything else is not.
+const UNSAFE_ART = /<\s*(script|image|foreignObject|iframe|style)\b|\son[a-z]+\s*=|javascript:|url\(\s*["']?(?!#)|href\s*=\s*["'](?!#)/i;
 
 function rgb(hex: string): [number, number, number] {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
@@ -69,6 +83,17 @@ export function checkTheme(theme: Theme): string[] {
   }
   if (theme.cardArt !== undefined && /url\(|[{};@]|\\/.test(theme.cardArt)) {
     problems.push('cardArt must be CSS background layers only: no url(), braces, semicolon, at-rule or backslash');
+  }
+  const arts: [string, string | undefined][] = [
+    ['titleArt.wide', theme.titleArt?.wide],
+    ['titleArt.narrow', theme.titleArt?.narrow],
+    ['garland.lit', theme.garland?.lit],
+    ['garland.unlit', theme.garland?.unlit],
+  ];
+  for (const [name, art] of arts) {
+    if (art === undefined) continue;
+    if (!/^\s*<svg[\s>]/.test(art)) problems.push(`${name} must be one inline svg`);
+    if (UNSAFE_ART.test(art)) problems.push(`${name} must hold plain shapes only: no script, image, event handler or link that leaves the page`);
   }
   if (problems.length > 0) return problems;
   const { palette } = theme;

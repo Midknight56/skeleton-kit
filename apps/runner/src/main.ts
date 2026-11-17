@@ -27,5 +27,14 @@ mountGame(element, {
   proofs,
   texts: runnerTexts,
   search: window.location.search,
-  credits: [def.title, 'Made by Adrian Ferguson, Midknight Entertainment', 'A one button runner made with the kit of this repository.', 'The pictures are plain shapes drawn for it.', 'Every sound is made in code.'],
+  tagline: 'Tap to jump. Reach the gate.',
+  credits: [
+    def.title,
+    'Made by Adrian Ferguson, Midknight Entertainment',
+    'A one button runner made with the kit of this repository.',
+    'The pictures are plain shapes drawn for it.',
+    'Every sound is made in code.',
+    'Type: Bricolage Grotesque, SIL Open Font License 1.1.',
+    'Type: Sometype Mono, SIL Open Font License 1.1.',
+  ],
 });

@@ -70,14 +70,20 @@ async function checkCard(page: Page, name: string, viewport: { width: number; he
   expect(m.card, `${where}: the card exists`).not.toBeNull();
   const card = m.card!;
   const problems: string[] = [];
+  // The title screen is the one menu that is the whole screen, over the scene of the game: its column hangs
+  // under the heading at the left. So it has no centred card to measure. It still has to cover the screen,
+  // hold its parts, keep its buttons one width and keep the spacing rules. See e2e/look.e2e.ts for its scene.
+  const scene = name === 'title';
 
-  if (!inside(card, { x: 16, y: 16, w: viewport.width - 32, h: viewport.height - 32 })) {
+  if (scene) {
+    if (card.x !== 0 || card.w !== viewport.width || card.h < viewport.height) problems.push(`the title screen ${JSON.stringify(card)} does not cover the screen`);
+  } else if (!inside(card, { x: 16, y: 16, w: viewport.width - 32, h: viewport.height - 32 })) {
     problems.push(`the card ${JSON.stringify(card)} is not 16 px inside the screen`);
   }
   const dx = Math.abs(card.x + card.w / 2 - viewport.width / 2);
   const dy = Math.abs(card.y + card.h / 2 - viewport.height / 2);
-  if (dx > viewport.width * 0.1) problems.push(`the card centre is ${dx.toFixed(0)} px from the screen centre across, limit ${viewport.width * 0.1}`);
-  if (dy > viewport.height * 0.1) problems.push(`the card centre is ${dy.toFixed(0)} px from the screen centre down, limit ${viewport.height * 0.1}`);
+  if (!scene && dx > viewport.width * 0.1) problems.push(`the card centre is ${dx.toFixed(0)} px from the screen centre across, limit ${viewport.width * 0.1}`);
+  if (!scene && dy > viewport.height * 0.1) problems.push(`the card centre is ${dy.toFixed(0)} px from the screen centre down, limit ${viewport.height * 0.1}`);
 
   expect(m.parts.length, `${where}: parts found`).toBeGreaterThan(1);
   for (const part of m.parts) if (!inside(part.rect, card)) problems.push(`${part.id} ${JSON.stringify(part.rect)} is not inside the card`);
@@ -101,13 +107,13 @@ async function checkCard(page: Page, name: string, viewport: { width: number; he
   const middle = card.x + card.w / 2;
   for (const c of m.controls.filter((c) => !c.id.startsWith('level-'))) {
     const off = Math.abs(c.x + c.w / 2 - middle);
-    if (off > 2) problems.push(`${c.id} is ${off.toFixed(0)} px from the card middle across, limit 2`);
+    if (!scene && off > 2) problems.push(`${c.id} is ${off.toFixed(0)} px from the card middle across, limit 2`);
   }
 
   for (const column of m.columns) {
     const widths = column.widths;
     if (Math.max(...widths) - Math.min(...widths) > 0.5) problems.push(`buttons of one column have widths ${widths.map((w) => w.toFixed(1)).join(', ')}`);
-    if (widths.length > 1 && Math.abs(Math.max(...widths) - column.widest) > 1) {
+    if (!scene && widths.length > 1 && Math.abs(Math.max(...widths) - column.widest) > 1) {
       problems.push(`the column is ${Math.max(...widths).toFixed(1)} px wide, the widest label plus padding is ${column.widest.toFixed(1)}`);
     }
   }

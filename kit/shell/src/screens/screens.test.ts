@@ -498,6 +498,8 @@ describe('theme css', () => {
     expect(css).toContain(':focus-visible');
     expect(css).toContain('border-radius: 8px');
     expect(css).toContain('#101830');
-    expect(css).not.toMatch(/https?:|url\(/);
+    // The only url() of the page style is the two font files of the site, by a relative path.
+    expect(css).not.toMatch(/https?:/);
+    expect(Array.from(css.matchAll(/url\(([^)]*)\)/g), (m) => m[1])).toEqual(['"../fonts/BricolageGrotesque.ttf"', '"../fonts/SometypeMono.ttf"']);
   });
 });
