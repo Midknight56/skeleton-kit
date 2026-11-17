@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { lessonProblems, lessonsToShow, showHints } from './lessons';
 import { createStore } from './storage';
+import type { Rect } from './layout';
 import type { Lesson } from './types';
 import { howScreen } from './screens/how';
 
@@ -111,6 +112,78 @@ describe('showHints', () => {
   });
 });
 
+// The faults seen on the 1920 by 1080 play screen: chips in the top bar, next to the counter text.
+// The numbers below are those of that screen: a 5 by 3 board of 317 px cells starting at x 167 and
+// y 56, a counter text of 24 px at the top, three buttons in a strip that is 72 px high.
+describe('showHints placement on a wide screen', () => {
+  const W = 1920;
+  const H = 1080;
+  const STRIP_TOP = H - 72;
+  const cell = 317;
+  const anchors: Record<string, Rect> = {
+    'item-1': { x: 167 + 2 * cell, y: 56, w: cell, h: cell },
+    'item-2': { x: 167, y: 56, w: cell, h: cell },
+    'btn-1': { x: 128, y: H - 60, w: 67, h: 44 },
+  };
+  // The counter text, as a box measured by this test: 0.6 em a letter, from one em above the baseline.
+  const counter: Rect = { x: W / 2 - (11 * 24 * 0.6) / 2, y: 36 - 24, w: 11 * 24 * 0.6, h: 24 * 1.3 };
+  const buttons: Rect[] = [
+    { x: 16, y: H - 60, w: 44, h: 44 },
+    { x: 72, y: H - 60, w: 44, h: 44 },
+    anchors['btn-1']!,
+  ];
+  const wide: Lesson[] = [
+    { id: 'l-1', anchor: 'item-1', text: 'Tap here' },
+    { id: 'l-2', anchor: 'btn-1', text: 'Then wait' },
+    { id: 'l-3', anchor: 'item-2', text: 'Or switch' },
+  ];
+  const area = {
+    width: W,
+    height: H,
+    safe: { top: 0, right: 0, bottom: 0, left: 0 },
+    fontSize: 14,
+    top: counter.y + counter.h,
+    bottom: STRIP_TOP,
+    avoid: [counter, ...buttons],
+  };
+
+  function gap(a: Rect, b: Rect): number {
+    const dx = Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w), 0);
+    const dy = Math.max(a.y - (b.y + b.h), b.y - (a.y + a.h), 0);
+    return Math.hypot(dx, dy);
+  }
+
+  function placed(): { id: string; anchor: Rect; rect: Rect }[] {
+    const container = document.createElement('div');
+    document.body.append(container);
+    showHints(document, container, wide, (anchor) => anchors[anchor] ?? null, area);
+    return Array.from(container.querySelectorAll<HTMLElement>('[data-hint]')).map((el) => {
+      const lesson = wide.find((l) => l.id === el.dataset.hint)!;
+      const w = parseFloat(el.style.width || '0') || Math.ceil(lesson.text.length * 14 * 0.7) + 16;
+      const h = parseFloat(el.style.height || '0') || Math.ceil(14 * 1.4) + 8;
+      return { id: lesson.id, anchor: anchors[lesson.anchor]!, rect: { x: parseFloat(el.style.left), y: parseFloat(el.style.top), w, h } };
+    });
+  }
+
+  it('puts each chip touching its anchor or within 12 px of it', () => {
+    const chips = placed();
+    expect(chips.length).toBe(3);
+    for (const c of chips) expect(gap(c.rect, c.anchor), c.id).toBeLessThanOrEqual(12);
+  });
+
+  it('keeps each chip out of the top bar and the control strip', () => {
+    for (const c of placed()) {
+      expect(c.rect.y, `${c.id} top`).toBeGreaterThanOrEqual(area.top);
+      expect(c.rect.y + c.rect.h, `${c.id} bottom`).toBeLessThanOrEqual(STRIP_TOP);
+    }
+  });
+
+  it('keeps each chip 12 px or more from the counter text and from every button', () => {
+    for (const c of placed()) {
+      for (const other of area.avoid) expect(gap(c.rect, other), `${c.id}`).toBeGreaterThanOrEqual(12);
+    }
+  });
+});
 describe('how to play screen', () => {
   it('lists every lesson and every key', () => {
     const root = howScreen(document, { lessons, keys: ['1: first', 'Space: wait'], onBack: () => undefined });

@@ -37,7 +37,10 @@ export function lessonProblems(lessons: Lesson[]): string[] {
 export interface Hints { remove(): void }
 
 // The screen a hint sits on: its size, its safe insets and the small type size of the theme.
-export interface HintArea { width: number; height: number; safe: Viewport['safe']; fontSize: number }
+// `top` is the bottom of the top bar and `bottom` the top of the control strip. `avoid` lists boxes that
+// a chip keeps 12 px away from (counter text, buttons). With any of the three, a chip also stays
+// touching its anchor or within 12 px of it.
+export interface HintArea { width: number; height: number; safe: Viewport['safe']; fontSize: number; top?: number; bottom?: number; avoid?: Rect[] }
 
 // A chip size from its text, for a page that has no layout (a letter is 0.7 em, padding 8 px a side).
 export function estimateChip(text: string, fontSize: number): { w: number; h: number } {
@@ -62,8 +65,19 @@ export function showHints(doc: Document, container: HTMLElement, lessons: Lesson
     hint.style.top = '0px';
     container.append(hint);
     const measured = hint.getBoundingClientRect();
-    const size = measured.width > 0 && measured.height > 0 ? { w: measured.width, h: measured.height } : estimateChip(lesson.text, area.fontSize);
-    const at = placeChip(box, size, area, placed);
+    let size: { w: number; h: number };
+    if (measured.width > 0 && measured.height > 0) {
+      // Whole pixels, so that a chip placed exactly 12 px from a button is exactly 12 px from it.
+      size = { w: Math.ceil(measured.width), h: Math.ceil(measured.height) };
+      hint.style.boxSizing = 'border-box';
+      hint.style.whiteSpace = 'nowrap';
+      hint.style.width = `${size.w}px`;
+      hint.style.height = `${size.h}px`;
+    } else {
+      size = estimateChip(lesson.text, area.fontSize);
+    }
+    const limited = area.top !== undefined || area.bottom !== undefined || area.avoid !== undefined;
+    const at = placeChip(box, size, area, placed, limited ? { top: area.top, bottom: area.bottom, avoid: area.avoid } : undefined);
     hint.style.left = `${at.x}px`;
     hint.style.top = `${at.y}px`;
     placed.push({ x: at.x, y: at.y, w: size.w, h: size.h });

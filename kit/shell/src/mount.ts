@@ -3,7 +3,8 @@ import { createAudio } from './audio';
 import { createBeacon } from './beacon';
 import { lessonsToShow, showHints, type Hints } from './lessons';
 import type { Rect } from './layout';
-import { createPainter, sceneBoxes, type CanvasLike, type Painter } from './painter';
+import type { Lesson } from './types';
+import { createPainter, hudTextBoxes, sceneBoxes, type CanvasLike, type Painter } from './painter';
 import { createPlay, type PlayController } from './play';
 import { createRouter, onFocusLoss, type Route } from './router';
 import { creditsScreen } from './screens/credits';
@@ -166,6 +167,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     const canvasHeight = H - 72 - safe.bottom;
     const viewport: Viewport = { width: W, height: canvasHeight, safe: { top: safe.top, right: safe.right, bottom: 0, left: safe.left } };
     let hints: Hints | null = null;
+    let shown: Lesson[] = [];
     let painter: Painter;
 
     if (!active || active.levelId !== levelId || active.result !== null) {
@@ -215,10 +217,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       active = fresh;
       hints = null;
       beacon.send('level_start', { level: levelId });
-      const shown = lessonsToShow(store, input.lessons, levelIndex === 0);
+      shown = lessonsToShow(store, input.lessons, levelIndex === 0);
       painter = makePainter(view);
       painter.setScene(play.scene(), 0);
-      hints = showHints(doc, view.root, shown, (anchor) => boxForAnchor(view.root, play.scene(), anchor), { width: W, height: H, safe, fontSize: theme.typeScale.small });
     } else {
       active.play.setViewport(viewport);
       painter = makePainter(view);
@@ -226,6 +227,26 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     }
     const current = active;
     show(view.root, false);
+    // The chips are measured and placed once the screen is shown, because a hidden page has no layout.
+    if (shown.length > 0) {
+      // Chips stay below the counter text and above the strip, 12 px from the text and the buttons.
+      const hud = hudTextBoxes(current.play.scene());
+      const buttons = Array.from(view.root.querySelectorAll<HTMLElement>('[data-control]')).map((el) => ({
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        w: parseFloat(el.style.width),
+        h: parseFloat(el.style.height),
+      }));
+      hints = showHints(doc, view.root, shown, (anchor) => boxForAnchor(view.root, current.play.scene(), anchor), {
+        width: W,
+        height: H,
+        safe,
+        fontSize: theme.typeScale.small,
+        top: Math.max(0, ...hud.map((b) => b.y + b.h)),
+        bottom: parseFloat(view.strip.style.top),
+        avoid: [...hud, ...buttons],
+      });
+    }
 
     let lastTick = -1;
     let last = -1;

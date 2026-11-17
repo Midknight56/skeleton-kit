@@ -104,3 +104,28 @@ describe('placeChip at 360 by 640', () => {
     expect(apart).toBe(true);
   });
 });
+
+describe('placeChip with limits', () => {
+  const area = { width: 1920, height: 1080, safe: { top: 0, right: 0, bottom: 0, left: 0 } };
+  const size = { w: 84, h: 27 };
+
+  it('does not go above the top limit and stays within 12 px of the anchor', () => {
+    const anchor: Rect = { x: 800, y: 56, w: 317, h: 317 };
+    const at = placeChip(anchor, size, area, [], { top: 43 });
+    expect(at.y).toBeGreaterThanOrEqual(43);
+    expect(at.y).toBe(377);
+  });
+
+  it('puts a chip for a button exactly 12 px above it, at the bottom limit', () => {
+    const button: Rect = { x: 128, y: 1020, w: 67, h: 44 };
+    const at = placeChip(button, size, area, [], { bottom: 1008, avoid: [button] });
+    expect(at).toEqual({ x: 128, y: 1008 - 27 });
+  });
+
+  it('keeps 12 px from a box to avoid and falls inside the anchor when nothing else fits', () => {
+    const anchor: Rect = { x: 16, y: 56, w: 100, h: 100 };
+    const wall: Rect = { x: 0, y: 150, w: 1920, h: 400 };
+    const at = placeChip(anchor, size, area, [], { top: 56, avoid: [wall, { x: 0, y: 0, w: 1920, h: 10 }] });
+    expect(at.y + size.h).toBeLessThanOrEqual(150 - 12);
+  });
+});

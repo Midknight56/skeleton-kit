@@ -40,20 +40,33 @@ export function playLayout(
   };
 }
 
+// Limits for a chip next to an anchor. `top` and `bottom` bound the chip's y range: the bottom of the
+// top bar and the top of the control strip. `avoid` lists boxes (counter text, buttons) that the chip
+// keeps 12 px away from. With limits, the chip also stays touching its anchor or within 12 px of it.
+export interface ChipLimits { top?: number; bottom?: number; avoid?: Rect[] }
+
+const NEAR = 12;
+// Float slack for a gap that is exactly 12 by construction.
+const EPS = 1e-6;
+
 // Where a text chip of size `size` goes next to `anchor`. The chip stays 16 px inside the screen
 // and the safe area. Candidates in order: above the anchor, below it, right of it, left of it,
 // then above and below shifted by whole chip heights. The first one that overlaps neither the
 // anchor nor a chip in `placed` wins. A chip too wide for the screen is pinned to the left limit.
+// With `limits` the candidates are 4 px and then 12 px from the anchor (a chip for a button is
+// exactly 12 px above it, at the top of the strip), then inside the anchor at its top or bottom
+// edge. The first one that meets every limit wins; the shifted candidates are not used.
 export function placeChip(
   anchor: Rect,
   size: { w: number; h: number },
   area: { width: number; height: number; safe: Viewport['safe'] },
   placed: Rect[],
+  limits?: ChipLimits,
 ): { x: number; y: number } {
   const minX = area.safe.left + MARGIN;
-  const minY = area.safe.top + MARGIN;
+  const minY = Math.max(area.safe.top + MARGIN, limits?.top ?? -Infinity);
   const maxX = Math.max(minX, area.width - area.safe.right - MARGIN - size.w);
-  const maxY = Math.max(minY, area.height - area.safe.bottom - MARGIN - size.h);
+  const maxY = Math.max(minY, Math.min(area.height - area.safe.bottom - MARGIN, limits?.bottom ?? Infinity) - size.h);
   const clamp = (x: number, y: number) => ({ x: Math.min(Math.max(x, minX), maxX), y: Math.min(Math.max(y, minY), maxY) });
   const gap = 4;
   const above = anchor.y - size.h - gap;
@@ -65,6 +78,33 @@ export function placeChip(
     clamp(anchor.x + anchor.w + gap, anchor.y),
     clamp(anchor.x - size.w - gap, anchor.y),
   ];
+  if (limits) {
+    const right = anchor.x + anchor.w - size.w;
+    candidates.push(
+      clamp(anchor.x, anchor.y - size.h - NEAR),
+      clamp(anchor.x, anchor.y + anchor.h + NEAR),
+      clamp(anchor.x + anchor.w + NEAR, anchor.y),
+      clamp(anchor.x - size.w - NEAR, anchor.y),
+      clamp(right, anchor.y - size.h - gap),
+      clamp(right, anchor.y + anchor.h + gap),
+      clamp(anchor.x, anchor.y),
+      clamp(right, anchor.y),
+      clamp(anchor.x, anchor.y + anchor.h - size.h),
+      clamp(right, anchor.y + anchor.h - size.h),
+    );
+    const rectOf = (c: { x: number; y: number }): Rect => ({ x: c.x, y: c.y, w: size.w, h: size.h });
+    const fits = (c: { x: number; y: number }, mayOverlapAnchor: boolean): boolean => {
+      const rect = rectOf(c);
+      if (!mayOverlapAnchor && overlaps(rect, anchor)) return false;
+      if (placed.some((p) => overlaps(rect, p))) return false;
+      if (gapBetween(rect, anchor) > NEAR + EPS) return false;
+      if (rect.y < minY - EPS || rect.y + rect.h > (limits.bottom ?? Infinity) + EPS) return false;
+      return !(limits.avoid ?? []).some((a) => gapBetween(rect, a) < NEAR - EPS);
+    };
+    for (const c of candidates) if (fits(c, false)) return c;
+    for (const c of candidates) if (fits(c, true)) return c;
+    return candidates.find((c) => !placed.some((p) => overlaps(rectOf(c), p))) ?? candidates[0]!;
+  }
   for (let k = 1; k <= 8; k++) candidates.push(clamp(anchor.x, above - k * step), clamp(anchor.x, below + k * step));
   for (const c of candidates) {
     const rect = { x: c.x, y: c.y, w: size.w, h: size.h };
@@ -72,7 +112,6 @@ export function placeChip(
   }
   return candidates[0]!;
 }
-
 // Returns one line for each layout problem. An empty list means every control fits.
 export function checkControls(boxes: ControlBox[], viewport: Viewport, playArea?: Rect): string[] {
   const problems: string[] = [];

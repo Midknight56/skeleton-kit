@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Scene, SceneItem } from '@kit/core';
-import { createPainter, itemIdsAt, sceneBoxes, type CanvasLike, type Ctx2D } from './painter';
+import { createPainter, hudTextBoxes, itemIdsAt, sceneBoxes, type CanvasLike, type Ctx2D } from './painter';
 
 type Call = [string, ...unknown[]];
 
@@ -298,5 +298,23 @@ describe('createPainter effects', () => {
     plain.setScene(base, 0);
     plain.paint(10);
     expect(withReduced).toBe(ctx2.count('fillRect'));
+  });
+});
+
+describe('hudTextBoxes', () => {
+  const scene = (items: SceneItem[]): Scene => ({ width: 400, height: 300, items });
+  it('boxes a centred hud text from one em above its baseline, 0.7 em a letter', () => {
+    const boxes = hudTextBoxes(scene([{ kind: 'text', id: 'hud-a', layer: 'hud', x: 200, y: 36, text: 'Turn 0 of 6', size: 24, fill: '#ffffff', align: 'center' }]));
+    const w = Math.ceil(11 * 24 * 0.7);
+    expect(boxes).toEqual([{ id: 'hud-a', x: 200 - w / 2, y: 12, w, h: Math.ceil(24 * 1.3) }]);
+  });
+  it('skips text that is not on the hud layer and items that are not text', () => {
+    const boxes = hudTextBoxes(
+      scene([
+        { kind: 'text', id: 'world-text', layer: 'world', x: 0, y: 20, text: 'x', size: 10, fill: '#fff', align: 'left' },
+        { kind: 'rect', id: 'r', layer: 'hud', x: 0, y: 0, w: 5, h: 5, fill: '#fff' },
+      ]),
+    );
+    expect(boxes).toEqual([]);
   });
 });

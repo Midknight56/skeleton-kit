@@ -31,6 +31,19 @@ export function sceneBoxes(scene: Scene): Box[] {
   return out;
 }
 
+// A box for each text item of the hud layer, wide enough to hold it: a letter is taken as 0.7 em, the
+// text runs from one em above its baseline to 0.3 em below it. The painter has no text measure, so
+// this is an estimate that errs on the large side. Used to keep lesson chips off the counter text.
+export function hudTextBoxes(scene: Scene): Box[] {
+  const out: Box[] = [];
+  for (const item of scene.items) {
+    if (item.kind !== 'text' || item.layer !== 'hud') continue;
+    const w = Math.ceil(item.text.length * item.size * 0.7);
+    const x = item.align === 'center' ? item.x - w / 2 : item.align === 'right' ? item.x - w : item.x;
+    out.push({ id: item.id, x, y: item.y - item.size, w, h: Math.ceil(item.size * 1.3) });
+  }
+  return out;
+}
 // Ids of the items under a point, top item first. Skips fx, hud and text items.
 export function itemIdsAt(scene: Scene, x: number, y: number): string[] {
   const hits: { id: string; layer: number; order: number }[] = [];
