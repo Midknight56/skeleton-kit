@@ -112,7 +112,8 @@ function randomRun(course: RawCourse, seed: number): { states: number; end: Runn
   return { states: count, end: fast };
 }
 
-describe('step against a slow reference', () => {
+// 200 runs take about 3 s alone, longer while the whole suite runs in parallel.
+describe('step against a slow reference', { timeout: 30_000 }, () => {
   it('agrees on 200 random runs over fixtures A to G, with jumps in the air among the picks', () => {
     const ends: RunnerState[] = [];
     for (let run = 0; run < 200; run++) {

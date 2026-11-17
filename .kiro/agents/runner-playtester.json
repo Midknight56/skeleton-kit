@@ -10,5 +10,29 @@
   "allowedTools": [
     "read",
     "@runner"
-  ]
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "mcp",
+        "match": [
+          "runner/*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  },
+  "kiroUpgrade": {
+    "revision": 3,
+    "fingerprint": "sha256:d8baeef79f309128f2c0ff8a7d001748673e67cfde6e818c2893cf37fa069e64",
+    "source": "sha256:8e6bf2c19c590e8d42d83752339684cbaa3af2d28cba2e751e8a941e9efcce3c"
+  }
 }
