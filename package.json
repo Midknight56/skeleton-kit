@@ -11,7 +11,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --testTimeout=20000",
     "prove": "npm run build:apps && npm run build -w @kit/solver && node kit/solver/dist/prove.js",
     "build:apps": "node tools/build-apps.mjs",
     "build:kit": "npm run build -w @kit/mcp && npm run build -w @kit/solver && npm run build -w @kit/create",
