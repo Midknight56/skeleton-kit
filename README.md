@@ -76,7 +76,7 @@ node kit/mcp/dist/server.js --game apps/garden
 
 ## Kiro Crew app
 
-`playcheck` is a Kiro Crew app in its own repository: CREW_REPO_URL. A Crew agent plays a game built with this kit through its tool door and reports the level, seed, actions, final status and state hash. Its nightly play check ships switched off.
+`playcheck` is a Kiro Crew app in its own repository: https://github.com/Midknight56/playcheck. A Crew agent plays a game built with this kit through its tool door and reports the level, seed, actions, final status and state hash. Its nightly play check ships switched off.
 
 ## Privacy
 
