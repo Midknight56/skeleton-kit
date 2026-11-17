@@ -9,9 +9,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
-    "prove": "npm run build -w @kit/solver && node kit/solver/dist/prove.js",
+    "prove": "npm run build:apps && npm run build -w @kit/solver && node kit/solver/dist/prove.js",
+    "build:apps": "npm run build -w @app/garden",
     "build:kit": "npm run build -w @kit/mcp && npm run build -w @kit/solver",
-    "verify": "npm run typecheck && npm run lint && npm run build:kit && npm run test && npm run prove -- --check",
+    "verify": "npm run typecheck && npm run lint && npm run build:kit && npm run build:apps && npm run test && npm run prove -- --check",
     "build": "node -e \"console.log('not built yet')\"",
     "e2e": "node -e \"console.log('not built yet')\"",
     "new:game": "node -e \"console.log('not built yet')\""

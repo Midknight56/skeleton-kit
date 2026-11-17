@@ -1,0 +1,14 @@
+[
+  { "id": "g01", "title": "First light", "maxTurns": 6, "rows": ["2f1..", "m..#.", ".f..."] },
+  { "id": "g02", "title": "Two steps", "maxTurns": 7, "rows": ["1.f..", ".....", ".f.m."] },
+  { "id": "g03", "title": "Switch", "maxTurns": 8, "rows": ["3..2.", "m.f..", "1fw.."] },
+  { "id": "g04", "title": "Web in the way", "maxTurns": 9, "rows": ["##1fm", "#fm2w", "w3..f"] },
+  { "id": "g05", "title": "Crossing", "maxTurns": 11, "rows": ["f2..f", ".m...", "1.wwm"] },
+  { "id": "g06", "title": "Two moths", "maxTurns": 10, "rows": ["f3.m.", "2f..w", "f41.m"] },
+  { "id": "g07", "title": "Hedge walk", "maxTurns": 13, "rows": ["3f.##", "f#1fw", "#wm.m", "#4w2."] },
+  { "id": "g08", "title": "Long way", "maxTurns": 14, "rows": ["..2#.m", ".fm...", "f..w.w", "1.#.w."] },
+  { "id": "g09", "title": "Three moths", "maxTurns": 14, "rows": ["fff4m", "m.w..", "21.m3"] },
+  { "id": "g10", "title": "Taking turns", "maxTurns": 16, "rows": ["1..w.mm", "mf.f...", "f#w3fw2"] },
+  { "id": "g11", "title": "Crowded", "maxTurns": 17, "rows": [".mm..", "fwf.3", "fww..", "2..m.", "..1.."] },
+  { "id": "g12", "title": "Last night", "maxTurns": 20, "rows": ["m..2...", "m#..#..", "4f.3#..", "f###..w", ".f#..1m", ".w....."] }
+]

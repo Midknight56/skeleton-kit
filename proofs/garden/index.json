@@ -1,0 +1,53 @@
+{
+  "game": "garden",
+  "levels": [
+    {
+      "actions": 2,
+      "id": "g01"
+    },
+    {
+      "actions": 3,
+      "id": "g02"
+    },
+    {
+      "actions": 4,
+      "id": "g03"
+    },
+    {
+      "actions": 5,
+      "id": "g04"
+    },
+    {
+      "actions": 7,
+      "id": "g05"
+    },
+    {
+      "actions": 6,
+      "id": "g06"
+    },
+    {
+      "actions": 9,
+      "id": "g07"
+    },
+    {
+      "actions": 10,
+      "id": "g08"
+    },
+    {
+      "actions": 10,
+      "id": "g09"
+    },
+    {
+      "actions": 12,
+      "id": "g10"
+    },
+    {
+      "actions": 13,
+      "id": "g11"
+    },
+    {
+      "actions": 16,
+      "id": "g12"
+    }
+  ]
+}

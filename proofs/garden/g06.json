@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "detail": "5 by 3, 4 lanterns, 2 moths, 3 flowers",
+      "name": "size_ok",
+      "passed": true
+    },
+    {
+      "detail": "shortest solution 6, band 6 to 11",
+      "name": "length_in_band",
+      "passed": true
+    },
+    {
+      "detail": "maxTurns 10, shortest solution 6 plus 4 is 10",
+      "name": "turn_limit",
+      "passed": true
+    },
+    {
+      "detail": "no single lantern wins",
+      "name": "needs_switch",
+      "passed": true
+    },
+    {
+      "detail": "lantern 2, 3 alone ends in a web",
+      "name": "web_matters",
+      "passed": true
+    }
+  ],
+  "format": 1,
+  "game": "garden",
+  "kind": "turn",
+  "level": "g06",
+  "replay": {
+    "actions": [
+      "light:1",
+      "light:2",
+      "wait*3",
+      "light:3"
+    ],
+    "finalHash": "9474e49e8a505ec1",
+    "finalPhase": "won",
+    "format": 1,
+    "game": "garden",
+    "level": "g06",
+    "rulesVersion": "1",
+    "seed": 1
+  },
+  "rulesVersion": "1",
+  "seed": 1,
+  "stats": {
+    "actions": 6,
+    "nodes": 67
+  }
+}
