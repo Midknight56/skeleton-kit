@@ -75,7 +75,7 @@ Rule for every task: when the task is finished, add one row to `docs/kiro-log.md
   - Verify: `npm run verify` passes.
   - _Requirements: 7.3_
 
-- [ ] 13. Kiro plays one course
+- [x] 13. Kiro plays one course
   - Build the app. With the `playtester` agent, play `r01` to a won status through the `runner` tools, using `observe` and `none*n` to time each jump. Do not read the proof file first. If the `runner` tools do not load in the session, write in the log that this task did not run, and do not write a transcript.
   - Write the list of tool calls and the final score in the log. Compare the number of actions with `proofs/runner/index.json`.
   - If anything in play differs from this spec, save the replay, add it under `tests/replays/` with a test, and fix the rules or the spec.
