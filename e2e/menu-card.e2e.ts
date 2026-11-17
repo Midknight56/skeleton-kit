@@ -96,6 +96,14 @@ async function checkCard(page: Page, name: string, viewport: { width: number; he
     if (between > 120) problems.push(`there are ${between.toFixed(0)} px between the heading and the next part`);
   }
 
+  // Every control of a button column sits in the middle of the card across, also in the confirm boxes.
+  // The level buttons are a grid in rows, so they are left out.
+  const middle = card.x + card.w / 2;
+  for (const c of m.controls.filter((c) => !c.id.startsWith('level-'))) {
+    const off = Math.abs(c.x + c.w / 2 - middle);
+    if (off > 2) problems.push(`${c.id} is ${off.toFixed(0)} px from the card middle across, limit 2`);
+  }
+
   for (const column of m.columns) {
     const widths = column.widths;
     if (Math.max(...widths) - Math.min(...widths) > 0.5) problems.push(`buttons of one column have widths ${widths.map((w) => w.toFixed(1)).join(', ')}`);

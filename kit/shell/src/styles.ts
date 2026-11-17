@@ -31,6 +31,7 @@ button[aria-disabled="true"] { opacity: 0.5; cursor: default; }
 button:disabled, button:disabled:hover { opacity: 0.4; border-style: dashed; cursor: default; }
 button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.accent}; outline-offset: 2px; }
 [data-dialog="confirm"] { position: fixed; inset: 0; z-index: 1; display: flex; align-items: safe center; justify-content: safe center; overflow: auto; background: ${p.background}; }
+[data-dialog="confirm"] [data-card] { display: flex; flex-direction: column; align-items: center; }
 [data-notice] { color: ${p.accent}; font-size: ${u(t.small)}; }
 [data-reason] { color: ${p.danger}; font-size: ${u(t.body)}; }
 [data-hint] { position: absolute; padding: 4px 8px; border-radius: ${theme.buttonRadius}px; background: ${p.accent}; color: ${p.background}; font-size: ${t.small}px; pointer-events: none; }
