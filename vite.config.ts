@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
+import { levelFactsPlugin } from './tools/level-facts.mjs';
 
 const escapeHtml = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -28,7 +30,7 @@ function gameTitle(): Plugin {
 // Every page uses a relative base, so the site works under any path.
 export default defineConfig({
   base: './',
-  plugins: [gameTitle()],
+  plugins: [gameTitle(), levelFactsPlugin(dirname(fileURLToPath(import.meta.url)))],
   build: {
     target: 'es2022',
     sourcemap: false,

@@ -1,4 +1,5 @@
 import type { LevelRef } from '@kit/core';
+import { describeFacts, type LevelFacts } from '../difficulty';
 import { button, heading, menuColumn, menuRoot, stars } from './dom';
 
 // A level is locked when an earlier level is not finished. The first unfinished level is open.
@@ -16,6 +17,9 @@ export interface LevelsProps {
   stars(levelId: string): number;
   onPick(levelId: string): void;
   onBack(): void;
+  // The proven facts of a level, if the page has them.
+  facts?(levelId: string): LevelFacts | undefined;
+  kind?: 'turn' | 'tick';
 }
 
 export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
@@ -33,10 +37,31 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
     tile.dataset.locked = String(locked);
     tile.dataset.stars = String(earned);
     if (locked) tile.setAttribute('aria-disabled', 'true');
-    tile.setAttribute('aria-label', `${level.title}, ${locked ? 'locked' : `${earned} of 3 stars`}`);
+    const facts = locked ? undefined : props.facts?.(level.id);
+    const described = facts ? describeFacts(facts, props.kind) : undefined;
+    const base = `${level.title}, ${locked ? 'locked' : `${earned} of 3 stars`}`;
+    tile.setAttribute('aria-label', described ? `${base}, ${described.text}` : base);
+    if (facts) {
+      tile.dataset.actions = String(facts.actions);
+      if (facts.firstMoves) {
+        tile.dataset.firstLegal = String(facts.firstMoves.legal);
+        tile.dataset.firstWin = String(facts.firstMoves.winning);
+      }
+    }
     const name = doc.createElement('span');
     name.textContent = locked ? `${i + 1} 🔒` : String(i + 1);
     tile.append(name, doc.createElement('br'), stars(doc, earned));
+    if (described && described.total > 0) {
+      const row = doc.createElement('span');
+      row.dataset.pips = '';
+      row.setAttribute('aria-hidden', 'true');
+      for (let n = 0; n < described.total; n++) {
+        const pip = doc.createElement('i');
+        if (n < described.filled) pip.dataset.on = '';
+        row.append(pip);
+      }
+      tile.append(row);
+    }
     grid.append(tile);
   });
   root.append(grid, menuColumn(doc, button(doc, 'back', 'Back', props.onBack)));

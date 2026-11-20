@@ -453,3 +453,54 @@ describe('usage events from mountGame', () => {
     handle.destroy();
   });
 });
+
+describe('level facts of the page', () => {
+  const tag = (json: string) => {
+    document.head.insertAdjacentHTML('beforeend', `<script type="application/json" id="kit-level-facts">${json}</script>`);
+  };
+  afterEach(() => {
+    document.getElementById('kit-level-facts')?.remove();
+  });
+  const openLevels = (root: HTMLElement) => {
+    root.querySelector<HTMLElement>('[data-control="levels"]')?.click();
+    return root.querySelector<HTMLElement>('[data-control="level-lv-1"]')!;
+  };
+
+  it('shows pips and the proof text on the first card from the tag in the page', () => {
+    tag('{"game":"fake-game","levels":{"lv-1":{"actions":4,"firstMoves":{"legal":5,"winning":2}},"lv-2":{"actions":3}}}');
+    const root = document.getElementById('root')!;
+    const handle = mountGame(root, options());
+    const card = openLevels(root);
+    expect(card.querySelectorAll('[data-pips] i[data-on]')).toHaveLength(2);
+    expect(card.querySelectorAll('[data-pips] i')).toHaveLength(5);
+    expect(card.getAttribute('aria-label')).toBe('One, 0 of 3 stars, wins in 4, 2 of 5 first moves win');
+    handle.destroy();
+  });
+
+  it('works as before when the page has no tag', () => {
+    const root = document.getElementById('root')!;
+    const handle = mountGame(root, options());
+    const card = openLevels(root);
+    expect(card.querySelector('[data-pips]')).toBeNull();
+    expect(card.getAttribute('aria-label')).toBe('One, 0 of 3 stars');
+    handle.destroy();
+  });
+
+  it('works as before when the tag is damaged', () => {
+    tag('{ nope');
+    const root = document.getElementById('root')!;
+    const handle = mountGame(root, options());
+    const card = openLevels(root);
+    expect(card.querySelector('[data-pips]')).toBeNull();
+    handle.destroy();
+  });
+
+  it('passes the kind of the game: a tick game says ticks', () => {
+    tag('{"game":"fake-game","levels":{"lv-1":{"actions":687}}}');
+    const root = document.getElementById('root')!;
+    const tick = { ...def, kind: 'tick' as const };
+    const handle = mountGame(root, { ...options(), def: tick as unknown as typeof def });
+    expect(openLevels(root).getAttribute('aria-label')).toBe('One, 0 of 3 stars, wins in 687 ticks');
+    handle.destroy();
+  });
+});

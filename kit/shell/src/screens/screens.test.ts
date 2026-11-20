@@ -503,3 +503,89 @@ describe('theme css', () => {
     expect(Array.from(css.matchAll(/url\(([^)]*)\)/g), (m) => m[1])).toEqual(['"../fonts/BricolageGrotesque.ttf"', '"../fonts/SometypeMono.ttf"']);
   });
 });
+
+describe('level cards with the facts of the proof', () => {
+  const lv = [
+    { id: 'a', title: 'Alpha' },
+    { id: 'b', title: 'Beta' },
+    { id: 'c', title: 'Gamma' },
+  ];
+  const facts = (id: string) =>
+    id === 'a' ? { actions: 4, firstMoves: { legal: 5, winning: 2 } } : id === 'b' ? { actions: 3 } : { actions: 7, firstMoves: { legal: 1, winning: 1 } };
+  const make = (kind: 'turn' | 'tick' = 'turn') =>
+    levelsScreen(document, { levels: lv, stars: (id) => (id === 'a' ? 2 : 0), onPick: noop, onBack: noop, facts, kind });
+  const card = (root: HTMLElement, id: string) => root.querySelector<HTMLElement>(`[data-control="level-${id}"]`)!;
+
+  it('shows the pips under the stars, filled ones marked, hidden from the screen reader', () => {
+    const tile = card(make(), 'a');
+    const row = tile.querySelector<HTMLElement>('[data-pips]')!;
+    expect(row.getAttribute('aria-hidden')).toBe('true');
+    expect(row.querySelectorAll('i')).toHaveLength(5);
+    expect(row.querySelectorAll('i[data-on]')).toHaveLength(2);
+    const star = tile.querySelector('[data-stars]')!;
+    expect(star.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts the exact numbers in three data attributes and the text after the stars in the name', () => {
+    const tile = card(make(), 'a');
+    expect(tile.dataset.actions).toBe('4');
+    expect(tile.dataset.firstLegal).toBe('5');
+    expect(tile.dataset.firstWin).toBe('2');
+    expect(tile.getAttribute('aria-label')).toBe('Alpha, 2 of 3 stars, wins in 4, 2 of 5 first moves win');
+  });
+
+  it('shows no pips for an open level without first moves, and keeps its actions', () => {
+    const tile = card(make(), 'b');
+    expect(tile.querySelector('[data-pips]')).toBeNull();
+    expect(tile.dataset.actions).toBe('3');
+    expect(tile.dataset.firstLegal).toBeUndefined();
+    expect(tile.dataset.firstWin).toBeUndefined();
+    expect(tile.getAttribute('aria-label')).toBe('Beta, 0 of 3 stars, wins in 3');
+  });
+
+  it('ends the name of a tick level with ticks and shows no pips', () => {
+    const tile = card(make('tick'), 'b');
+    expect(tile.getAttribute('aria-label')).toBe('Beta, 0 of 3 stars, wins in 3 ticks');
+    expect(tile.querySelector('[data-pips]')).toBeNull();
+  });
+
+  it('shows no pips and no data on a locked card, and its name ends locked', () => {
+    const tile = card(make(), 'c');
+    expect(tile.dataset.locked).toBe('true');
+    expect(tile.querySelector('[data-pips]')).toBeNull();
+    expect(tile.dataset.actions).toBeUndefined();
+    expect(tile.dataset.firstLegal).toBeUndefined();
+    expect(tile.getAttribute('aria-label')).toBe('Gamma, locked');
+  });
+
+  it('works as before when no facts are given', () => {
+    const root = levelsScreen(document, { levels: lv, stars: () => 0, onPick: noop, onBack: noop });
+    expect(root.querySelector('[data-pips]')).toBeNull();
+    expect(card(root, 'a').getAttribute('aria-label')).toBe('Alpha, 0 of 3 stars');
+  });
+
+  it('holds no digit in the text of a card besides the level number', () => {
+    const root = make();
+    for (const [i, l] of lv.entries()) {
+      const text = (card(root, l.id).textContent ?? '').replace(String(i + 1), '');
+      expect(text, l.id).not.toMatch(/\d/);
+    }
+  });
+
+  it('has pip rules with no transition or animation and with theme palette colours only', () => {
+    const theme = neutralTheme();
+    const css = themeCss(theme);
+    const rules = css.split('\n').filter((line) => line.includes('[data-pips]'));
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) {
+      expect(rule).not.toMatch(/transition|animation/);
+      const rest = Object.values(theme.palette).reduce((s, c) => s.replaceAll(c, ''), rule);
+      expect(rest.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/g) ?? []).toEqual([]);
+    }
+    const all = rules.join('\n');
+    expect(all).toContain(theme.palette.accent);
+    expect(all).toContain(theme.palette.text);
+    expect(all).toContain('calc(6 * var(--u))');
+    expect(all).toContain('calc(2 * var(--u))');
+  });
+});

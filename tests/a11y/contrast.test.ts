@@ -289,6 +289,8 @@ function pairsOf(game: string, theme: Theme): Pair[] {
   add(judge('pause and undo icons on their fill', colourOf(BUTTON), plum, 'icon', ICON));
   add(judge('level tile stars on their fill', colourOf(BUTTON), plum, 'icon', ICON));
   add(judge('locked level tile stars on their fill', colourOf('.tiles button[data-locked="true"]'), backgroundOf('.tiles button[data-locked="true"]'), 'icon', ICON));
+  add(judge('level card filled pip on the card fill', rgbOf(firstColour(need(rules, '.tiles [data-pips] i[data-on]', 'background'))), plum, 'icon', ICON));
+  add(judge('level card empty pip border on the card fill', rgbOf(firstColour(need(rules, '.tiles [data-pips] i', 'border'))), plum, 'border 2px', ICON));
   const outline = rgbOf(firstColour(need(rules, 'button:focus-visible, a[data-control]:focus-visible', 'outline')));
   add(judge('focus outline on the sky', outline, sky, 'border 3px', ICON));
   add(judge('focus outline on the play strip', outline, strip, 'border 3px', ICON));
@@ -350,6 +352,19 @@ describe('contrast of the colours the shell uses', () => {
     writeFileSync(REPORT, JSON.stringify(report, null, 2) + '\n', 'utf8');
     for (const p of all) console.log(`${p.result.toUpperCase()}  ${p.ratio.toFixed(2).padStart(6)} (min ${p.limit})  ${p.name}  ${p.foreground} on ${p.background}  ${p.size}`);
     expect(all.length).toBeGreaterThan(30);
+  });
+
+  it('has the pip pairs of the level cards for both games, with theme colours only', () => {
+    for (const [game, theme] of games) {
+      const filled = all.find((p) => p.name === `${game}: level card filled pip on the card fill`);
+      const empty = all.find((p) => p.name === `${game}: level card empty pip border on the card fill`);
+      expect(filled, `${game} filled pip pair`).toBeDefined();
+      expect(empty, `${game} empty pip pair`).toBeDefined();
+      expect(filled?.foreground).toBe(theme.palette.accent.toLowerCase().slice(0, 7));
+      expect(empty?.foreground).toBe(theme.palette.text.toLowerCase().slice(0, 7));
+      expect(filled?.limit).toBe(3);
+      expect(empty?.limit).toBe(3);
+    }
   });
 
   it('has no pair under its limit', () => {

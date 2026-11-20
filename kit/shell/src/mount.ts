@@ -13,6 +13,7 @@ import { createPlay, type PlayController } from './play';
 import { createRouter, onFocusLoss, type Route } from './router';
 import { creditsScreen } from './screens/credits';
 import { howScreen } from './screens/how';
+import { readLevelFacts } from './level-facts';
 import { levelLocks, levelsScreen } from './screens/levels';
 import { pauseScreen } from './screens/pause';
 import { playScreen } from './screens/play-screen';
@@ -89,6 +90,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   const audio = createAudio({ theme, store });
   const beacon = createBeacon({ game: def.id, enabled: () => store.read().settings.usage });
   const levels = def.levels();
+  const levelFacts = readLevelFacts(doc);
   doc.title = def.title;
 
   const style = doc.createElement('style');
@@ -482,6 +484,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
             stars: (id) => store.read().levels[id]?.stars ?? 0,
             onPick: (id) => router.go('play', { level: id, fresh: '1' }),
             onBack: () => router.go('title'),
+            facts: (id) => levelFacts.get(id),
+            kind: def.kind,
           }),
           true,
         );

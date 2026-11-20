@@ -42,7 +42,10 @@ export interface ProofFile {
   replay: Replay;
   stats: { actions: number; nodes: number };
 }
-export interface ProofIndex { game: string; levels: { id: string; actions: number }[] }
+export interface ProofIndex {
+  game: string;
+  levels: { id: string; actions: number; firstMoves?: { legal: number; winning: number } }[];
+}
 export interface ProofSet {
   loadIndex(): Promise<ProofIndex>;
   load(levelId: string): Promise<ProofFile>;

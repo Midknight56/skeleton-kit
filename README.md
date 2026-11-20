@@ -20,6 +20,8 @@ An automated scan checks accessibility too. `e2e/a11y.e2e.ts` runs axe-core (4.1
 
 **Innovation/Idea.** The same game code runs in three places: the browser, the prover and the tool door. One draw list feeds a canvas painter for players and an SVG text painter for tools and tests, so the picture a program gets is the picture a player sees. A turn puzzle and a real time runner at 60 ticks a second share one contract, which shows the kit is not tied to one kind of game. For the runner the prover also measures how forgiving each jump is: every jump has a window of at least 9 ticks on the first two courses, 6 on the middle two and 4 on the last two (at 60 ticks a second, 150 ms down to 67 ms).
 
+For each turn level the prover also finds the fewest actions that win and how many of the legal first moves can still win. `npm run prove` writes both numbers to `proofs/garden/index.json`, the build step in `tools/level-facts.mjs` copies them into the page, and `kit/shell/src/difficulty.ts` turns them into a row of pips on each open level card on the level select screen. The exact numbers are in the name a screen reader reads. These are facts of the proof: the proof shows a level can be won, not how it feels to play.
+
 **Presentation.** The landing page plays a garden level by itself in the first screen and shows the exact tool calls that play it. The video shows both games, a change that breaks a level, the prover naming the broken level, and how Kiro built it.
 
 ## The two apps
@@ -39,7 +41,7 @@ A third small game, `examples/lights`, was made with `npm run new:game` to show 
 | `kit/conformance` | Nine property tests every game must pass, with `fast-check`. |
 | `kit/solver` | The prover. Writes and checks `proofs/<game>/<level>.json`. |
 | `kit/mcp` | The tool door: an MCP server with five tools (`new_game`, `act`, `observe`, `render`, `replay`). See `docs/tool-door.md`. |
-| `kit/shell` | The complete game shell both games use: screens, input, layout, sound, saves, usage events. |
+| `kit/shell` | The complete game shell both games use: screens, input, layout, sound, saves, usage events, level facts. |
 | `kit/create` | `npm run new:game` makes a new game folder. |
 
 ## How Kiro was used

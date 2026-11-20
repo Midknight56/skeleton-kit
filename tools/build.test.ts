@@ -138,6 +138,40 @@ describe('the build output', () => {
     expect(existsSync(join(dist, 'proofs', 'garden', 'index.json')), 'dist/proofs/garden/index.json is missing.').toBe(true);
   });
 
+  describe('level facts in the page', () => {
+    const tagPattern = /<script type="application\/json" id="kit-level-facts">(.*?)<\/script>/s;
+    const pageFacts = (id: string) => {
+      const html = readFileSync(join(dist, id, 'index.html'), 'utf8');
+      const text = tagPattern.exec(html)?.[1];
+      expect(text, `dist/${id}/index.html has no kit-level-facts tag. Run npm run build.`).toBeDefined();
+      return JSON.parse(text ?? '') as { game: string; levels: Record<string, { actions: number; firstMoves?: unknown }> };
+    };
+    const index = (id: string) =>
+      JSON.parse(readFileSync(fileURLToPath(new URL(`../proofs/${id}/index.json`, import.meta.url)), 'utf8')) as {
+        levels: { id: string; actions: number; firstMoves?: unknown }[];
+      };
+
+    it('holds the garden proof numbers for all 12 levels, equal to the index', () => {
+      const facts = pageFacts('garden');
+      const items = index('garden').levels;
+      expect(items).toHaveLength(12);
+      expect(Object.keys(facts.levels)).toHaveLength(12);
+      for (const item of items) {
+        expect(facts.levels[item.id]).toEqual({ actions: item.actions, firstMoves: item.firstMoves });
+      }
+    });
+
+    it('holds actions only for the runner, with no firstMoves', () => {
+      const facts = pageFacts('runner');
+      for (const item of index('runner').levels) expect(facts.levels[item.id]).toEqual({ actions: item.actions });
+      expect(readFileSync(join(dist, 'runner', 'index.html'), 'utf8')).not.toContain('firstMoves');
+    });
+
+    it('holds no tag on the landing page', () => {
+      expect(readFileSync(join(dist, 'index.html'), 'utf8')).not.toContain('kit-level-facts');
+    });
+  });
+
   it('copies both fonts and their licences to dist/fonts, one path for every page', () => {
     for (const file of ['BricolageGrotesque.ttf', 'SometypeMono.ttf', 'OFL-BricolageGrotesque.txt', 'OFL-SometypeMono.txt']) {
       expect(existsSync(join(dist, 'fonts', file)), `dist/fonts/${file} is missing. Run npm run build.`).toBe(true);

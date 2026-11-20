@@ -43,6 +43,9 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 canvas { display: block; touch-action: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: ${u(12)}; justify-content: center; max-width: ${u(480)}; }
 .tiles button { width: ${u(88)}; }
+.tiles [data-pips] { display: flex; justify-content: center; gap: ${u(2)}; margin-top: ${u(4)}; }
+.tiles [data-pips] i { display: block; box-sizing: border-box; width: ${u(6)}; height: ${u(6)}; border: 2px solid ${p.text}; border-radius: 50%; }
+.tiles [data-pips] i[data-on] { background: ${p.accent}; border-color: ${p.accent}; }
 ${motionCss()}
 ${lookCss(theme)}`;
 }

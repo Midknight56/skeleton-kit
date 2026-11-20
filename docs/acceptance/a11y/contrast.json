@@ -4,7 +4,7 @@
     "normalText": 4.5,
     "largeTextAndControlBordersAndIcons": 3
   },
-  "pairs": 48,
+  "pairs": 52,
   "failing": 0,
   "lowestRatio": {
     "name": "garden: storage notice on the sky",
@@ -198,6 +198,24 @@
       "background": "#221a3d",
       "size": "icon",
       "ratio": 7.55,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: level card filled pip on the card fill",
+      "foreground": "#ff6fb5",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 5.12,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: level card empty pip border on the card fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "border 2px",
+      "ratio": 10.65,
       "limit": 3,
       "result": "pass"
     },
@@ -414,6 +432,24 @@
       "background": "#221a3d",
       "size": "icon",
       "ratio": 7.55,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: level card filled pip on the card fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 10.65,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: level card empty pip border on the card fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "border 2px",
+      "ratio": 10.65,
       "limit": 3,
       "result": "pass"
     },
