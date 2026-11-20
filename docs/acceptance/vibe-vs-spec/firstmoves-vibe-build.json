@@ -1,0 +1,70 @@
+{
+ "garden/g01": {
+  "legal": 2,
+  "winning": 2
+ },
+ "garden/g02": {
+  "legal": 1,
+  "winning": 1
+ },
+ "garden/g03": {
+  "legal": 3,
+  "winning": 3
+ },
+ "garden/g04": {
+  "legal": 3,
+  "winning": 1
+ },
+ "garden/g05": {
+  "legal": 2,
+  "winning": 1
+ },
+ "garden/g06": {
+  "legal": 4,
+  "winning": 2
+ },
+ "garden/g07": {
+  "legal": 4,
+  "winning": 1
+ },
+ "garden/g08": {
+  "legal": 2,
+  "winning": 2
+ },
+ "garden/g09": {
+  "legal": 4,
+  "winning": 4
+ },
+ "garden/g10": {
+  "legal": 3,
+  "winning": 2
+ },
+ "garden/g11": {
+  "legal": 3,
+  "winning": 1
+ },
+ "garden/g12": {
+  "legal": 4,
+  "winning": 2
+ },
+ "runner/r01": null,
+ "runner/r02": null,
+ "runner/r03": null,
+ "runner/r04": null,
+ "runner/r05": null,
+ "runner/r06": null,
+ "sample-hop/h1": null,
+ "sample-hop/h2": null,
+ "sample-lights/l1": {
+  "legal": 9,
+  "winning": 9
+ },
+ "sample-lights/l2": {
+  "legal": 9,
+  "winning": 9
+ },
+ "sample-lights/l3": {
+  "legal": 9,
+  "winning": 9
+ }
+}

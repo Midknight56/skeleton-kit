@@ -1,0 +1,350 @@
+diff --git a/kit/solver/src/first-moves.test.ts b/kit/solver/src/first-moves.test.ts
+new file mode 100644
+index 0000000..6307de0
+--- /dev/null
++++ b/kit/solver/src/first-moves.test.ts
+@@ -0,0 +1,115 @@
++import fc from 'fast-check';
++import { describe, expect, it } from 'vitest';
++import type { GameDef, Json } from '@kit/core';
++import sampleLights from '../test-fixtures/sample-lights/def';
++import sampleHop from '../test-fixtures/sample-hop/def';
++import { countFirstMoves, solveTurn } from './turn';
++
++const LEVELS = ['l1', 'l2', 'l3'] as const;
++
++function counts(level: string, maxDepth: number) {
++  const result = countFirstMoves(sampleLights, level, 1, { maxDepth });
++  if (!result.decided) throw new Error('undecided');
++  return result.firstMoves;
++}
++
++/** The same game, but it starts in the state after one first action. Written for the test, apart from countFirstMoves. */
++function afterFirst(text: string): GameDef<Json, unknown> {
++  const def = sampleLights as unknown as GameDef<Json, unknown>;
++  return {
++    ...def,
++    init: (levelId, seed) => {
++      const start = def.init(levelId, seed);
++      const action = def.actions(start).find((item) => def.encodeAction(item) === text);
++      return def.step(start, action);
++    },
++  };
++}
++
++function firstTexts(level: string): string[] {
++  const start = sampleLights.init(level, 1);
++  return sampleLights.actions(start).map((action) => sampleLights.encodeAction(action));
++}
++
++describe('countFirstMoves on the lights sample', () => {
++  it('gives the presses of the solution when maxDepth is the shortest length', () => {
++    expect(counts('l1', 1)).toEqual({ legal: 9, winning: 1 });
++    expect(counts('l2', 2)).toEqual({ legal: 9, winning: 2 });
++    expect(counts('l3', 3)).toEqual({ legal: 9, winning: 3 });
++  });
++
++  it('gives 0 and 0 when allow refuses every action', () => {
++    expect(countFirstMoves(sampleLights, 'l1', 1, { allow: () => false })).toEqual({ decided: true, firstMoves: { legal: 0, winning: 0 } });
++  });
++
++  it('counts only the first actions that allow accepts', () => {
++    const result = countFirstMoves(sampleLights, 'l1', 1, { maxDepth: 1, allow: (text) => text === 'press:1,1' || text === 'press:0,0' });
++    expect(result).toEqual({ decided: true, firstMoves: { legal: 2, winning: 1 } });
++  });
++
++  it('gives 0 and 0 when the start state is already won', () => {
++    const won = { ...sampleLights, init: () => ({ lamps: new Array<number>(9).fill(0), moves: 0 }) };
++    expect(countFirstMoves(won, 'l1', 1)).toEqual({ decided: true, firstMoves: { legal: 0, winning: 0 } });
++  });
++
++  it('is undecided with node_limit and names a first action when maxNodes is 10 on l3', () => {
++    const result = countFirstMoves(sampleLights, 'l3', 1, { maxNodes: 10 });
++    expect(result.decided).toBe(false);
++    if (!result.decided) {
++      expect(result.reason).toBe('node_limit');
++      expect(firstTexts('l3')).toContain(result.action);
++    }
++  });
++
++  it('counts two first actions that reach the same state as two', () => {
++    const same = { ...sampleLights, step: (state: typeof sampleLights extends GameDef<infer S, unknown> ? S : never) => state };
++    const result = countFirstMoves(same as unknown as typeof sampleLights, 'l1', 1, { maxDepth: 1 });
++    expect(result).toEqual({ decided: true, firstMoves: { legal: 9, winning: 0 } });
++  });
++
++  it('throws a plain Error for a tick game', () => {
++    let caught: unknown;
++    try {
++      countFirstMoves(sampleHop as unknown as GameDef<Json, unknown>, 'h1', 1);
++    } catch (error) {
++      caught = error;
++    }
++    expect(caught).toBeInstanceOf(Error);
++    expect((caught as Error).name).toBe('Error');
++    expect((caught as Error).message.startsWith('countFirstMoves needs a turn game')).toBe(true);
++  });
++
++  const levelAndDepth = fc.record({ level: fc.constantFrom(...LEVELS), maxDepth: fc.integer({ min: 1, max: 5 }) });
++
++  it('property 1: winning is at most legal, and at least 1 when solveTurn solves with the same maxDepth', () => {
++    fc.assert(
++      fc.property(levelAndDepth, ({ level, maxDepth }) => {
++        const { legal, winning } = counts(level, maxDepth);
++        expect(winning).toBeLessThanOrEqual(legal);
++        if (solveTurn(sampleLights, level, 1, { maxDepth }).solved) expect(winning).toBeGreaterThanOrEqual(1);
++      }),
++      { numRuns: 15 },
++    );
++  });
++
++  it('property 2: the first action of the solveTurn result is a winning first move, and winning matches a count made apart', () => {
++    fc.assert(
++      fc.property(levelAndDepth, ({ level, maxDepth }) => {
++        const winners = firstTexts(level).filter((text) => solveTurn(afterFirst(text), level, 1, { maxDepth: maxDepth - 1 }).solved);
++        expect(counts(level, maxDepth).winning).toBe(winners.length);
++        const solved = solveTurn(sampleLights, level, 1, { maxDepth });
++        if (solved.solved) expect(winners).toContain(solved.actions[0]);
++      }),
++      { numRuns: 15 },
++    );
++  });
++
++  it('property 3: two calls with the same input give equal results', () => {
++    fc.assert(
++      fc.property(levelAndDepth, ({ level, maxDepth }) => {
++        expect(countFirstMoves(sampleLights, level, 1, { maxDepth })).toEqual(countFirstMoves(sampleLights, level, 1, { maxDepth }));
++      }),
++      { numRuns: 15 },
++    );
++  });
++});
+diff --git a/kit/solver/src/prove.test.ts b/kit/solver/src/prove.test.ts
+index 9a86ff6..a5c4b1a 100644
+--- a/kit/solver/src/prove.test.ts
++++ b/kit/solver/src/prove.test.ts
+@@ -143,6 +143,49 @@ describe('prove command', () => {
+     expect(prove(cwd, '--check').code).toBe(1);
+   }, 60000);
+ 
++  it('writes firstMoves for turn levels and the index, none for tick levels, and repeats byte for byte', () => {
++    const cwd = workFolder([fixture('sample-lights'), fixture('sample-hop')]);
++    const first = prove(cwd);
++    expect(first.code, first.stderr).toBe(0);
++    const files = snapshot(cwd);
++    for (const level of ['l1', 'l2', 'l3']) {
++      const proof = JSON.parse(files[`sample-lights/${level}.json`] as string) as { stats: Record<string, unknown> };
++      expect(Object.keys(proof.stats)).toEqual(['actions', 'firstMoves', 'nodes']);
++      expect(proof.stats.firstMoves).toMatchObject({ legal: 9 });
++      const winning = (proof.stats.firstMoves as { winning: number }).winning;
++      expect(winning).toBeGreaterThanOrEqual(1);
++      expect(winning).toBeLessThanOrEqual(9);
++    }
++    const lightsIndex = JSON.parse(files['sample-lights/index.json'] as string) as { levels: { id: string; firstMoves: { legal: number; winning: number } }[] };
++    expect(lightsIndex.levels.map((item) => item.id)).toEqual(['l1', 'l2', 'l3']);
++    for (const item of lightsIndex.levels) {
++      const proof = JSON.parse(files[`sample-lights/${item.id}.json`] as string) as { stats: { firstMoves: unknown } };
++      expect(item.firstMoves).toEqual(proof.stats.firstMoves);
++      expect(item.firstMoves.legal).toBe(9);
++    }
++    for (const level of ['h1', 'h2']) {
++      const proof = JSON.parse(files[`sample-hop/${level}.json`] as string) as { stats: Record<string, unknown> };
++      expect(proof.stats).not.toHaveProperty('firstMoves');
++    }
++    const hopIndex = JSON.parse(files['sample-hop/index.json'] as string) as { levels: Record<string, unknown>[] };
++    for (const item of hopIndex.levels) expect(item).not.toHaveProperty('firstMoves');
++
++    expect(prove(cwd).code).toBe(0);
++    expect(snapshot(cwd)).toEqual(files);
++    expect(prove(cwd, '--check').code).toBe(0);
++  }, 60000);
++
++  it('exits 2 in --check mode for proofs that have no firstMoves', () => {
++    const cwd = workFolder([fixture('sample-lights')]);
++    expect(prove(cwd).code).toBe(0);
++    const file = join(cwd, 'proofs', 'sample-lights', 'l1.json');
++    const text = readFileSync(file, 'utf8');
++    writeFileSync(file, text.replace(/ {4}"firstMoves": \{[^}]*\},\n/, ''), 'utf8');
++    expect(readFileSync(file, 'utf8')).not.toContain('firstMoves');
++    const check = prove(cwd, '--check');
++    expect(check.code).toBe(2);
++    expect(check.stderr).toContain('l1');
++  }, 60000);
+   it('exits 3 for a missing config, a bad config and a game folder with no build', () => {
+     expect(prove(workFolder(null)).code).toBe(3);
+ 
+@@ -198,6 +241,30 @@ describe('prove command', () => {
+       expect(snapshot(cwd)).toEqual({});
+     }, 60000);
+ 
++    it('exits 1 and leaves the files as they were when a first move search hits node_limit', () => {
++      // With this key and 200 nodes, solveTurn solves every level but the search for some first move of l3 runs out of nodes.
++      const game = gameWithProof("export const turnOptions = { maxNodes: 200, key: (state) => state.lamps };\n");
++      const cwd = workFolder([fixture('sample-lights')]);
++      expect(prove(cwd).code).toBe(0);
++      const before = snapshot(cwd);
++      writeFileSync(join(cwd, 'kit.config.json'), `${JSON.stringify({ games: [game] })}\n`, 'utf8');
++      const run = prove(cwd);
++      expect(run.code).toBe(1);
++      expect(run.stderr).toContain('sample-lights');
++      expect(run.stderr).toContain('l3');
++      expect(run.stderr).toContain('first move press:');
++      expect(run.stderr).toContain('hit node_limit');
++      expect(snapshot(cwd)).toEqual(before);
++    }, 60000);
++
++    it('writes firstMoves from the same turnOptions that solveTurn gets', () => {
++      const game = gameWithProof("export const turnOptions = { allow: (text) => text !== 'press:0,2' };\n");
++      const cwd = workFolder([game]);
++      const run = prove(cwd);
++      expect(run.code, run.stderr).toBe(0);
++      const l1 = JSON.parse(readFileSync(join(cwd, 'proofs', 'sample-lights', 'l1.json'), 'utf8')) as { stats: { firstMoves: { legal: number } } };
++      expect(l1.stats.firstMoves.legal).toBe(8);
++    }, 60000);
+     it('passes turnOptions to the search', () => {
+       const game = gameWithProof('export const turnOptions = { allow: () => false };\n');
+       const cwd = workFolder([game]);
+diff --git a/kit/solver/src/prove.ts b/kit/solver/src/prove.ts
+index a4eb9bc..6ea7451 100644
+--- a/kit/solver/src/prove.ts
++++ b/kit/solver/src/prove.ts
+@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
+ import { pathToFileURL } from 'node:url';
+ import { createSession, runReplay, validateDef, type GameDef, type Json } from '@kit/core';
+ import { solveTick } from './tick';
+-import { solveTurn, type SolveResult, type TurnOptions } from './turn';
++import { countFirstMoves, solveTurn, type FirstMoves, type SolveResult, type TurnOptions } from './turn';
+ 
+ interface CheckResult {
+   name: string;
+@@ -106,7 +106,7 @@ async function loadGame(root: string, dir: string): Promise<Game> {
+ }
+ 
+ /** Proves one level. Returns the proof file text and the action count, or the reason it failed. */
+-function proveLevel(game: Game, levelId: string): { ok: true; text: string; actions: number } | { ok: false; reason: string } {
++function proveLevel(game: Game, levelId: string): { ok: true; text: string; actions: number; firstMoves?: FirstMoves } | { ok: false; reason: string } {
+   const { def } = game;
+   const result = def.kind === 'turn' ? solveTurn(def, levelId, SEED, game.turnOptions) : solveTick(def, levelId, SEED);
+   if (!result.solved) return { ok: false, reason: `not solved: ${result.reason} after ${result.nodes} nodes` };
+@@ -121,6 +121,13 @@ function proveLevel(game: Game, levelId: string): { ok: true; text: string; acti
+   if (!check.ok) return { ok: false, reason: `the replay check failed: ${check.error}: ${check.message}` };
+   if (check.finalPhase !== 'won') return { ok: false, reason: `the replay ends in phase ${check.finalPhase}, not won` };
+ 
++  let firstMoves: FirstMoves | undefined;
++  if (def.kind === 'turn') {
++    const counted = countFirstMoves(def, levelId, SEED, game.turnOptions);
++    if (!counted.decided) return { ok: false, reason: `first move ${counted.action} hit ${counted.reason}` };
++    firstMoves = counted.firstMoves;
++  }
++
+   let checks: CheckResult[] = [];
+   if (game.levelChecks !== undefined) {
+     try {
+@@ -141,9 +148,9 @@ function proveLevel(game: Game, levelId: string): { ok: true; text: string; acti
+     replay,
+     rulesVersion: def.rulesVersion,
+     seed: SEED,
+-    stats: { actions: result.actions.length, nodes: result.nodes },
++    stats: { actions: result.actions.length, ...(firstMoves === undefined ? {} : { firstMoves }), nodes: result.nodes },
+   });
+-  return { ok: true, text, actions: result.actions.length };
++  return { ok: true, text, actions: result.actions.length, ...(firstMoves === undefined ? {} : { firstMoves }) };
+ }
+ 
+ async function run(argv: string[]): Promise<number> {
+@@ -156,7 +163,7 @@ async function run(argv: string[]): Promise<number> {
+   const files: ProofFile[] = [];
+   const failures: string[] = [];
+   for (const game of games) {
+-    const index: { actions: number; id: string }[] = [];
++    const index: { actions: number; firstMoves?: FirstMoves; id: string }[] = [];
+     for (const level of game.def.levels()) {
+       const outcome = proveLevel(game, level.id);
+       if (!outcome.ok) {
+@@ -164,7 +171,7 @@ async function run(argv: string[]): Promise<number> {
+         continue;
+       }
+       files.push({ game: game.def.id, name: `${level.id}.json`, text: outcome.text });
+-      index.push({ actions: outcome.actions, id: level.id });
++      index.push({ actions: outcome.actions, ...(outcome.firstMoves === undefined ? {} : { firstMoves: outcome.firstMoves }), id: level.id });
+       process.stdout.write(`proved ${game.def.id} ${level.id}: ${outcome.actions} actions\n`);
+     }
+     files.push({ game: game.def.id, name: 'index.json', text: stable({ game: game.def.id, levels: index }) });
+diff --git a/kit/solver/src/turn.ts b/kit/solver/src/turn.ts
+index 309223b..0aa42ef 100644
+--- a/kit/solver/src/turn.ts
++++ b/kit/solver/src/turn.ts
+@@ -18,18 +18,19 @@ interface Node<S> {
+   depth: number;
+ }
+ 
++type SearchResult =
++  | { solved: true; actions: string[]; nodes: number }
++  | { solved: false; reason: 'exhausted' | 'node_limit' | 'depth_limit'; nodes: number };
++
+ /**
+- * Breadth first search for a turn game. Returns the shortest list of action texts that reaches phase `won`.
+- * Among lists of that length it returns the first one in the order of `def.actions`.
+- * It reads no file and calls no random source.
++ * The one breadth first loop. It starts from `start`, reaches a won state in at most `maxDepth` actions,
++ * and returns the first shortest list in the order of `def.actions`. Both `solveTurn` and `countFirstMoves` use it.
+  */
+-export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): SolveResult {
++function search<S extends Json, A>(def: GameDef<S, A>, start: S, options: TurnOptions, maxDepth: number): SearchResult {
+   const maxNodes = options.maxNodes ?? 200000;
+-  const maxDepth = options.maxDepth ?? 60;
+   const keyOf = options.key ?? ((state: Json) => state);
+   const allow = options.allow ?? (() => true);
+ 
+-  const start = createSession(def, levelId, seed).state;
+   const nodes: Node<S>[] = [{ state: start, parent: -1, action: '', depth: 0 }];
+   const visited = new Set<string>([canonicalJson(keyOf(start))]);
+ 
+@@ -66,3 +67,46 @@ export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string
+   }
+   return { solved: false, reason: cutByDepth ? 'depth_limit' : 'exhausted', nodes: visited.size };
+ }
++
++/**
++ * Breadth first search for a turn game. Returns the shortest list of action texts that reaches phase `won`.
++ * Among lists of that length it returns the first one in the order of `def.actions`.
++ * It reads no file and calls no random source.
++ */
++export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): SolveResult {
++  return search(def, createSession(def, levelId, seed).state, options, options.maxDepth ?? 60);
++}
++
++export interface FirstMoves {
++  legal: number;
++  winning: number;
++}
++
++export type FirstMovesResult =
++  | { decided: true; firstMoves: FirstMoves }
++  | { decided: false; reason: 'node_limit'; action: string };
++
++/**
++ * Counts the legal first actions of a level and how many of them can still lead to a won state
++ * within `maxDepth` actions in total. Each first action gets its own search with its own visited set.
++ * It reads no file and calls no random source.
++ */
++export function countFirstMoves<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): FirstMovesResult {
++  if (def.kind !== 'turn') throw new Error(`countFirstMoves needs a turn game, but ${def.id} is a ${def.kind} game`);
++  const maxDepth = options.maxDepth ?? 60;
++  const allow = options.allow ?? (() => true);
++  const start = createSession(def, levelId, seed).state;
++  if (def.status(start).phase === 'won') return { decided: true, firstMoves: { legal: 0, winning: 0 } };
++
++  const firsts = def
++    .actions(start)
++    .map((action) => ({ action, text: def.encodeAction(action) }))
++    .filter((choice) => allow(choice.text));
++  let winning = 0;
++  for (const { action, text } of firsts) {
++    const result = search(def, def.step(start, action), options, maxDepth - 1);
++    if (result.solved) winning++;
++    else if (result.reason === 'node_limit') return { decided: false, reason: 'node_limit', action: text };
++  }
++  return { decided: true, firstMoves: { legal: firsts.length, winning } };
++}
+\ No newline at end of file

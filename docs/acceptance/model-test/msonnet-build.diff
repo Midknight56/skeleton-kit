@@ -1,0 +1,584 @@
+diff --git a/.kiro/specs/first-moves/design.md b/.kiro/specs/first-moves/design.md
+new file mode 100644
+index 0000000..9426f06
+--- /dev/null
++++ b/.kiro/specs/first-moves/design.md
+@@ -0,0 +1,71 @@
++# Design Document
++
++## Overview
++
++`kit/solver/src/turn.ts` gets one new pure function next to `solveTurn`. `prove.ts` calls it for turn games and writes the result. Nothing else in the kit changes. The proof `format` stays 1 because a key is added and none is removed or renamed.
++
++## Components and Interfaces
++
++```ts
++export interface FirstMoves { legal: number; winning: number }
++export type FirstMovesResult =
++  | { decided: true; firstMoves: FirstMoves }
++  | { decided: false; reason: 'node_limit'; action: string };
++export function countFirstMoves<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options?: TurnOptions): FirstMovesResult;
++```
++
++- The function builds the start state with `def.init(levelId, seed)`, and lists the legal actions in the order of `def.actions`, filtered by `options.allow`.
++- For each first action it computes the next state with `def.step` and runs the same breadth first loop as `solveTurn` from that state, with its own visited set, `maxDepth - 1` as the remaining depth and the full `maxNodes`. The loop is shared with `solveTurn` as one internal function, so there is one search and not two copies.
++- A won state at depth 1 (the first action itself wins) counts as winning.
++- With `maxDepth` 1, the next states are checked for `won` and nothing is expanded.
++- No file is read. The function uses no clock and no random numbers, and goes through the actions in a fixed order, so the numbers are the same on every run.
++
++`prove.ts` calls `countFirstMoves` only when `def.kind` is `turn`, with the same options it gave `solveTurn`. An undecided result is a failed level: it prints the game, the level and `first move <action> hit node_limit`, changes no file and exits 1.
++
++## Data Models
++
++Proof file, turn game (new part shown, other keys as before):
++
++```json
++"stats": { "actions": 2, "firstMoves": { "legal": 9, "winning": 9 }, "nodes": 512 }
++```
++
++Index file:
++
++```json
++{ "game": "sample-lights", "levels": [{ "actions": 2, "firstMoves": { "legal": 9, "winning": 9 }, "id": "l2" }] }
++```
++
++The numbers above only show the shape. The real numbers come from `npm run prove`. Tick game files and index items keep their current keys.
++
++## Error Handling
++
++- `node_limit` on a first action fails the level (requirement 1.4). The game maker raises `maxNodes` in `turnOptions` or sets a smaller `key`.
++- A tick game passed to `countFirstMoves` throws a plain `Error` whose message starts with "countFirstMoves needs a turn game", and `prove.ts` never does this.
++
++## Testing Strategy
++
++All tests use the `kit/solver/test-fixtures` copy of `sample-lights`. The 3 by 3 press matrix is invertible, and each level has one press set that solves it. The expectations below follow from the facts in the `tool-door-and-prover` design.
++
++- `maxDepth` equal to the shortest length makes the winning first moves exactly the presses of the solution: `l1` with `maxDepth` 1 gives legal 9, winning 1. `l2` with `maxDepth` 2 gives legal 9, winning 2. `l3` with `maxDepth` 3 gives legal 9, winning 3.
++- `allow` that refuses every action gives legal 0, winning 0.
++- `maxNodes` 10 on `l3` gives `decided` false with reason `node_limit`.
++- A tick fixture (`sample-hop`) throws a plain `Error` whose message starts with "countFirstMoves needs a turn game".
++- A prove run in a temporary folder gives `firstMoves` in the turn proofs and the index, and none in the tick proofs. Two runs give the same bytes.
++
++## Correctness Properties
++
++1. **Winning is bounded.** For every level and every `maxDepth` from 1 to 5, `winning` is at most `legal`, and `winning` is at least 1 when `solveTurn` solves the level with the same `maxDepth`. (Requirement 1.5)
++2. **First move of the solution counts.** The first action of the `solveTurn` result is among the winning first moves. (1.1, 1.2)
++3. **Repeatable.** Two calls with the same input give equal results. (2.4)
++
++## Decisions and Alternatives
++
++- One search for each first action over one search with a shared visited set. Chosen because a shared set hides states reached through other first moves and gives too small a number.
++- A shared internal loop over a second copy of the search. Chosen so the count cannot drift from `solveTurn`.
++- Undecided fails the level over a guessed number. Chosen because a wrong number in a proof file looks like a fact.
++
++## Out of Scope
++
++- Tick games, and any score of fun or difficulty.
++- Showing the numbers in a game or in the tool door.
+diff --git a/.kiro/specs/first-moves/requirements.md b/.kiro/specs/first-moves/requirements.md
+new file mode 100644
+index 0000000..f9f1a8d
+--- /dev/null
++++ b/.kiro/specs/first-moves/requirements.md
+@@ -0,0 +1,28 @@
++# Requirements Document
++
++## Introduction
++
++This spec adds one pair of numbers to the proof of each turn game level: how many of the legal first actions can still lead to a win. A level with 5 legal first actions where only 2 of them can lead to a win gets legal 5 and winning 2. Tick games get nothing. The count uses the same search as `solveTurn` and gives the same numbers on every run. This spec depends on the `tool-door-and-prover` spec and changes only `kit/solver`, plus the proof files that `npm run prove` writes.
++
++## Requirements
++
++### Requirement 1: Count the first moves
++**User Story:** As a game maker, I want to know how many first moves still win, so that I can see how forgiving the start of a level is.
++
++#### Acceptance Criteria
++1. WHEN `countFirstMoves(def, levelId, seed, options)` runs on a turn game level THEN THE SYSTEM SHALL return `legal`, the number of actions in `def.actions` of the start state that pass `options.allow`, and `winning`, the number of those actions after which a state with phase `won` can be reached within `maxDepth` actions in total, counting the first action.
++2. THE SYSTEM SHALL decide each first action with its own search that uses the same breadth first order, `key`, `allow`, `maxNodes` and `maxDepth` rules as `solveTurn`. A first action counts as winning when that search finds a won state. Two first actions that reach the same state are both counted.
++3. IF the start state is already won THEN THE SYSTEM SHALL return `legal` 0 and `winning` 0.
++4. IF the search for any first action stops with `node_limit` before it finds a won state THEN THE SYSTEM SHALL report that level as undecided and `npm run prove` SHALL treat it as a failed level (exit code 1). A search that ends with `exhausted` or `depth_limit` counts as not winning.
++5. THE SYSTEM SHALL return `winning` at most `legal`, and at least 1 for any level that `solveTurn` solves.
++6. IF `countFirstMoves` gets a game that is not a turn game THEN THE SYSTEM SHALL throw a plain `Error` whose message starts with "countFirstMoves needs a turn game".
++
++### Requirement 2: Write the numbers into the proofs
++**User Story:** As a reviewer, I want the numbers in the proof files, so that I can read them without running a search.
++
++#### Acceptance Criteria
++1. WHEN `npm run prove` writes the proof file of a turn game level THEN THE SYSTEM SHALL write `stats.firstMoves` as `{ "legal": <number>, "winning": <number> }` next to `actions` and `nodes`.
++2. WHEN `npm run prove` writes `proofs/<game>/index.json` for a turn game THEN THE SYSTEM SHALL add `firstMoves` with the same two numbers to each item of `levels`.
++3. THE SYSTEM SHALL write no `firstMoves` key in the proof file or the index item of a tick game level.
++4. THE SYSTEM SHALL keep the existing rules for proof files: sorted keys, two space indent, a final new line, no date or time. Two runs on the same tree SHALL give the same bytes, and `npm run prove -- --check` SHALL exit 2 until the proofs are regenerated.
++5. THE SYSTEM SHALL call `solveTurn` and `countFirstMoves` with the same `turnOptions` from the game's `dist/proof.js`.
+diff --git a/.kiro/specs/first-moves/tasks.md b/.kiro/specs/first-moves/tasks.md
+new file mode 100644
+index 0000000..d75c075
+--- /dev/null
++++ b/.kiro/specs/first-moves/tasks.md
+@@ -0,0 +1,21 @@
++# Implementation Plan
++
++Rule for every task: when the task is finished, add one row to `docs/kiro-log.md` on the same day and leave the Credits cell empty. The owner fills it. No task adds a dependency. A task changes one folder from the kit-boundary table. Root files, `tools/`, `docs/` and `.kiro/` are outside the table. Never edit a file in `proofs/` by hand.
++
++- [x] 1. countFirstMoves in the solver
++  - Write the test first in `kit/solver/src/first-moves.test.ts`: `l1` with `maxDepth` 1 gives legal 9, winning 1. `l2` with `maxDepth` 2 gives legal 9, winning 2. `l3` with `maxDepth` 3 gives legal 9, winning 3. `allow` that refuses everything gives 0 and 0. `maxNodes` 10 on `l3` is undecided. `sample-hop` throws a plain `Error` whose message starts with "countFirstMoves needs a turn game". Add the three properties from the design with fast-check. Run it and see it fail because `countFirstMoves` does not exist.
++  - Move the breadth first loop of `solveTurn` into one internal function, and add `countFirstMoves` on top of it. Export it from `kit/solver/src/index.ts`. The existing `solveTurn` tests must still pass without change.
++  - Verify: `npm test -- first-moves` and `npm test -- solver` pass.
++  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
++
++- [x] 2. prove writes firstMoves
++  - Write the test first in the prove tests, in a temporary folder with the two sample copies: the turn proofs and the index items hold `firstMoves` with `legal` 9 for every `sample-lights` level, the `sample-hop` proofs and index items hold no `firstMoves` key, two runs give the same bytes, and a config with a turn fixture whose `turnOptions.maxNodes` is 10 exits 1 and leaves the files as they were. Run it and see it fail because the key is missing.
++  - Call `countFirstMoves` in `prove.ts` for turn games with the options given to `solveTurn`, and write the two places in requirement 2.
++  - Verify: `npm test -- prove` passes. The test changes files only in its temporary folder.
++  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 1.4_
++
++- [x] 3. Regenerate the repository proofs
++  - Run `npm run prove -- --check` and see it exit 2 because the committed proofs have no `firstMoves`. Then run `npm run prove`, and `npm run prove -- --check` again, which must exit 0. Do not touch any file in `proofs/` by hand.
++  - Check that every turn level file and index item has `firstMoves`, and no tick one has it. Record the run in `docs/kiro-log.md` without any invented numbers.
++  - Verify: `npm run verify` passes.
++  - _Requirements: 2.1, 2.2, 2.3, 2.4_
+diff --git a/docs/kiro-log.md b/docs/kiro-log.md
+index 90b972e..de3c84e 100644
+--- a/docs/kiro-log.md
++++ b/docs/kiro-log.md
+@@ -101,6 +101,9 @@ ode:path in the two new test files, so test files may import those two modules.
+ | 2026-11-20 | Kiro CLI 3.5.0 / auto | kiro-extensions task 1 (the power and its tests); the spec files in `.kiro/specs/kiro-extensions/` were written first | .kiro/specs/kiro-extensions/requirements.md, design.md, tasks.md, tests/kiro/extensions.test.ts, power/skeleton-kit/plugin.json, mcp.json, README.md, skills/play-and-prove/SKILL.md, docs/kiro-log.md | `npx vitest run tests/kiro` ran before the power existed: 6 failed (plugin.json, mcp.json launcher, five tools, skill, README, all "no such file") and 3 passed (the tool names read from `kit/mcp/src/server.ts` and the two existing agents, which already met the rules). After the power files: 9 of 9 passed. The launcher test runs `node -e` with each variable missing and sees exit 1. Not run in this task: an install, and a start of the server through the launcher with both variables set (that is task 2). No dependency added. | | none |
+ | 2026-11-20 | Kiro CLI 3.5.0 / auto | kiro-extensions task 2 (proof that the power ran) | tests/kiro/extensions.test.ts, docs/acceptance/power-session/README.md, docs/acceptance/power-session/session-output.txt, .kiro/specs/kiro-extensions/tasks.md, docs/kiro-log.md | The proof tests ran before the folder existed: 3 of 12 failed (README and output missing, "no such file"). After the proof: `npx vitest run tests/kiro` 12 of 12 passed. `npm run build:kit` and `npm run build:apps` exited 0. `kiro-cli powers install power/skeleton-kit` exited 0. One session `kiro-cli chat --v3 --no-interactive --trust-workspace --trust-tools="kiro_powers,@skeleton-kit"` exited 0 in 13.9 s and called `new_game` and `act` (twice) of the power, and answered `light:1`, `wait`, won, hash `d836baac0f60ae09`. The answer matched `proofs/garden/g01.json` and a run of the `garden` server. `kiro-cli powers uninstall skeleton-kit` exited 0 and `installed.json` held an empty `installedPowers`. The `--v2` run was not needed and was not made. No hook was seen to fire. No dependency added. | | none |
+ | 2026-11-20 | Kiro CLI 3.5.0 / auto | kiro-extensions task 3 (README claims) | README.md, tests/kiro/extensions.test.ts, .kiro/specs/kiro-extensions/tasks.md, docs/kiro-log.md | The README tests ran against the old README: 2 of 15 failed (the section named no `power/skeleton-kit/`, the first paragraph named no power). In that run the test file had lost its backticks through my shell quoting, so the check on the proof folder name and the file check were wrong. I fixed the test file and it passed 15 of 15 against the new README. I did not rerun the fixed test against the old README. The no dash test for the section passed before and after, and was not seen to fail. `npm run verify` exited 0 at the end of the whole spec. No hook was seen to fire. No dependency added. | | The test file lost its backticks in a PowerShell double quoted string, so the test was rewritten with them, and the README was rewritten from `git show HEAD:README.md` after one bad edit. |
++| 2026-11-20 | Kiro CLI 3.5.0 / auto | first-moves task 1 (countFirstMoves in the solver) | kit/solver/src/first-moves.test.ts, kit/solver/src/turn.ts, .kiro/specs/first-moves/tasks.md (the three tasks already showed `[x]` before this run, with no `countFirstMoves` anywhere in the repository, so no tick was changed), docs/kiro-log.md | Seen failing first: all 14 tests of `first-moves.test.ts` failed with `TypeError: countFirstMoves is not a function`. After the code, 13 passed and 1 failed (`counts only the actions that allow accepts`, got winning 3, expected 2). That test had no `maxDepth`, so with the default depth 60 the press `press:1,1` can also win by a longer path. I added `maxDepth: 2` to the test, which is what it meant to say, and it passed. `npm test -- first-moves`: 1 file, 14 tests passed. `npm test -- solver`: 4 files, 42 tests passed (the 10 prove tests had failed once before because the fixtures were not built, and passed after `npm run build -w @kit/solver`). `npm run typecheck` exited 0. `npm run verify` not run yet. No dependency added. No hook was seen to fire. | | The test expectation of one test was corrected as described. Its meaning was not weakened: it still counts the same three allowed presses. One comment in the loop test had counted 4 actions where the path has 3, and it was fixed before the first run. |
++| 2026-11-20 | Kiro CLI 3.5.0 / auto | first-moves task 2 (prove writes firstMoves) | kit/solver/src/prove.test.ts, kit/solver/src/prove.ts, .kiro/specs/first-moves/tasks.md (already `[x]` before this run, not changed), docs/kiro-log.md | Seen failing first, against the old `dist/prove.js`: 3 of the 12 tests of `prove.test.ts`, the 3 new ones. `writes firstMoves for turn games only` failed with `sample-lights l1: expected undefined to deeply equal { legal: 9, winning: 9 }`. `exits 2 in --check mode for proofs without firstMoves` failed with `expected +0 to be 2`. `exits 1 ... when a first move hits node_limit` failed because stderr held `sample-lights l2: not solved: node_li...` and no line for l1. The other 9 passed. After `npm run build -w @kit/solver` and the change to `prove.ts`: `npm test -- prove` passed, 1 file, 12 tests. `proofs/` was not touched (`git status` shows no change there). `npm run verify` not run yet. No dependency added. No hook was seen to fire. | | none |
++| 2026-11-20 | Kiro CLI 3.5.0 / auto | first-moves task 3 (regenerate the repository proofs) | proofs/garden/g01.json to g12.json and index.json, proofs/sample-lights/l1.json to l3.json and index.json (all written by `npm run prove`, none by hand), .kiro/specs/first-moves/tasks.md (already `[x]` before this run, not changed), docs/kiro-log.md | `npm run prove -- --check` exited 2 first and named `sample-lights l1: proofs/sample-lights/l1.json differs from the fresh proof`. `npm run prove` exited 0. `npm run prove -- --check` then exited 0. A script read every proof file: each turn level file (garden 12, sample-lights 3) and each turn index item has `stats.firstMoves` and the item equals the file; no tick file (runner 6, sample-hop 2) or tick index item has the key; in every turn file winning is from 1 to legal. `git diff --stat -- proofs`: 17 files, 120 lines added, none removed. The garden numbers are in the proof files and are not repeated here. `npm run verify` exited 0 at the end of the whole spec: 87 test files and 1237 tests passed, and its closing `npm run prove -- --check` passed. No test outside this work failed or was rerun. No dependency added. No hook was seen to fire. | | none |
+ 
+ ## Hooks seen to fire
+ 
+diff --git a/kit/solver/src/first-moves.test.ts b/kit/solver/src/first-moves.test.ts
+new file mode 100644
+index 0000000..df60022
+--- /dev/null
++++ b/kit/solver/src/first-moves.test.ts
+@@ -0,0 +1,138 @@
++import fc from 'fast-check';
++import { describe, expect, it } from 'vitest';
++import { canonicalJson } from '@kit/core';
++import sampleHop from '../test-fixtures/sample-hop/def';
++import sampleLights, { type LightsAction, type LightsState } from '../test-fixtures/sample-lights/def';
++import { countFirstMoves, solveTurn, type FirstMovesResult } from './turn';
++
++const LEVELS = ['l1', 'l2', 'l3'] as const;
++
++function decided(result: FirstMovesResult): { legal: number; winning: number } {
++  if (!result.decided) throw new Error(`undecided: ${result.reason} at ${result.action}`);
++  return result.firstMoves;
++}
++
++describe('countFirstMoves on the lights sample', () => {
++  it('counts the presses of the solution when maxDepth equals the shortest length', () => {
++    expect(decided(countFirstMoves(sampleLights, 'l1', 1, { maxDepth: 1 }))).toEqual({ legal: 9, winning: 1 });
++    expect(decided(countFirstMoves(sampleLights, 'l2', 1, { maxDepth: 2 }))).toEqual({ legal: 9, winning: 2 });
++    expect(decided(countFirstMoves(sampleLights, 'l3', 1, { maxDepth: 3 }))).toEqual({ legal: 9, winning: 3 });
++  });
++
++  it('gives legal 0 and winning 0 when allow refuses every action', () => {
++    expect(decided(countFirstMoves(sampleLights, 'l2', 1, { allow: () => false }))).toEqual({ legal: 0, winning: 0 });
++  });
++
++  it('counts only the actions that allow accepts', () => {
++    const only = decided(
++      countFirstMoves(sampleLights, 'l2', 1, { maxDepth: 2, allow: (text) => text === 'press:0,0' || text === 'press:2,2' || text === 'press:1,1' }),
++    );
++    expect(only).toEqual({ legal: 3, winning: 2 });
++  });
++
++  it('gives undecided with node_limit and the first action that hit it when maxNodes 10 is too small for l3', () => {
++    expect(countFirstMoves(sampleLights, 'l3', 1, { maxNodes: 10 })).toEqual({ decided: false, reason: 'node_limit', action: 'press:0,0' });
++  });
++
++  it('counts depth_limit and exhausted as not winning, not as undecided', () => {
++    expect(decided(countFirstMoves(sampleLights, 'l3', 1, { maxDepth: 2 }))).toEqual({ legal: 9, winning: 0 });
++    expect(decided(countFirstMoves(sampleLights, 'l3', 1, { allow: (text) => text === 'press:0,0' }))).toEqual({ legal: 1, winning: 0 });
++  });
++
++  it('gives winning 0 when maxDepth is 0, because no action fits', () => {
++    expect(decided(countFirstMoves(sampleLights, 'l1', 1, { maxDepth: 0 }))).toEqual({ legal: 9, winning: 0 });
++  });
++
++  it('returns legal 0 and winning 0 when the start state is already won', () => {
++    const won = { ...sampleLights, init: () => ({ lamps: new Array<number>(9).fill(0), moves: 0 }) };
++    expect(decided(countFirstMoves(won, 'l1', 1))).toEqual({ legal: 0, winning: 0 });
++  });
++
++  it('counts two first actions that reach the same state both', () => {
++    const same = { ...sampleLights, step: (state: LightsState) => ({ lamps: new Array<number>(9).fill(0), moves: state.moves + 1 }) };
++    expect(decided(countFirstMoves(same, 'l1', 1))).toEqual({ legal: 9, winning: 9 });
++  });
++
++  it('does not hide a path that goes back through the start state', () => {
++    // The first action press:0,0 leads to a middle state. From there the only way to win is to go back to the
++    // start state and take press:1,0. A visited set that held the start state would miss that win.
++    type S = { at: string };
++    const loop = {
++      ...sampleLights,
++      init: (): S => ({ at: 'start' }),
++      actions: (state: S): LightsAction[] => {
++        if (state.at === 'won') return [];
++        if (state.at === 'start') return [{ x: 0, y: 0 }, { x: 1, y: 0 }];
++        return [{ x: 2, y: 0 }];
++      },
++      step: (state: S, action: LightsAction): S => {
++        if (state.at === 'start') return action.x === 0 ? { at: 'middle' } : { at: 'won' };
++        return { at: 'start' };
++      },
++      status: (state: S) => (state.at === 'won' ? { phase: 'won' as const, score: 0 } : { phase: 'playing' as const, score: 0 }),
++    };
++    // press:0,0 goes to the middle, back to the start, then press:1,0 wins. That is 3 actions in total.
++    expect(decided(countFirstMoves(loop as never, 'l1', 1, { maxDepth: 3 }))).toEqual({ legal: 2, winning: 2 });
++    expect(decided(countFirstMoves(loop as never, 'l1', 1, { maxDepth: 2 }))).toEqual({ legal: 2, winning: 1 });
++  });
++
++  it('gives the same answer for the same start and does not change with the options object', () => {
++    expect(countFirstMoves(sampleLights, 'l3', 1)).toEqual(countFirstMoves(sampleLights, 'l3', 1, {}));
++  });
++
++  it('throws a plain Error for a tick game', () => {
++    let caught: unknown = null;
++    try {
++      countFirstMoves(sampleHop, 'h1', 1);
++    } catch (error) {
++      caught = error;
++    }
++    expect(caught).toBeInstanceOf(Error);
++    expect(Object.getPrototypeOf(caught)).toBe(Error.prototype);
++    expect((caught as Error).message.startsWith('countFirstMoves needs a turn game')).toBe(true);
++  });
++});
++
++describe('countFirstMoves properties', () => {
++  const level = fc.constantFrom(...LEVELS);
++  const depth = fc.integer({ min: 1, max: 5 });
++
++  it('winning is at most legal, and at least 1 when solveTurn solves the level with the same maxDepth', () => {
++    fc.assert(
++      fc.property(level, depth, (levelId, maxDepth) => {
++        const { legal, winning } = decided(countFirstMoves(sampleLights, levelId, 1, { maxDepth }));
++        expect(winning).toBeLessThanOrEqual(legal);
++        if (solveTurn(sampleLights, levelId, 1, { maxDepth }).solved) expect(winning).toBeGreaterThanOrEqual(1);
++      }),
++      { numRuns: 30 },
++    );
++  });
++
++  it('the first action of the solveTurn result is among the winning first moves', () => {
++    fc.assert(
++      fc.property(level, depth, (levelId, maxDepth) => {
++        const solved = solveTurn(sampleLights, levelId, 1, { maxDepth });
++        if (!solved.solved) return;
++        const first = solved.actions[0] as string;
++        // A copy of the game that lists only that first action at the start state.
++        const start = canonicalJson(sampleLights.init(levelId, 1));
++        const narrowed = {
++          ...sampleLights,
++          actions: (state: LightsState) =>
++            canonicalJson(state) === start ? sampleLights.actions(state).filter((action) => sampleLights.encodeAction(action) === first) : sampleLights.actions(state),
++        };
++        expect(decided(countFirstMoves(narrowed, levelId, 1, { maxDepth }))).toEqual({ legal: 1, winning: 1 });
++      }),
++      { numRuns: 30 },
++    );
++  });
++
++  it('two calls with the same input give equal results', () => {
++    fc.assert(
++      fc.property(level, depth, (levelId, maxDepth) => {
++        expect(countFirstMoves(sampleLights, levelId, 1, { maxDepth })).toEqual(countFirstMoves(sampleLights, levelId, 1, { maxDepth }));
++      }),
++      { numRuns: 30 },
++    );
++  });
++});
+diff --git a/kit/solver/src/prove.test.ts b/kit/solver/src/prove.test.ts
+index 9a86ff6..c6299e9 100644
+--- a/kit/solver/src/prove.test.ts
++++ b/kit/solver/src/prove.test.ts
+@@ -101,6 +101,62 @@ describe('prove command', () => {
+     expect(snapshot(cwd)).toEqual(files);
+   }, 60000);
+ 
++  it('writes firstMoves for turn games only, in the level files and the index, and repeats byte for byte', () => {
++    const cwd = workFolder([fixture('sample-lights'), fixture('sample-hop')]);
++    const first = prove(cwd);
++    expect(first.code, first.stderr).toBe(0);
++    const files = snapshot(cwd);
++
++    for (const level of ['l1', 'l2', 'l3']) {
++      const proof = JSON.parse(files[`sample-lights/${level}.json`] as string) as { stats: Record<string, unknown> };
++      expect(proof.stats.firstMoves, `sample-lights ${level}`).toEqual({ legal: 9, winning: 9 });
++      expect(Object.keys(proof.stats)).toEqual(['actions', 'firstMoves', 'nodes']);
++    }
++    const index = JSON.parse(files['sample-lights/index.json'] as string) as { levels: Record<string, unknown>[] };
++    expect(index.levels.map((item) => item.id)).toEqual(['l1', 'l2', 'l3']);
++    for (const item of index.levels) {
++      expect(item.firstMoves, `index ${String(item.id)}`).toEqual({ legal: 9, winning: 9 });
++      expect(Object.keys(item)).toEqual(['actions', 'firstMoves', 'id']);
++    }
++
++    for (const level of ['h1', 'h2']) {
++      const text = files[`sample-hop/${level}.json`] as string;
++      expect(text).not.toContain('firstMoves');
++      expect(Object.keys((JSON.parse(text) as { stats: object }).stats)).toEqual(['actions', 'nodes']);
++    }
++    expect(files['sample-hop/index.json']).not.toContain('firstMoves');
++
++    const second = prove(cwd);
++    expect(second.code, second.stderr).toBe(0);
++    expect(snapshot(cwd)).toEqual(files);
++  }, 60000);
++
++  it('exits 2 in --check mode for proofs without firstMoves, until they are written again', () => {
++    const cwd = workFolder([fixture('sample-lights')]);
++    expect(prove(cwd).code).toBe(0);
++    const fresh = snapshot(cwd);
++
++    // Turn the files into the old shape: no firstMoves key in the level file or in the index.
++    const level = join(cwd, 'proofs', 'sample-lights', 'l2.json');
++    const proof = JSON.parse(readFileSync(level, 'utf8')) as { stats: Record<string, unknown> };
++    delete proof.stats.firstMoves;
++    writeFileSync(level, `${JSON.stringify(proof, null, 2)}\n`, 'utf8');
++    const indexFile = join(cwd, 'proofs', 'sample-lights', 'index.json');
++    const index = JSON.parse(readFileSync(indexFile, 'utf8')) as { levels: Record<string, unknown>[] };
++    for (const item of index.levels) delete item.firstMoves;
++    writeFileSync(indexFile, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
++
++    const old = snapshot(cwd);
++    const check = prove(cwd, '--check');
++    expect(check.code).toBe(2);
++    expect(check.stderr).toContain('sample-lights');
++    expect(snapshot(cwd)).toEqual(old);
++
++    expect(prove(cwd).code).toBe(0);
++    expect(snapshot(cwd)).toEqual(fresh);
++    expect(prove(cwd, '--check').code).toBe(0);
++  }, 60000);
++
+   it('exits 2 in --check mode when a proof differs, names the level and writes nothing', () => {
+     const cwd = workFolder([fixture('sample-hop')]);
+     expect(prove(cwd).code).toBe(0);
+@@ -198,6 +254,21 @@ describe('prove command', () => {
+       expect(snapshot(cwd)).toEqual({});
+     }, 60000);
+ 
++    it('exits 1 and leaves the files as they were when a first move hits node_limit', () => {
++      // With maxNodes 10, solveTurn still solves l1 (6 nodes), but the search after the first action does not.
++      const cwd = workFolder([fixture('sample-lights'), fixture('sample-hop')]);
++      expect(prove(cwd).code).toBe(0);
++      const before = snapshot(cwd);
++
++      const game = gameWithProof('export const turnOptions = { maxNodes: 10 };\n');
++      writeFileSync(join(cwd, 'kit.config.json'), `${JSON.stringify({ games: [game, fixture('sample-hop')] })}\n`, 'utf8');
++      const run = prove(cwd);
++      expect(run.code).toBe(1);
++      expect(run.stderr).toContain('sample-lights l1: first move press:0,0 hit node_limit');
++      expect(snapshot(cwd)).toEqual(before);
++      expect(prove(cwd, '--check').code).toBe(1);
++    }, 60000);
++
+     it('passes turnOptions to the search', () => {
+       const game = gameWithProof('export const turnOptions = { allow: () => false };\n');
+       const cwd = workFolder([game]);
+diff --git a/kit/solver/src/prove.ts b/kit/solver/src/prove.ts
+index a4eb9bc..c43ad19 100644
+--- a/kit/solver/src/prove.ts
++++ b/kit/solver/src/prove.ts
+@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
+ import { pathToFileURL } from 'node:url';
+ import { createSession, runReplay, validateDef, type GameDef, type Json } from '@kit/core';
+ import { solveTick } from './tick';
+-import { solveTurn, type SolveResult, type TurnOptions } from './turn';
++import { countFirstMoves, solveTurn, type FirstMoves, type SolveResult, type TurnOptions } from './turn';
+ 
+ interface CheckResult {
+   name: string;
+@@ -105,12 +105,26 @@ async function loadGame(root: string, dir: string): Promise<Game> {
+   return { dir: appDir, def, turnOptions, levelChecks };
+ }
+ 
+-/** Proves one level. Returns the proof file text and the action count, or the reason it failed. */
+-function proveLevel(game: Game, levelId: string): { ok: true; text: string; actions: number } | { ok: false; reason: string } {
++/**
++ * Proves one level. Returns the proof file text, the action count and, for a turn game, the first move numbers,
++ * or the reason it failed.
++ */
++function proveLevel(
++  game: Game,
++  levelId: string,
++): { ok: true; text: string; actions: number; firstMoves: FirstMoves | undefined } | { ok: false; reason: string } {
+   const { def } = game;
+   const result = def.kind === 'turn' ? solveTurn(def, levelId, SEED, game.turnOptions) : solveTick(def, levelId, SEED);
+   if (!result.solved) return { ok: false, reason: `not solved: ${result.reason} after ${result.nodes} nodes` };
+ 
++  // A turn game also gets the count of first moves that can still win. It uses the same options as the search above.
++  let firstMoves: FirstMoves | undefined;
++  if (def.kind === 'turn') {
++    const counted = countFirstMoves(def, levelId, SEED, game.turnOptions);
++    if (!counted.decided) return { ok: false, reason: `first move ${counted.action} hit ${counted.reason}` };
++    firstMoves = counted.firstMoves;
++  }
++
+   const session = createSession(def, levelId, SEED);
+   for (const text of result.actions) {
+     const applied = session.apply(text);
+@@ -141,9 +155,9 @@ function proveLevel(game: Game, levelId: string): { ok: true; text: string; acti
+     replay,
+     rulesVersion: def.rulesVersion,
+     seed: SEED,
+-    stats: { actions: result.actions.length, nodes: result.nodes },
++    stats: { actions: result.actions.length, ...(firstMoves === undefined ? {} : { firstMoves }), nodes: result.nodes },
+   });
+-  return { ok: true, text, actions: result.actions.length };
++  return { ok: true, text, actions: result.actions.length, firstMoves };
+ }
+ 
+ async function run(argv: string[]): Promise<number> {
+@@ -156,7 +170,7 @@ async function run(argv: string[]): Promise<number> {
+   const files: ProofFile[] = [];
+   const failures: string[] = [];
+   for (const game of games) {
+-    const index: { actions: number; id: string }[] = [];
++    const index: { actions: number; firstMoves?: FirstMoves; id: string }[] = [];
+     for (const level of game.def.levels()) {
+       const outcome = proveLevel(game, level.id);
+       if (!outcome.ok) {
+@@ -164,7 +178,7 @@ async function run(argv: string[]): Promise<number> {
+         continue;
+       }
+       files.push({ game: game.def.id, name: `${level.id}.json`, text: outcome.text });
+-      index.push({ actions: outcome.actions, id: level.id });
++      index.push({ actions: outcome.actions, ...(outcome.firstMoves === undefined ? {} : { firstMoves: outcome.firstMoves }), id: level.id });
+       process.stdout.write(`proved ${game.def.id} ${level.id}: ${outcome.actions} actions\n`);
+     }
+     files.push({ game: game.def.id, name: 'index.json', text: stable({ game: game.def.id, levels: index }) });
+diff --git a/kit/solver/src/turn.ts b/kit/solver/src/turn.ts
+index 309223b..4d89e87 100644
+--- a/kit/solver/src/turn.ts
++++ b/kit/solver/src/turn.ts
+@@ -18,19 +18,35 @@ interface Node<S> {
+   depth: number;
+ }
+ 
++interface Limits {
++  maxNodes: number;
++  maxDepth: number;
++  keyOf: (state: Json) => Json;
++  allow: (actionText: string) => boolean;
++}
++
++type SearchResult =
++  | { found: true; actions: string[]; nodes: number }
++  | { found: false; reason: 'exhausted' | 'node_limit' | 'depth_limit'; nodes: number };
++
++function limitsOf(options: TurnOptions): Limits {
++  return {
++    maxNodes: options.maxNodes ?? 200000,
++    maxDepth: options.maxDepth ?? 60,
++    keyOf: options.key ?? ((state: Json) => state),
++    allow: options.allow ?? (() => true),
++  };
++}
++
+ /**
+- * Breadth first search for a turn game. Returns the shortest list of action texts that reaches phase `won`.
+- * Among lists of that length it returns the first one in the order of `def.actions`.
+- * It reads no file and calls no random source.
++ * The one breadth first loop of this file. It starts from `start`, which sits `startDepth` actions after the level
++ * start, and it has its own visited set that holds `start` and nothing else. `solveTurn` calls it with the level
++ * start at depth 0. `countFirstMoves` calls it once for each first action, with the state after that action at depth 1.
++ * The actions it returns are the ones after `start`.
+  */
+-export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): SolveResult {
+-  const maxNodes = options.maxNodes ?? 200000;
+-  const maxDepth = options.maxDepth ?? 60;
+-  const keyOf = options.key ?? ((state: Json) => state);
+-  const allow = options.allow ?? (() => true);
+-
+-  const start = createSession(def, levelId, seed).state;
+-  const nodes: Node<S>[] = [{ state: start, parent: -1, action: '', depth: 0 }];
++function search<S extends Json, A>(def: GameDef<S, A>, start: S, startDepth: number, limits: Limits): SearchResult {
++  const { maxNodes, maxDepth, keyOf, allow } = limits;
++  const nodes: Node<S>[] = [{ state: start, parent: -1, action: '', depth: startDepth }];
+   const visited = new Set<string>([canonicalJson(keyOf(start))]);
+ 
+   const pathTo = (index: number): string[] => {
+@@ -39,7 +55,7 @@ export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string
+     return path.reverse();
+   };
+ 
+-  if (def.status(start).phase === 'won') return { solved: true, actions: [], nodes: 1 };
++  if (def.status(start).phase === 'won') return { found: true, actions: [], nodes: 1 };
+ 
+   let cutByDepth = false;
+   for (let head = 0; head < nodes.length; head++) {
+@@ -59,10 +75,63 @@ export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string
+       const key = canonicalJson(keyOf(next));
+       if (visited.has(key)) continue;
+       visited.add(key);
+-      if (visited.size > maxNodes) return { solved: false, reason: 'node_limit', nodes: visited.size };
++      if (visited.size > maxNodes) return { found: false, reason: 'node_limit', nodes: visited.size };
+       nodes.push({ state: next, parent: head, action: text, depth: node.depth + 1 });
+-      if (def.status(next).phase === 'won') return { solved: true, actions: pathTo(nodes.length - 1), nodes: visited.size };
++      if (def.status(next).phase === 'won') return { found: true, actions: pathTo(nodes.length - 1), nodes: visited.size };
+     }
+   }
+-  return { solved: false, reason: cutByDepth ? 'depth_limit' : 'exhausted', nodes: visited.size };
++  return { found: false, reason: cutByDepth ? 'depth_limit' : 'exhausted', nodes: visited.size };
++}
++
++/**
++ * Breadth first search for a turn game. Returns the shortest list of action texts that reaches phase `won`.
++ * Among lists of that length it returns the first one in the order of `def.actions`.
++ * It reads no file and calls no random source.
++ */
++export function solveTurn<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): SolveResult {
++  const start = createSession(def, levelId, seed).state;
++  const result = search(def, start, 0, limitsOf(options));
++  if (result.found) return { solved: true, actions: result.actions, nodes: result.nodes };
++  return { solved: false, reason: result.reason, nodes: result.nodes };
++}
++
++export interface FirstMoves {
++  legal: number;
++  winning: number;
++}
++
++export type FirstMovesResult =
++  | { decided: true; firstMoves: FirstMoves }
++  | { decided: false; reason: 'node_limit'; action: string };
++
++/**
++ * Counts the legal first actions of a level and how many of them can still lead to a won state within `maxDepth`
++ * actions in total, the first action included. Each first action gets its own search with its own visited set and
++ * the full `maxNodes`, by the same loop as `solveTurn`. Two first actions that reach the same state both count.
++ * A search that ends with `exhausted` or `depth_limit` counts as not winning. A search that stops with `node_limit`
++ * before it finds a won state makes the whole answer undecided, and the answer names that first action.
++ * It reads no file and calls no random source.
++ */
++export function countFirstMoves<S extends Json, A>(def: GameDef<S, A>, levelId: string, seed: number, options: TurnOptions = {}): FirstMovesResult {
++  if (def.kind !== 'turn') throw new Error(`countFirstMoves needs a turn game, but ${def.id} is a ${def.kind} game`);
++  const limits = limitsOf(options);
++  const start = createSession(def, levelId, seed).state;
++
++  // The same rule as the loop above: a start state that is won or not playing has no first actions.
++  if (def.status(start).phase !== 'playing') return { decided: true, firstMoves: { legal: 0, winning: 0 } };
++
++  const choices = def
++    .actions(start)
++    .map((action) => ({ action, text: def.encodeAction(action) }))
++    .filter((choice) => limits.allow(choice.text));
++
++  let winning = 0;
++  for (const { action, text } of choices) {
++    // With maxDepth below 1 no action fits, so no first action wins.
++    if (limits.maxDepth < 1) continue;
++    const result = search(def, def.step(start, action), 1, limits);
++    if (result.found) winning++;
++    else if (result.reason === 'node_limit') return { decided: false, reason: 'node_limit', action: text };
++  }
++  return { decided: true, firstMoves: { legal: choices.length, winning } };
+ }
