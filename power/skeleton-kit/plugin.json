@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "skeleton-kit",
+  "version": "0.1.0",
+  "description": "Play a game built on Skeleton kit. Gives Kiro the five tools of the kit's tool door (new_game, act, observe, render, replay) and a skill that says a level counts as fine only after it was played to a won status.",
+  "author": {
+    "name": "Adrian Ferguson"
+  },
+  "keywords": ["skeleton kit", "playtest", "play a level", "game replay", "state hash", "level proof", "tool door", "turn puzzle", "one button runner"],
+  "repository": "https://github.com/Midknight56/skeleton-kit",
+  "license": "MIT"
+}

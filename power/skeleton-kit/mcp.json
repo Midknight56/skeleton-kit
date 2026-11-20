@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "skeleton-kit": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "-e",
+        "const { pathToFileURL } = require('node:url'); const dist = process.env.SKELETON_KIT_MCP_DIST; const game = process.env.SKELETON_KIT_GAME; if (!dist || !game) { console.error('skeleton-kit power: set SKELETON_KIT_MCP_DIST to the full path of kit/mcp/dist/server.js and SKELETON_KIT_GAME to the full path of a game folder that holds dist/def.js, for example apps/garden.'); process.exit(1); } process.argv = [process.argv[0], dist, '--game', game]; import(pathToFileURL(dist).href);"
+      ],
+      "env": {
+        "SKELETON_KIT_MCP_DIST": "${SKELETON_KIT_MCP_DIST}",
+        "SKELETON_KIT_GAME": "${SKELETON_KIT_GAME}"
+      }
+    }
+  }
+}

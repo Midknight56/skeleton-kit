@@ -1,0 +1,42 @@
+kiro-cli : [INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=10
+At line:1 char:297
++ ... w(); $out = kiro-cli chat --v3 --no-interactive --trust-workspace --t ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([INFO] [KRS] <-... totalEvents=10:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[tool] Kiro Powers
+[tool] status: InProgress
+[tool] status: Completed
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=15
+[tool] Tool Load
+[tool] status: Completed
+[tool] Tool Load
+[tool] status: Completed
+[tool] Tool Load
+[tool] status: Completed
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=37
+[tool] @skeleton-kit/skeleton-kit/new_game
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=23
+[tool] status: Pending
+[tool] status: InProgress
+[tool] status: Completed
+[tool] @skeleton-kit/skeleton-kit/act
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=43
+[tool] status: Pending
+[tool] status: InProgress
+[tool] status: Completed
+[tool] @skeleton-kit/skeleton-kit/act
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=38
+[tool] status: Pending
+[tool] status: InProgress
+[tool] status: Completed
+Level g01 with seed 1 is won. I sent two actions, both from the legal list:
+
+1. `light:1`
+2. `wait`
+
+The final status is phase `won` with score 2, at turn 2 of 6. The moth is home, so 1 of 1 moths are home. The state hash is `d836baac0f60ae09`.
+
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=27
+I didn't save a replay.

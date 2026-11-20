@@ -2,7 +2,7 @@
 
 Skeleton kit is our entry for the Skeleton Crew category: a skeleton code template lean enough to be clear but flexible enough to support various use cases, with two distinct applications built from one foundation. Moth Garden is a turn puzzle and Broom Runner is a one button runner at 60 ticks a second, and both run on the same kit. Kiro built it with spec driven development, from five specs. A search script proves that every level of both games can be finished, and any AI tool can play the games through a tool door (an MCP server built from the game's own rules).
 
-Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from five specs, with five steering files, three hooks, three MCP servers and two custom agents.
+Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from five specs, with five steering files, three hooks, three MCP servers, two custom agents and one power.
 
 Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
@@ -56,7 +56,9 @@ A third small game, `examples/lights`, was made with `npm run new:game` to show 
 
 **Property based testing (PBT).** `kit/conformance` holds nine properties every game must pass (with `fast-check`): repeatable, replay round trip, legal closure, plain data, input not changed, game over is final, action text round trip, undo, and view and observation safe. Kiro added twelve more properties to `kit-core` from its requirements. The property on replay failures found the TypeError bug above, which no unit test had covered.
 
-**Kiro powers.** Not used in this build.
+**Kiro powers.** One power, `power/skeleton-kit/`, in the Agent Plugins format. It gives Kiro the five tools of the tool door (`new_game`, `act`, `observe`, `render`, `replay`) and one skill, `play-and-prove`. The skill says a level is fine only after it was played to a won status, that only legal actions are sent, and that `proofs/` is changed only by `npm run prove`. The power starts the server file of your own clone, named by two environment variables, so the clone has to be built first. The steps are in `power/skeleton-kit/README.md`. It was written from the spec `kiro-extensions`.
+
+The power ran once. `docs/acceptance/power-session/` holds the saved output of one headless Kiro CLI 3.5.0 session in which the power was installed and Kiro won garden level g01 with two legal actions, using the power's `new_game` and `act` tools. The prompt named no tool. The answer matched the proof file and a run of the garden server. The power was uninstalled afterwards. That is one session, one prompt and one game, and the folder lists what was not tried.
 
 ## Run it
 
