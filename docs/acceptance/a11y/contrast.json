@@ -151,7 +151,7 @@
       "name": "garden: garland level number on the garland panel",
       "foreground": "#b5abcf",
       "background": "#110d21",
-      "size": "10px weight 400, normal text",
+      "size": "12px weight 400, normal text",
       "ratio": 8.78,
       "limit": 4.5,
       "result": "pass"
@@ -160,7 +160,7 @@
       "name": "garden: garland note on the garland panel",
       "foreground": "#b5abcf",
       "background": "#110d21",
-      "size": "11px weight 400, normal text",
+      "size": "12px weight 400, normal text",
       "ratio": 8.78,
       "limit": 4.5,
       "result": "pass"
@@ -385,7 +385,7 @@
       "name": "runner: garland level number on the garland panel",
       "foreground": "#b5abcf",
       "background": "#110d21",
-      "size": "10px weight 400, normal text",
+      "size": "12px weight 400, normal text",
       "ratio": 8.78,
       "limit": 4.5,
       "result": "pass"
@@ -394,7 +394,7 @@
       "name": "runner: garland note on the garland panel",
       "foreground": "#b5abcf",
       "background": "#110d21",
-      "size": "11px weight 400, normal text",
+      "size": "12px weight 400, normal text",
       "ratio": 8.78,
       "limit": 4.5,
       "result": "pass"

@@ -10,7 +10,7 @@ Rule for every task: write the tests first and see them fail for the right reaso
   - Verify: `npm test -- look` and `npm run typecheck` both exit 0.
   - _Requirements: 1.1 to 1.3, 2.1 to 2.5, 4.1 to 4.3_
 
-- [ ] 2. The end to end files and the contrast test
+- [x] 2. The end to end files and the contrast test
   - Run `npm run build`. Then run `npx playwright test e2e/layout.e2e.ts`, `e2e/play-layout.e2e.ts`, `e2e/look.e2e.ts` and `e2e/a11y.e2e.ts`, one command for each file, headless.
   - Run `npm test -- contrast`. It rewrites `docs/acceptance/a11y/contrast.json`. Check that the two garland rows now say 12px.
   - If a layout test fails because the larger text no longer fits, change only the garland geometry in `kit/shell/src/look.ts`, as the design says. Keep the failing case, change the geometry, and run the file again. Then run the other three files again.

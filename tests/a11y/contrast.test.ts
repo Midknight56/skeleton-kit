@@ -6,6 +6,7 @@ import { gardenTheme } from '../../apps/garden/theme';
 import { runnerTheme } from '../../apps/runner/theme';
 import { themeCss } from '../../kit/shell/src/styles';
 import type { Theme } from '../../kit/shell/src/theme';
+import { rulesOf, type Rule } from './css-rules';
 
 // Task 5 of .kiro/specs/accessibility-scan. axe lists color-contrast as incomplete on every screen,
 // because the text sits on gradients and pictures. This test computes the WCAG 2.1 contrast ratio
@@ -69,14 +70,6 @@ function over(top: Rgba, under: Rgba): Rgba {
 
 const rgbOf = (c: Rgba): Rgb => [c[0], c[1], c[2]];
 const hexOf = (c: Rgb): string => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
-
-interface Rule { selector: string; body: string }
-
-function rulesOf(css: string): Rule[] {
-  const rules: Rule[] = [];
-  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) rules.push({ selector: m[1]!.trim().replace(/\s+/g, ' '), body: m[2]! });
-  return rules;
-}
 
 // The value of one property in the last rule with exactly this selector that sets it. The rules of
 // the look come after the base rules, so the last one wins, as in the browser for equal specificity.

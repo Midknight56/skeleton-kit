@@ -68,7 +68,6 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 [data-screen="title"] [data-control="watch"] { box-shadow: 0 4px 0 ${T.ink}; }
 @media (max-width: 480px) { [data-screen="title"] [data-column] { grid-template-columns: 1fr 1fr; } }
 
-/* Garland text is never smaller than 12 px. */
 [data-garland] { position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; height: ${L(110, 176)}; padding: 0 ${L(16, 96)}; background: #110d21; border-top: 1.5px solid ${T.plum}; pointer-events: none; display: none; }
 [data-garland] .wire { position: absolute; left: ${L(16, 96)}; right: ${L(16, 96)}; top: ${L(26, 32)}; height: 1.5px; background: ${STRING_COLOUR}; }
 [data-garland] .row { position: absolute; left: ${L(16, 96)}; right: ${L(16, 96)}; top: ${L(18, 24)}; display: flex; justify-content: space-between; }

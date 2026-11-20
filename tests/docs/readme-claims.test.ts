@@ -175,12 +175,24 @@ describe('numbers read from the files', () => {
 });
 
 describe('the claims in the text', () => {
-  it('names the hooks that fired with their proof files, and says typecheck-on-save has none', () => {
+  it('names the IDE session proof and never says typecheck-on-save was not seen to fire', () => {
+    expect(readme).toContain('`docs/acceptance/ide-session/`');
+    expect(existsSync(join(REPO, 'docs', 'acceptance', 'ide-session', 'README.md'))).toBe(true);
+    const sentences = readme.split(/(?<=\.)\s/).filter((s) => s.includes('typecheck-on-save'));
+    expect(sentences.length).toBeGreaterThan(0);
+    for (const sentence of sentences) {
+      expect(sentence, sentence).not.toMatch(/no proof file|not named as fired|not seen to fire|was not seen|has not fired|not fired/i);
+    }
+  });
+
+  it('names the hooks that fired with their proof files', () => {
     expect(readme).toContain('`docs/acceptance/hook-verify-on-stop.md`');
     expect(existsSync(join(REPO, 'docs', 'acceptance', 'hook-verify-on-stop.md'))).toBe(true);
-    const sentence = readme.split(/(?<=\.)\s/).find((s) => s.includes('typecheck-on-save')) ?? '';
-    expect(sentence).toMatch(/no proof file/);
-    expect(existsSync(join(REPO, 'docs', 'acceptance', 'hook-typecheck-on-save.md'))).toBe(false);
+    const sentence = readme.split(/(?<=\.)\s/).find((s) => s.includes('typecheck-on-save') && s.includes('seen to fire')) ?? '';
+    expect(sentence).toContain('seen to fire');
+    expect(readme).toContain('`docs/acceptance/ide-session/hook-process-log.txt`');
+    expect(existsSync(join(REPO, 'docs', 'acceptance', 'ide-session', 'hook-process-log.txt'))).toBe(true);
+    expect(read('docs', 'kiro-log.md')).toMatch(/\| typecheck-on-save \(PostFileSave\) \|/);
   });
 
   it('writes the Kiro Web task and the Crew app from their records', () => {
@@ -192,11 +204,15 @@ describe('the claims in the text', () => {
     expect(readme).toMatch(/0\.2\.1 is installed.*(has not been run|not yet run)/s);
   });
 
-  it('says only the one recorded task for the IDE', () => {
+  it('says the two recorded IDE pieces of work, from the proof', () => {
     const ide = /\*\*Kiro IDE\.\*\*([\s\S]*?)\n\n/.exec(readme)?.[1] ?? '';
     expect(ide).toContain('`kit-core` task 12');
     expect(ide).toContain('16 Nov 2026');
-    expect(ide.length).toBeLessThan(500);
+    expect(ide).toContain('`garland-text`');
+    expect(ide).toContain('`docs/acceptance/ide-session/`');
+    expect(ide).toContain('npm run typecheck');
+    expect(ide).toContain('Kiro.exe');
+    expect(ide.length).toBeLessThan(2000);
   });
 
   it('writes the public number with its source and as a statement about competition only', () => {
