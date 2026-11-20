@@ -27,3 +27,7 @@ Each fix goes to the cause in `kit/shell/src` or in the apps. Colour changes onl
 ## Limits
 
 axe cannot judge the canvas content, and it does not replace a test with real people.
+
+## Contrast check (task 5)
+
+`tests/a11y/contrast.test.ts` builds the page CSS with `themeCss` for each theme and reads the colour, font size and font weight of each text from the rules, so the test follows the real style. Sizes are taken at `--u` of 1px, the smallest. A pair is text colour, background, size, limit. Backgrounds that are gradients are reduced to the lightest colour under the text. The sky is the lightest stop of its gradient with the glow at full strength over it. The ratio uses the WCAG 2.1 relative luminance. The test prints every pair, writes `docs/acceptance/a11y/contrast.json` and fails on any pair under its limit. The file states what is not covered: text drawn on the canvas, the moon and stars behind text, and what the game draws behind the proof line.

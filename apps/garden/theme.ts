@@ -51,8 +51,9 @@ export const gardenTheme: Theme = {
   cardArt:
     'radial-gradient(ellipse 85% 60% at 50% 0%, #fff3c433 0%, #ffb62724 40%, #ffb62700 100%), ' +
     'radial-gradient(ellipse 45% 28% at 50% 0%, #fff3c44d 0%, #fff3c400 100%)',
-  // The sky of the title screen glows with the lit lantern.
-  glow: '#ff8a1f4d',
+  // The sky of the title screen glows with the lit lantern. The alpha is 0x41 (it was 0x4d): at its centre the pink text
+  // colour just reaches a contrast of 4.5 on it (tests/a11y/contrast.test.ts).
+  glow: '#ff8a1f41',
   titleArt: { wide: wideArt(), narrow: narrowArt() },
   garland: { lit: garlandLit, unlit: garlandUnlit },
   sprites,

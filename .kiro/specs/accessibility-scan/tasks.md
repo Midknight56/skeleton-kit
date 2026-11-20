@@ -19,3 +19,7 @@ Rule for every task: write the tests first and see them fail for the right reaso
   - Add the paragraphs with the counts from the two reports.
   - Verify: `npm run verify` exits 0.
   - _Requirements: 4.1 to 4.3_
+- [x] 5. The contrast check
+  - Write `tests/a11y/contrast.test.ts` first and run it on the shell as it is. Fix a failing pair by changing only its token. Run `e2e/a11y.e2e.ts`, `e2e/look.e2e.ts`, `e2e/menu-card.e2e.ts`, `e2e/layout.e2e.ts` alone and the unit tests of `kit/shell`.
+  - Edit the two accessibility paragraphs of `README.md`. Verify: `npm run verify` exits 0.
+  - _Requirements: 5.1 to 5.6_

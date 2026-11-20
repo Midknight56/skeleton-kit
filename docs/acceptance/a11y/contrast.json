@@ -1,0 +1,457 @@
+{
+  "tool": "tests/a11y/contrast.test.ts, WCAG 2.1 relative luminance, no package",
+  "limits": {
+    "normalText": 4.5,
+    "largeTextAndControlBordersAndIcons": 3
+  },
+  "pairs": 48,
+  "failing": 0,
+  "lowestRatio": {
+    "name": "garden: storage notice on the sky",
+    "ratio": 4.51
+  },
+  "notCovered": [
+    "Text that the painter draws on the canvas (the labels of the play screen) is not covered. The painter in kit/shell/src/painter.ts has no text call, so no colour of it could be added. Any text a game draws inside its own scene is not covered.",
+    "The watch proof line is tested against the page sky. What the game scene draws under that row of the canvas is not covered.",
+    "The stars of the sky and the moon of the menu screens are not tested as backgrounds. The stars are 1 px dots. The moon sits in a corner and no rule keeps text off it.",
+    "The title puppets are not tested as backgrounds. The shell hides every puppet that comes within 24 px of a heading, a paragraph or the menu column (backdrop.ts, keepClear).",
+    "Buttons are tested for their label and icon. The edge of a plum button against the sky is not tested, because the label names the control. Disabled buttons and the opacity of a locked tile are not applied, because WCAG 1.4.3 exempts inactive controls.",
+    "Sizes are read at the smallest size of the menu screens (--u of 1px). A larger screen only makes text bigger.",
+    "The decorative card border, the strings and the garland pictures are not tested. They carry no information.",
+    "A ratio is a calculation. It says nothing about how real users see the screen."
+  ],
+  "entries": [
+    {
+      "name": "garden: heading on the sky",
+      "foreground": "#efe7d2",
+      "background": "#523029",
+      "size": "34px weight 800, large text",
+      "ratio": 9.39,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: title heading on the sky",
+      "foreground": "#efe7d2",
+      "background": "#523029",
+      "size": "44px weight 800, large text",
+      "ratio": 9.39,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: paragraph and list text on the sky",
+      "foreground": "#efe7d2",
+      "background": "#523029",
+      "size": "18px weight 400, normal text",
+      "ratio": 9.39,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: title tagline on the sky",
+      "foreground": "#b5abcf",
+      "background": "#523029",
+      "size": "14px weight 400, normal text",
+      "ratio": 5.34,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: storage notice on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#523029",
+      "size": "13px weight 400, normal text",
+      "ratio": 4.51,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: result reason on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#523029",
+      "size": "18px weight 400, normal text",
+      "ratio": 4.51,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: watch proof line on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#523029",
+      "size": "18px weight 500, normal text",
+      "ratio": 4.51,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: button label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "18px weight 700, normal text",
+      "ratio": 10.65,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: title button label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "16px weight 700, normal text",
+      "ratio": 10.65,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: title play button label",
+      "foreground": "#141026",
+      "background": "#ff8a1f",
+      "size": "18px weight 700, normal text",
+      "ratio": 7.86,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: pressed or primary button label",
+      "foreground": "#141026",
+      "background": "#ff8a1f",
+      "size": "18px weight 700, normal text",
+      "ratio": 7.86,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: watch button label",
+      "foreground": "#ff6fb5",
+      "background": "#2e1a3a",
+      "size": "16px weight 700, normal text",
+      "ratio": 6.18,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: locked level tile label on its fill",
+      "foreground": "#b5abcf",
+      "background": "#221a3d",
+      "size": "18px weight 700, normal text",
+      "ratio": 7.55,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: hint chip label on its fill",
+      "foreground": "#141026",
+      "background": "#ff6fb5",
+      "size": "14px weight 700, normal text",
+      "ratio": 7.23,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: garland level number on the garland panel",
+      "foreground": "#b5abcf",
+      "background": "#110d21",
+      "size": "10px weight 400, normal text",
+      "ratio": 8.78,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: garland note on the garland panel",
+      "foreground": "#b5abcf",
+      "background": "#110d21",
+      "size": "11px weight 400, normal text",
+      "ratio": 8.78,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: confirm box message on its card",
+      "foreground": "#efe7d2",
+      "background": "#48373b",
+      "size": "18px weight 400, normal text",
+      "ratio": 9,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: pause and undo icons on their fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 10.65,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: level tile stars on their fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 10.65,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: locked level tile stars on their fill",
+      "foreground": "#b5abcf",
+      "background": "#221a3d",
+      "size": "icon",
+      "ratio": 7.55,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: focus outline on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#523029",
+      "size": "border 3px",
+      "ratio": 4.51,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: focus outline on the play strip",
+      "foreground": "#ff6fb5",
+      "background": "#28191f",
+      "size": "border 3px",
+      "ratio": 6.57,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: watch button border on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#523029",
+      "size": "border 2px",
+      "ratio": 4.51,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "garden: watch button border on its fill",
+      "foreground": "#ff6fb5",
+      "background": "#2e1a3a",
+      "size": "border 2px",
+      "ratio": 6.18,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: heading on the sky",
+      "foreground": "#efe7d2",
+      "background": "#302658",
+      "size": "38px weight 800, large text",
+      "ratio": 11.05,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: title heading on the sky",
+      "foreground": "#efe7d2",
+      "background": "#302658",
+      "size": "44px weight 800, large text",
+      "ratio": 11.05,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: paragraph and list text on the sky",
+      "foreground": "#efe7d2",
+      "background": "#302658",
+      "size": "17px weight 400, normal text",
+      "ratio": 11.05,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: title tagline on the sky",
+      "foreground": "#b5abcf",
+      "background": "#302658",
+      "size": "14px weight 400, normal text",
+      "ratio": 6.29,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: storage notice on the sky",
+      "foreground": "#efe7d2",
+      "background": "#302658",
+      "size": "13px weight 400, normal text",
+      "ratio": 11.05,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: result reason on the sky",
+      "foreground": "#ff8a1f",
+      "background": "#302658",
+      "size": "17px weight 400, normal text",
+      "ratio": 5.78,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: watch proof line on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#302658",
+      "size": "17px weight 500, normal text",
+      "ratio": 5.31,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: button label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "17px weight 700, normal text",
+      "ratio": 10.65,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: title button label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "16px weight 700, normal text",
+      "ratio": 10.65,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: title play button label",
+      "foreground": "#141026",
+      "background": "#ff8a1f",
+      "size": "18px weight 700, normal text",
+      "ratio": 7.86,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: pressed or primary button label",
+      "foreground": "#141026",
+      "background": "#ff8a1f",
+      "size": "17px weight 700, normal text",
+      "ratio": 7.86,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: watch button label",
+      "foreground": "#ff6fb5",
+      "background": "#2e1a3a",
+      "size": "16px weight 700, normal text",
+      "ratio": 6.18,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: locked level tile label on its fill",
+      "foreground": "#b5abcf",
+      "background": "#221a3d",
+      "size": "17px weight 700, normal text",
+      "ratio": 7.55,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: hint chip label on its fill",
+      "foreground": "#0c0919",
+      "background": "#efe7d2",
+      "size": "14px weight 700, normal text",
+      "ratio": 15.93,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: garland level number on the garland panel",
+      "foreground": "#b5abcf",
+      "background": "#110d21",
+      "size": "10px weight 400, normal text",
+      "ratio": 8.78,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: garland note on the garland panel",
+      "foreground": "#b5abcf",
+      "background": "#110d21",
+      "size": "11px weight 400, normal text",
+      "ratio": 8.78,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: confirm box message on its card",
+      "foreground": "#efe7d2",
+      "background": "#271f48",
+      "size": "17px weight 400, normal text",
+      "ratio": 12.39,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: pause and undo icons on their fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 10.65,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: level tile stars on their fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "icon",
+      "ratio": 10.65,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: locked level tile stars on their fill",
+      "foreground": "#b5abcf",
+      "background": "#221a3d",
+      "size": "icon",
+      "ratio": 7.55,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: focus outline on the sky",
+      "foreground": "#efe7d2",
+      "background": "#302658",
+      "size": "border 3px",
+      "ratio": 11.05,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: focus outline on the play strip",
+      "foreground": "#efe7d2",
+      "background": "#1b1432",
+      "size": "border 3px",
+      "ratio": 14.25,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: watch button border on the sky",
+      "foreground": "#ff6fb5",
+      "background": "#302658",
+      "size": "border 2px",
+      "ratio": 5.31,
+      "limit": 3,
+      "result": "pass"
+    },
+    {
+      "name": "runner: watch button border on its fill",
+      "foreground": "#ff6fb5",
+      "background": "#2e1a3a",
+      "size": "border 2px",
+      "ratio": 6.18,
+      "limit": 3,
+      "result": "pass"
+    }
+  ]
+}

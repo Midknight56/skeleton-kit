@@ -41,3 +41,14 @@ This spec adds an automated accessibility scan of every screen of the game shell
 1. THE SYSTEM SHALL add a short paragraph to the Design paragraph of the judging block in `README.md` and an Accessibility line under "How Kiro was used".
 2. THE SYSTEM SHALL read the violation counts before and after from the two report files.
 3. THE SYSTEM SHALL say that axe does not replace a test with real people and cannot read a canvas.
+
+### Requirement 5: The contrast check
+**User Story:** As a player with low vision, I want the text colours of the shell checked by a calculation, so that contrast is tested where axe cannot judge it.
+
+#### Acceptance Criteria
+1. THE SYSTEM SHALL compute the WCAG 2.1 contrast ratio in `tests/a11y/contrast.test.ts` with a small pure function and no new package.
+2. THE SYSTEM SHALL test every text colour of the shell against every background it is drawn on, for both games, reading colours, sizes and weights from `kit/shell/src` and the two `theme.ts` files.
+3. WHERE text sits on a gradient or an image, THE SYSTEM SHALL test it against the lightest colour under the text and say in a comment how that colour was found.
+4. THE SYSTEM SHALL require a ratio of 4.5 for normal text and 3 for large text (24 px, or 18.66 px bold), for the borders of controls and for icons.
+5. THE SYSTEM SHALL list each pair with its ratio, write `docs/acceptance/a11y/contrast.json`, state what the pairs do not cover, and fail on any pair under its limit.
+6. WHEN a pair fails, THE SYSTEM SHALL change only the token that fails, by the smallest step that reaches the limit, and log the change.
