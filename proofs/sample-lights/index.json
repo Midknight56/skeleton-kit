@@ -3,14 +3,26 @@
   "levels": [
     {
       "actions": 1,
+      "firstMoves": {
+        "legal": 9,
+        "winning": 9
+      },
       "id": "l1"
     },
     {
       "actions": 2,
+      "firstMoves": {
+        "legal": 9,
+        "winning": 9
+      },
       "id": "l2"
     },
     {
       "actions": 3,
+      "firstMoves": {
+        "legal": 9,
+        "winning": 9
+      },
       "id": "l3"
     }
   ]

@@ -22,6 +22,10 @@
   "seed": 1,
   "stats": {
     "actions": 3,
+    "firstMoves": {
+      "legal": 9,
+      "winning": 9
+    },
     "nodes": 95
   }
 }

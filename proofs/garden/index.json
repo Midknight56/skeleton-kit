@@ -3,50 +3,98 @@
   "levels": [
     {
       "actions": 2,
+      "firstMoves": {
+        "legal": 2,
+        "winning": 2
+      },
       "id": "g01"
     },
     {
       "actions": 3,
+      "firstMoves": {
+        "legal": 1,
+        "winning": 1
+      },
       "id": "g02"
     },
     {
       "actions": 4,
+      "firstMoves": {
+        "legal": 3,
+        "winning": 3
+      },
       "id": "g03"
     },
     {
       "actions": 5,
+      "firstMoves": {
+        "legal": 3,
+        "winning": 1
+      },
       "id": "g04"
     },
     {
       "actions": 7,
+      "firstMoves": {
+        "legal": 2,
+        "winning": 1
+      },
       "id": "g05"
     },
     {
       "actions": 6,
+      "firstMoves": {
+        "legal": 4,
+        "winning": 2
+      },
       "id": "g06"
     },
     {
       "actions": 9,
+      "firstMoves": {
+        "legal": 4,
+        "winning": 1
+      },
       "id": "g07"
     },
     {
       "actions": 10,
+      "firstMoves": {
+        "legal": 2,
+        "winning": 2
+      },
       "id": "g08"
     },
     {
       "actions": 10,
+      "firstMoves": {
+        "legal": 4,
+        "winning": 4
+      },
       "id": "g09"
     },
     {
       "actions": 12,
+      "firstMoves": {
+        "legal": 3,
+        "winning": 2
+      },
       "id": "g10"
     },
     {
       "actions": 13,
+      "firstMoves": {
+        "legal": 3,
+        "winning": 1
+      },
       "id": "g11"
     },
     {
       "actions": 16,
+      "firstMoves": {
+        "legal": 4,
+        "winning": 2
+      },
       "id": "g12"
     }
   ]

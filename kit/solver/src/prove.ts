@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createSession, runReplay, validateDef, type GameDef, type Json } from '@kit/core';
 import { solveTick } from './tick';
-import { solveTurn, type SolveResult, type TurnOptions } from './turn';
+import { countFirstMoves, solveTurn, type FirstMoves, type SolveResult, type TurnOptions } from './turn';
 
 interface CheckResult {
   name: string;
@@ -106,7 +106,7 @@ async function loadGame(root: string, dir: string): Promise<Game> {
 }
 
 /** Proves one level. Returns the proof file text and the action count, or the reason it failed. */
-function proveLevel(game: Game, levelId: string): { ok: true; text: string; actions: number } | { ok: false; reason: string } {
+function proveLevel(game: Game, levelId: string): { ok: true; text: string; actions: number; firstMoves?: FirstMoves } | { ok: false; reason: string } {
   const { def } = game;
   const result = def.kind === 'turn' ? solveTurn(def, levelId, SEED, game.turnOptions) : solveTick(def, levelId, SEED);
   if (!result.solved) return { ok: false, reason: `not solved: ${result.reason} after ${result.nodes} nodes` };
@@ -120,6 +120,13 @@ function proveLevel(game: Game, levelId: string): { ok: true; text: string; acti
   const check = runReplay(def, replay);
   if (!check.ok) return { ok: false, reason: `the replay check failed: ${check.error}: ${check.message}` };
   if (check.finalPhase !== 'won') return { ok: false, reason: `the replay ends in phase ${check.finalPhase}, not won` };
+
+  let firstMoves: FirstMoves | undefined;
+  if (def.kind === 'turn') {
+    const counted = countFirstMoves(def, levelId, SEED, game.turnOptions);
+    if (!counted.decided) return { ok: false, reason: `first move ${counted.action} hit ${counted.reason}` };
+    firstMoves = counted.firstMoves;
+  }
 
   let checks: CheckResult[] = [];
   if (game.levelChecks !== undefined) {
@@ -141,9 +148,9 @@ function proveLevel(game: Game, levelId: string): { ok: true; text: string; acti
     replay,
     rulesVersion: def.rulesVersion,
     seed: SEED,
-    stats: { actions: result.actions.length, nodes: result.nodes },
+    stats: { actions: result.actions.length, ...(firstMoves === undefined ? {} : { firstMoves }), nodes: result.nodes },
   });
-  return { ok: true, text, actions: result.actions.length };
+  return { ok: true, text, actions: result.actions.length, ...(firstMoves === undefined ? {} : { firstMoves }) };
 }
 
 async function run(argv: string[]): Promise<number> {
@@ -156,7 +163,7 @@ async function run(argv: string[]): Promise<number> {
   const files: ProofFile[] = [];
   const failures: string[] = [];
   for (const game of games) {
-    const index: { actions: number; id: string }[] = [];
+    const index: { actions: number; firstMoves?: FirstMoves; id: string }[] = [];
     for (const level of game.def.levels()) {
       const outcome = proveLevel(game, level.id);
       if (!outcome.ok) {
@@ -164,7 +171,7 @@ async function run(argv: string[]): Promise<number> {
         continue;
       }
       files.push({ game: game.def.id, name: `${level.id}.json`, text: outcome.text });
-      index.push({ actions: outcome.actions, id: level.id });
+      index.push({ actions: outcome.actions, ...(outcome.firstMoves === undefined ? {} : { firstMoves: outcome.firstMoves }), id: level.id });
       process.stdout.write(`proved ${game.def.id} ${level.id}: ${outcome.actions} actions\n`);
     }
     files.push({ game: game.def.id, name: 'index.json', text: stable({ game: game.def.id, levels: index }) });

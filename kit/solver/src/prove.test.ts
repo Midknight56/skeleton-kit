@@ -143,6 +143,49 @@ describe('prove command', () => {
     expect(prove(cwd, '--check').code).toBe(1);
   }, 60000);
 
+  it('writes firstMoves for turn levels and the index, none for tick levels, and repeats byte for byte', () => {
+    const cwd = workFolder([fixture('sample-lights'), fixture('sample-hop')]);
+    const first = prove(cwd);
+    expect(first.code, first.stderr).toBe(0);
+    const files = snapshot(cwd);
+    for (const level of ['l1', 'l2', 'l3']) {
+      const proof = JSON.parse(files[`sample-lights/${level}.json`] as string) as { stats: Record<string, unknown> };
+      expect(Object.keys(proof.stats)).toEqual(['actions', 'firstMoves', 'nodes']);
+      expect(proof.stats.firstMoves).toMatchObject({ legal: 9 });
+      const winning = (proof.stats.firstMoves as { winning: number }).winning;
+      expect(winning).toBeGreaterThanOrEqual(1);
+      expect(winning).toBeLessThanOrEqual(9);
+    }
+    const lightsIndex = JSON.parse(files['sample-lights/index.json'] as string) as { levels: { id: string; firstMoves: { legal: number; winning: number } }[] };
+    expect(lightsIndex.levels.map((item) => item.id)).toEqual(['l1', 'l2', 'l3']);
+    for (const item of lightsIndex.levels) {
+      const proof = JSON.parse(files[`sample-lights/${item.id}.json`] as string) as { stats: { firstMoves: unknown } };
+      expect(item.firstMoves).toEqual(proof.stats.firstMoves);
+      expect(item.firstMoves.legal).toBe(9);
+    }
+    for (const level of ['h1', 'h2']) {
+      const proof = JSON.parse(files[`sample-hop/${level}.json`] as string) as { stats: Record<string, unknown> };
+      expect(proof.stats).not.toHaveProperty('firstMoves');
+    }
+    const hopIndex = JSON.parse(files['sample-hop/index.json'] as string) as { levels: Record<string, unknown>[] };
+    for (const item of hopIndex.levels) expect(item).not.toHaveProperty('firstMoves');
+
+    expect(prove(cwd).code).toBe(0);
+    expect(snapshot(cwd)).toEqual(files);
+    expect(prove(cwd, '--check').code).toBe(0);
+  }, 60000);
+
+  it('exits 2 in --check mode for proofs that have no firstMoves', () => {
+    const cwd = workFolder([fixture('sample-lights')]);
+    expect(prove(cwd).code).toBe(0);
+    const file = join(cwd, 'proofs', 'sample-lights', 'l1.json');
+    const text = readFileSync(file, 'utf8');
+    writeFileSync(file, text.replace(/ {4}"firstMoves": \{[^}]*\},\n/, ''), 'utf8');
+    expect(readFileSync(file, 'utf8')).not.toContain('firstMoves');
+    const check = prove(cwd, '--check');
+    expect(check.code).toBe(2);
+    expect(check.stderr).toContain('l1');
+  }, 60000);
   it('exits 3 for a missing config, a bad config and a game folder with no build', () => {
     expect(prove(workFolder(null)).code).toBe(3);
 
@@ -198,6 +241,30 @@ describe('prove command', () => {
       expect(snapshot(cwd)).toEqual({});
     }, 60000);
 
+    it('exits 1 and leaves the files as they were when a first move search hits node_limit', () => {
+      // With this key and 200 nodes, solveTurn solves every level but the search for some first move of l3 runs out of nodes.
+      const game = gameWithProof("export const turnOptions = { maxNodes: 200, key: (state) => state.lamps };\n");
+      const cwd = workFolder([fixture('sample-lights')]);
+      expect(prove(cwd).code).toBe(0);
+      const before = snapshot(cwd);
+      writeFileSync(join(cwd, 'kit.config.json'), `${JSON.stringify({ games: [game] })}\n`, 'utf8');
+      const run = prove(cwd);
+      expect(run.code).toBe(1);
+      expect(run.stderr).toContain('sample-lights');
+      expect(run.stderr).toContain('l3');
+      expect(run.stderr).toContain('first move press:');
+      expect(run.stderr).toContain('hit node_limit');
+      expect(snapshot(cwd)).toEqual(before);
+    }, 60000);
+
+    it('writes firstMoves from the same turnOptions that solveTurn gets', () => {
+      const game = gameWithProof("export const turnOptions = { allow: (text) => text !== 'press:0,2' };\n");
+      const cwd = workFolder([game]);
+      const run = prove(cwd);
+      expect(run.code, run.stderr).toBe(0);
+      const l1 = JSON.parse(readFileSync(join(cwd, 'proofs', 'sample-lights', 'l1.json'), 'utf8')) as { stats: { firstMoves: { legal: number } } };
+      expect(l1.stats.firstMoves.legal).toBe(8);
+    }, 60000);
     it('passes turnOptions to the search', () => {
       const game = gameWithProof('export const turnOptions = { allow: () => false };\n');
       const cwd = workFolder([game]);
