@@ -1,0 +1,4 @@
+[INFO] [KRS] <-- GenerateAssistantResponseCommand done totalEvents=5
+ready
+exit 0 seconds 330
+HOOKRUN_DONE
