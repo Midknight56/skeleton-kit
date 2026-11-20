@@ -2,7 +2,7 @@
 
 Rule for every task: write the tests first and see them fail for the right reason. When the task is finished, tick it here and add one row to `docs/kiro-log.md` on the same day. Leave the Credits cell empty.
 
-- [ ] 1. The test and the two sizes (`kit/shell`)
+- [x] 1. The test and the two sizes (`kit/shell`)
   - Write the `garland text` test in `kit/shell/src/look.test.ts`, as the design says. It reads the CSS of `lookCss` and checks each garland `font-size` at `--u` of 1px and of 2px.
   - Run `npm test -- look`. See it fail for the sizes 10 and 11, naming `.number` and `.note` at the small end.
   - Change `L(10, 13)` to `L(12, 13)` and `L(11, 14)` to `L(12, 14)` in `kit/shell/src/look.ts`. Change nothing else.

@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { TOKENS } from './tokens';
 import { FONT_FILES, fontFaceCss } from './fonts';
+import { lookCss } from './look';
 import { createBackdrop } from './screens/backdrop';
 import { titleScreen } from './screens/title';
 import { themeCss } from './styles';
@@ -243,5 +244,52 @@ describe('watch message', () => {
   it('names the message and builds it from the numbers of the run', () => {
     expect(WATCH_MESSAGE).toBe('skeleton-kit:watch');
     expect(watchMessage('g03', 2, 4, 1)).toEqual({ type: 'skeleton-kit:watch', level: 'g03', applied: 2, total: 4, round: 1 });
+  });
+});
+
+describe('garland text', () => {
+  const MIN = 12;
+  const css = lookCss(neutralTheme());
+  const CALC = /^calc\(\s*(\d+(?:\.\d+)?)px\s*\+\s*(-?\d+(?:\.\d+)?)\s*\*\s*\(var\(--u\)\s*-\s*1px\)\s*\)$/;
+  const PLAIN = /^(\d+(?:\.\d+)?)px$/;
+
+  // Every `font-size` of a rule whose selector starts with `[data-garland]`, media blocks included.
+  const declarations = (): { selector: string; value: string }[] => {
+    const found: { selector: string; value: string }[] = [];
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const selector = (m[1] ?? '').trim();
+      if (!selector.startsWith('[data-garland]')) continue;
+      for (const d of (m[2] ?? '').matchAll(/(?:^|;)\s*font-size:\s*([^;]+)/g)) {
+        found.push({ selector, value: (d[1] ?? '').trim() });
+      }
+    }
+    return found;
+  };
+
+  const sizeAt = (value: string, u: number): number | undefined => {
+    const calc = CALC.exec(value);
+    if (calc) return Number(calc[1]) + Number(calc[2]) * (u - 1);
+    const plain = PLAIN.exec(value);
+    return plain ? Number(plain[1]) : undefined;
+  };
+
+  it('has at least two garland font sizes, each one readable', () => {
+    const all = declarations();
+    expect(all.length).toBeGreaterThanOrEqual(2);
+    for (const { selector, value } of all) {
+      expect(sizeAt(value, 1), `${selector}: cannot read font-size "${value}"`).toBeDefined();
+    }
+  });
+
+  it(`keeps every garland font size at ${MIN}px or more at both ends of --u`, () => {
+    const failures: string[] = [];
+    for (const { selector, value } of declarations()) {
+      for (const [end, u] of [['small end (--u 1px)', 1], ['large end (--u 2px)', 2]] as const) {
+        const size = sizeAt(value, u);
+        if (size === undefined) failures.push(`${selector} ${end}: unreadable "${value}"`);
+        else if (size < MIN) failures.push(`${selector} at the ${end} is ${size}px, under ${MIN}px`);
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });
