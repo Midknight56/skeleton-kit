@@ -23,6 +23,7 @@
     "new:game": "node kit/create/build.mjs --quiet && node kit/create/dist/cli.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.11.3",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",

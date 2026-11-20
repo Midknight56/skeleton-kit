@@ -21,7 +21,7 @@ inclusion: always
 - One app never imports from another app.
 - A game's `src/rules` never imports from `kit/shell`, `kit/mcp` or the DOM.
 - `kit/core` has no dependency outside the TypeScript standard library.
-- A new dependency needs its licence written in the task's log row. Only MIT, BSD, ISC or Apache 2.0 licences are allowed.
+- A new dependency needs its licence written in the task's log row. Only MIT, BSD, ISC or Apache 2.0 licences are allowed. A dependency that is used only by tests and never ships in a build or is linked into one may also use MPL-2.0 when the log row names the package, the licence and says it is a test only tool.
 - One task changes one folder from the table. If a task needs a second folder, stop and say so.
 - Write every text file as UTF-8 with no byte order mark and with LF line endings. On Windows, do not write files with PowerShell `Set-Content` or `Out-File`.
 
