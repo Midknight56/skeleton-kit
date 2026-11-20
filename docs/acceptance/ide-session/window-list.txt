@@ -1,0 +1,1 @@
+tasks.md - skeleton-kit-ide - Kiro | pid 42144 | left=-1998 top=40 right=-92 bottom=1092

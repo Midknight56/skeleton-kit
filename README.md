@@ -1,8 +1,6 @@
 # Skeleton kit
 
-Skeleton kit is our entry for the Skeleton Crew category: a skeleton code template lean enough to be clear but flexible enough to support various use cases, with two distinct applications built from one foundation. Moth Garden is a turn puzzle and Broom Runner is a one button runner at 60 ticks a second, and both run on the same kit. Kiro built it with spec driven development, from five specs. A search script proves that every level of both games can be finished, and any AI tool can play the games through a tool door (an MCP server built from the game's own rules).
-
-Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from five specs, with five steering files, three hooks, three MCP servers, two custom agents and one power.
+![The Skeleton kit landing page with a garden level playing by itself, the garden level select with a row of proof pips on each open level, and a garden level in play.](docs/img/hero.png)
 
 Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
@@ -10,19 +8,25 @@ Video: https://youtu.be/AU-yrIBvsuA
 
 ## Judging criteria at a glance
 
-**Potential Impact.** Solo developers and small studios have nobody to replay every level after each change, and an AI coding tool writes game code it cannot play. With this kit, `npm run prove -- --check` replays a proof for every level after each change and fails with the exact replay file when a level breaks. Each run is free: the proof is a plain search, not a model. Today it proves 12 garden levels (2 to 16 actions) and 6 runner courses (687 to 1851 actions).
+**Potential Impact.** Solo developers and small studios have nobody to replay every level after each change, and an AI coding tool writes game code it cannot play. They also compete with a great many games: 27,286 games have been released on Steam so far in 2026, against 21,185 in all of 2025 (GamingOnLinux, article published 2026-11-18, citing SteamDB, https://www.gamingonlinux.com/2026/11/steam-is-officially-drowning-in-game-releases/, read on 20 Nov 2026). That number says how many games a small maker competes with. It is not a measure of this kit. With this kit, `npm run prove -- --check` replays a proof for every level after each change and fails with the exact replay file when a level breaks. Each run is free: the proof is a plain search, not a model. `proofs/garden/index.json` and `proofs/runner/index.json` hold 12 garden levels (2 to 16 actions) and 6 runner courses (687 to 1851 actions). The garden level select shows, for each open level, the fewest actions that win and how many of the legal first moves can still win (spec `difficulty-display`). These are facts of the proof: the proof shows a level can be won, not how it feels to play.
 
-**Technological Implementation.** Five Kiro specs (`kit-core`, `tool-door-and-prover`, `garden-puzzle`, `broom-runner`, `shell-and-site`) with 78 tasks, all done. Five steering files set the rules (determinism, kit boundary, game standards, claims, product). Three hooks: `protect-proofs` blocks any direct write to `proofs/` (seen to block a real write, logged), `verify-on-stop` is set to run the full check when the agent finishes a turn, and `typecheck-on-save` is set to check types on save. Three MCP servers give Kiro each game's tool door, and two custom agents (`playtester`, `runner-playtester`) played levels to a won state through them. A property test found a real bug (a replay whose game field was an object with no prototype threw a TypeError); the fix is in `kit/core/src/replay.ts`. Every task is logged in `docs/kiro-log.md`.
+**Technological Implementation.** Kiro wrote the code from 10 specs with 97 tasks, all done (counted in `.kiro/specs/`). Five steering files set the rules, three MCP servers give Kiro each game's tool door, and two custom agents (`playtester`, `runner-playtester`) played levels to a won state through them. A property test found a real bug (a replay whose game field was an object with no prototype threw a TypeError); the fix is in `kit/core/src/replay.ts`. Every task is in `docs/kiro-log.md`.
+
+The Kiro features each have a proof file. The power `power/skeleton-kit/` ran in one headless Kiro CLI 3.5.0 session and won garden level g01 (`docs/acceptance/power-session/`). The hook `protect-proofs` blocked a real write on 16 Nov 2026 (`docs/kiro-log.md`, "Hooks seen to fire"), and `verify-on-stop` ran `npm run verify` at the end of a headless session on 20 Nov 2026 (`docs/acceptance/hook-verify-on-stop.md`). One task was made in Kiro Web, a pull request that merged: https://github.com/Midknight56/skeleton-kit/pull/1 (`docs/acceptance/web-session/`). The Crew app `playcheck` ran on Kiro Crew 0.12.2 and matched 18 of 18 proof replays of this kit (the README of the app, https://github.com/Midknight56/playcheck). One feature was built twice, from one paragraph and from a spec, and the same task was run on three models (`docs/acceptance/vibe-vs-spec/` and `docs/acceptance/model-test/`). An axe-core scan of 54 screens of both games found 0 violations (`docs/acceptance/a11y/`).
 
 **Design.** Both games are complete: title, level select with locks and stars, play, pause (also when the page loses focus), results with Next, Retry and Levels, settings with a confirm box before a reset, how to play, credits, a watch mode that plays any level from its proof, a loading screen and a privacy page. Every screen hangs cut paper puppets on strings under one moon: a lantern and moths for the garden, the witch on her broom for the runner. Moths flap, lanterns glow, the broom leaves sparks and dust, and the reduced motion setting turns every effect off. The effects are drawing only, so every proof still replays. The art is SVG drawn in code and every sound is made in code. Headless browser tests measure every control at 360x640, 768x1024 and 1920x1080: 16 px from the screen edge, 12 px between neighbours, nothing overlapping.
-
-An automated scan checks accessibility too. `e2e/a11y.e2e.ts` runs axe-core (4.11.4 was installed, through @axe-core/playwright 4.11.3) with the tags wcag2a, wcag2aa, wcag21a and wcag21aa on 9 screens of both games at 360x640, 768x1024 and 1920x1080: title, level select, play, pause, results, settings, how to play, credits and the confirm box before a reset. That is 54 scans. The result is in `docs/acceptance/a11y/`. Before any fix the report had 0 critical, 0 serious, 0 moderate and 0 minor violations, and the report after has the same counts, because the scan found nothing to fix. axe lists color-contrast as incomplete on all 54 scans, because the text sits on gradients and images, so the scan does not judge contrast. A second check does: `tests/a11y/contrast.test.ts` computes the WCAG 2.1 contrast ratio of 48 pairs of text, icon and border colours of both games against the lightest colour under them, and writes `docs/acceptance/a11y/contrast.json`. The lowest ratio is 4.51 and every pair meets its limit (4.5 for normal text, 3 for large text, icons and control borders). One value changed to get there: the garden glow in `apps/garden/theme.ts`, from alpha 0x4d to 0x41. The check does not cover text drawn on the canvas, and neither check replaces a test with real users.
 
 **Innovation/Idea.** The same game code runs in three places: the browser, the prover and the tool door. One draw list feeds a canvas painter for players and an SVG text painter for tools and tests, so the picture a program gets is the picture a player sees. A turn puzzle and a real time runner at 60 ticks a second share one contract, which shows the kit is not tied to one kind of game. For the runner the prover also measures how forgiving each jump is: every jump has a window of at least 9 ticks on the first two courses, 6 on the middle two and 4 on the last two (at 60 ticks a second, 150 ms down to 67 ms).
 
 For each turn level the prover also finds the fewest actions that win and how many of the legal first moves can still win. `npm run prove` writes both numbers to `proofs/garden/index.json`, the build step in `tools/level-facts.mjs` copies them into the page, and `kit/shell/src/difficulty.ts` turns them into a row of pips on each open level card on the level select screen. The exact numbers are in the name a screen reader reads. These are facts of the proof: the proof shows a level can be won, not how it feels to play.
 
-**Presentation.** The landing page plays a garden level by itself in the first screen and shows the exact tool calls that play it. The video shows both games, a change that breaks a level, the prover naming the broken level, and how Kiro built it.
+**Presentation.** The landing page plays a garden level by itself in the first screen and shows the exact tool calls that play it. The picture at the top is made by `tools/capture-hero.mjs` from three captures of the built site: the landing page, a garden level in play and the garden level select with its proof pips.
+
+## What it is
+
+Skeleton kit is our entry for the Skeleton Crew category: a skeleton code template lean enough to be clear but flexible enough to support various use cases, with two distinct applications built from one foundation. Moth Garden is a turn puzzle and Broom Runner is a one button runner at 60 ticks a second, and both run on the same kit. Kiro built it with spec driven development, from 10 specs. A search script proves that every level of both games can be finished, and any AI tool can play the games through a tool door (an MCP server built from the game's own rules).
+
+Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from 10 specs, with five steering files, three hooks, three MCP servers, two custom agents and one power.
 
 ## The two apps
 
@@ -46,25 +50,60 @@ A third small game, `examples/lights`, was made with `npm run new:game` to show 
 
 ## How Kiro was used
 
-**Kiro IDE, CLI, Web, Crew.** Almost all the code came from the Kiro CLI 3.3.0 run with no person at the keyboard (`kiro-cli chat --no-interactive`, model Auto): one prompt per spec review, group of spec tasks or fix, each told to write the test first, run `npm run verify` and add a row to `docs/kiro-log.md` for each task. The log holds 86 such rows, including a review of each spec before any code was written. One task, `kit-core` task 12, ran in the Kiro IDE to try its spec correctness feature. Kiro Crew runs the `playcheck` app (see below). Kiro Web was not used.
+**Kiro IDE.** One task is recorded: `kit-core` task 12 on 16 Nov 2026 (its row in `docs/kiro-log.md`). It added twelve properties to the `kit-core` design and tests, and one of them found the TypeError in `kit/core/src/replay.ts`.
+
+**Kiro CLI.** Almost all the code came from the Kiro CLI run with no person at the keyboard (`kiro-cli chat --no-interactive`, model Auto): one prompt per spec review, group of spec tasks or fix, each told to write the test first, run `npm run verify` and add a row to `docs/kiro-log.md`. The log has 108 rows of Kiro work: 88 on Kiro CLI 3.3.0 (16 and 17 Nov 2026), 19 on Kiro CLI 3.5.0 (20 Nov 2026) and 1 in the Kiro IDE.
+
+**Kiro Web.** One task was made in Kiro Web on 20 Nov 2026: a new file, `docs/replay-format.md` (103 lines), that explains the replay file the kit writes. Kiro Web opened pull request 1 and it merged: https://github.com/Midknight56/skeleton-kit/pull/1. The proof is `docs/acceptance/web-session/`. Its network was set to repository access only, so Kiro Web could install no package and run no test, which is why the change is a document.
+
+**Kiro Crew.** `playcheck` is a Kiro Crew app in its own repository: https://github.com/Midknight56/playcheck. A Crew agent plays a game built with this kit through its tool door and reports the level, seed, actions, final status and state hash. A nightly job replays the kit's proof of every level and compares the hashes. It ships switched off. Version 0.2.1 keeps the state file of that job in the app's own data folder, because version 0.2.0 lost it between runs. Versions 0.1.0 and 0.2.0 were installed and run on Kiro Crew 0.12.2 on Windows (0.1.0 on 16 Nov 2026, 0.2.0 on 20 Nov 2026). The README of the app records the results. On 20 Nov 2026 three runs of the nightly job gave: run 1 failed because no one approved a tool call, and runs 2 and 3 matched 18 of 18 proof replays and won garden g01 and runner r01 by hand, in 45 and 43 seconds. Version 0.2.1 is installed and switched off. It has not been run.
 
 **Custom agents.** `.kiro/agents/playtester.json` and `.kiro/agents/runner-playtester.json` have only the game tools and file reads, and may not change any file. Each must play a level to a won status in its own session before it may call the level fine. They ran on the CLI's v2 engine, because the v3 engine loaded no MCP tools in a run with no person at the keyboard. Their tool calls are pasted in `docs/kiro-log.md` under "Tool door transcripts".
 
-**Agent hooks.** `protect-proofs` (PreToolUse) runs `tools/hooks/protect-proofs.mjs` and refuses any write into `proofs/`, so only `npm run prove` can change a proof. It blocked a real write on 16 Nov 2026 (in the log under "Hooks seen to fire"). `verify-on-stop` is set to run `npm run verify` when the agent finishes a turn, and `typecheck-on-save` is set to run the type check on save. The log records a hook only when it was seen to fire.
+**Agent hooks.** `protect-proofs` (PreToolUse) runs `tools/hooks/protect-proofs.mjs` and refuses any write into `proofs/`, so only `npm run prove` can change a proof. It blocked a real write on 16 Nov 2026 (in the log under "Hooks seen to fire"). `verify-on-stop` (Stop) runs `npm run verify` when the agent finishes a turn. It ran at the end of a headless Kiro CLI 3.5.0 session on 20 Nov 2026: `docs/acceptance/hook-verify-on-stop.md` has the times and the event of the session record. `typecheck-on-save` (PostFileSave) is set to run the type check on save and has no proof file yet, so it is not named as fired.
 
-**Spec driven development.** Each of the five specs has requirements, a design and a task list (78 tasks in all). The kit was split so that each spec could be built and checked on its own: `kit-core` first (the contract, replays and hashes), then the tool door and prover, then each game, then the shell and site. A task was done only when its tests passed and the proof check passed. When a fault showed up later (for example, a hint chip over a moth on a wide screen), it went back to Kiro as a new task with a failing test first, not as a loose request. Compared with vibe coding (loose requests in a chat), the specs kept every run in line with one contract, and each run had to pass the same `npm run verify` before its work was kept.
+**Spec driven development.** The repository has 10 specs, each with requirements, a design and a task list, 97 tasks in all, counted in `.kiro/specs/`. Five specs built the kit and the games, with 78 tasks: `kit-core`, `tool-door-and-prover`, `garden-puzzle`, `broom-runner` and `shell-and-site`. Five came later, with 19 tasks: `kiro-extensions`, `accessibility-scan`, `first-moves`, `difficulty-display` and `readme-hero`. The kit was split so that each spec could be built and checked on its own: `kit-core` first (the contract, replays and hashes), then the tool door and prover, then each game, then the shell and site. A task was done only when its tests passed and the proof check passed. A fault found later went back to Kiro as a new task with a failing test first, for example the row "fix: garden lesson chip cut off at the left edge" in `docs/kiro-log.md`. The section after this one compares a spec build with a build from loose requests.
 
-**Steering docs.** Three files are always loaded: `product.md` (who it is for), `kit-boundary.md` (which folder may import which) and `claims-policy.md` (never invent test output, never edit `proofs/` by hand, log every task). Two load only for matching files: `determinism.md` for the rules code (plain JSON state, integers only in a tick game, no clock and no global random) and `game-standards.md` for the shell and apps (every screen, clear in five seconds, spacing rules). The claims policy made the biggest difference: Kiro's log rows say which tests failed first, what did not run and what was not checked.
+**Steering docs.** Three files are always loaded: `product.md` (who it is for), `kit-boundary.md` (which folder may import which) and `claims-policy.md` (never invent test output, never edit `proofs/` by hand, log every task). Two load only for matching files: `determinism.md` for the rules code (plain JSON state, integers only in a tick game, no clock and no global random) and `game-standards.md` for the shell and apps (every screen, clear in five seconds, spacing rules). The log rows say which tests failed first, what did not run and what was not checked.
 
-**MCP.** `.kiro/settings/mcp.json` starts the kit's own tool door for the garden, the runner and a third small game. With it Kiro can play the games it wrote, not only compile them. The `playtester` agent won a level of the third game through it and the `runner-playtester` agent won runner course r01 (tick 687, score 110), and each replay was checked against the rules. Without MCP an agent can only read the code and guess how a level plays.
+**MCP.** `.kiro/settings/mcp.json` starts the kit's own tool door for the garden, the runner and a third small game. With it Kiro can play the games it wrote, not only compile them. The `playtester` agent won a level of the third game through it and the `runner-playtester` agent won runner course r01 (tick 687, score 110), and each replay was checked against the rules.
 
 **Property based testing (PBT).** `kit/conformance` holds nine properties every game must pass (with `fast-check`): repeatable, replay round trip, legal closure, plain data, input not changed, game over is final, action text round trip, undo, and view and observation safe. Kiro added twelve more properties to `kit-core` from its requirements. The property on replay failures found the TypeError bug above, which no unit test had covered.
 
 **Kiro powers.** One power, `power/skeleton-kit/`, in the Agent Plugins format. It gives Kiro the five tools of the tool door (`new_game`, `act`, `observe`, `render`, `replay`) and one skill, `play-and-prove`. The skill says a level is fine only after it was played to a won status, that only legal actions are sent, and that `proofs/` is changed only by `npm run prove`. The power starts the server file of your own clone, named by two environment variables, so the clone has to be built first. The steps are in `power/skeleton-kit/README.md`. It was written from the spec `kiro-extensions`.
 
-The power ran once. `docs/acceptance/power-session/` holds the saved output of one headless Kiro CLI 3.5.0 session in which the power was installed and Kiro won garden level g01 with two legal actions, using the power's `new_game` and `act` tools. The prompt named no tool. The answer matched the proof file and a run of the garden server. The power was uninstalled afterwards. That is one session, one prompt and one game, and the folder lists what was not tried.
+`docs/acceptance/power-session/` holds the saved output of one headless Kiro CLI 3.5.0 session in which the power was installed and Kiro won garden level g01 with two legal actions, using the power's `new_game` and `act` tools. The prompt named no tool. The answer matched the proof file and a run of the garden server. The power was uninstalled afterwards. The folder lists the limits of that one session.
 
-**Accessibility.** The tool is axe-core (4.11.4 was installed) through @axe-core/playwright 4.11.3, a test only tool that no build holds. `e2e/a11y.e2e.ts` scans 9 screens of both games at 3 viewports and writes `docs/acceptance/a11y/report.json`; the first run is kept as `report-before.json`. Violations before: 0 critical, 0 serious, 0 moderate, 0 minor. After: the same, so Kiro made no accessibility fix. The test fails on any serious or critical violation. axe lists color-contrast as incomplete on every screen, so `tests/a11y/contrast.test.ts` checks 48 colour pairs by calculation and writes `docs/acceptance/a11y/contrast.json`. Lowest ratio 4.51. One value changed: the garden glow in `apps/garden/theme.ts`, alpha 0x4d to 0x41. Text drawn on the canvas is not covered. axe cannot read the canvas, and neither check replaces a test with real users.
+## Spec against vibe, and the model test
+
+The same small feature was built twice from commit `847e6e1` with Kiro CLI 3.5.0, model `auto`, headless, in throwaway worktrees of this repository. The feature: the prover tells, for each turn level, how many of the first moves can still win. The loose build had one paragraph and no spec. The spec build had a spec (`first-moves`). The numbers are from the session records, not from the usage page (`docs/acceptance/vibe-vs-spec/README.md`).
+
+| | Loose build | Spec build |
+| --- | --- | --- |
+| Kiro runs | 1 | 3 |
+| Credits | 2.31 | 7.88 |
+| Minutes | 19.5 | 30.9 |
+| Test cases added | 1, plus assertions in `prove.test.ts` | 14 (1220 tests before, 1234 after) |
+| `npm run verify` at the end | exit 0 | exit 0 |
+| Spec files left behind | none | three |
+
+The two builds wrote equal first move numbers for all 23 levels. The loose build named the wrong surface and date in its log row and changed three folders in one task. The spec build stopped at run 2 before any code, because the spec asked for an error code that does not exist, and run 3 fixed the spec and built it. That stop cost one run (0.90 credits, 6.3 minutes).
+
+The model test ran the three tasks of that spec on three models, each in its own worktree from the same commit (`docs/acceptance/model-test/README.md`).
+
+| Model | Credits | Minutes | Test cases added (total after) | `npm run verify` |
+| --- | --- | --- | --- | --- |
+| `auto` | 5.77 | 18.1 | 14 (1234) | exit 0 |
+| `claude-sonnet-5.5` | 10.47 | 21.0 | 17 (1237) | exit 0 |
+| `gpt-5.6-luna` | 6.98 | 33.0 | 9 (1229) | exit 0 |
+
+All three wrote first move numbers equal to the reference. Each test is one feature or one task, run once. Minutes include about 5 minutes for the `verify-on-stop` hook at the end of each run.
+
+## Accessibility
+
+The tool is axe-core 4.11.4 (installed) through @axe-core/playwright 4.11.3, a test only tool that no build holds. `e2e/a11y.e2e.ts` runs it with the tags wcag2a, wcag2aa, wcag21a and wcag21aa on 9 screens of both games at 360x640, 768x1024 and 1920x1080: title, level select, play, pause, results, settings, how to play, credits and the confirm box before a reset. That is 54 scans. They write `docs/acceptance/a11y/report.json`, and the first run is kept as `docs/acceptance/a11y/report-before.json`. Violations before: 0 critical, 0 serious, 0 moderate, 0 minor. After: the same, so no accessibility fix was needed. The test fails on any serious or critical violation.
+
+axe lists color-contrast as incomplete on all 54 scans, because the text sits on gradients and images. So `tests/a11y/contrast.test.ts` computes the WCAG 2.1 contrast ratio of 52 pairs of text, icon and border colours of both games against the lightest colour under them, and writes `docs/acceptance/a11y/contrast.json`. The lowest ratio is 4.51 and every pair meets its limit (4.5 for normal text, 3 for large text, icons and control borders). One value changed to get there: the garden glow in `apps/garden/theme.ts`, from alpha 0x4d to 0x41. Text drawn on the canvas is not covered, because axe cannot read the canvas. Neither check replaces a test with real users.
 
 ## Run it
 
@@ -76,7 +115,7 @@ npm run verify
 npm run e2e
 ```
 
-`npm run verify` runs the type check, lint, build, 1205 unit tests and the proof check. `npm run e2e` runs 126 headless browser tests.
+`npm run verify` runs the type check, lint, build, 1328 unit tests and the proof check. `npm run e2e` runs 133 headless browser tests.
 
 Play a game through its tool door:
 
@@ -84,9 +123,7 @@ Play a game through its tool door:
 node kit/mcp/dist/server.js --game apps/garden
 ```
 
-## Kiro Crew app
-
-`playcheck` is a Kiro Crew app in its own repository: https://github.com/Midknight56/playcheck. A Crew agent plays a game built with this kit through its tool door and reports the level, seed, actions, final status and state hash. Its nightly play check ships switched off.
+To make the picture at the top again, run `npm run build`, then `node tools/capture-hero.mjs`.
 
 ## Privacy
 

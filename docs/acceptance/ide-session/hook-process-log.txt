@@ -1,0 +1,8 @@
+4:28:16 PM pid 27716 parent 40952 (node.exe) C:\Windows\system32\cmd.exe /d /s /c tsc --noEmit -p tsconfig.json
+4:28:16 PM pid 42084 parent 27716 (cmd.exe) "node"   "D:\Projects\kiroween\skeleton-kit-ide\node_modules\.bin\\..\typescript\bin\tsc" --noEmit -p tsconfig.json
+4:29:29 PM pid 47228 parent 53732 (Kiro.exe) C:\Windows\system32\cmd.exe /d /s /c "npm run typecheck"
+4:29:30 PM pid 61280 parent 47316 (node.exe) C:\Windows\system32\cmd.exe /d /s /c tsc --noEmit -p tsconfig.json
+4:29:30 PM pid 26736 parent 61280 (cmd.exe) "node"   "d:\Projects\kiroween\skeleton-kit-ide\node_modules\.bin\\..\typescript\bin\tsc" --noEmit -p tsconfig.json
+4:30:09 PM pid 56784 parent 46644 (node.exe) C:\Windows\system32\cmd.exe /d /s /c npm run typecheck && npm run lint && npm run build:kit && npm run build:apps && npm run build && npm run test && npm run pr
+4:30:10 PM pid 59560 parent 38060 (node.exe) C:\Windows\system32\cmd.exe /d /s /c tsc --noEmit -p tsconfig.json
+4:30:10 PM pid 41452 parent 59560 (cmd.exe) "node"   "d:\Projects\kiroween\skeleton-kit-ide\node_modules\.bin\\..\typescript\bin\tsc" --noEmit -p tsconfig.json
