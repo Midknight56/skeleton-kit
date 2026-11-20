@@ -56,6 +56,10 @@
   "seed": 1,
   "stats": {
     "actions": 13,
+    "firstMoves": {
+      "legal": 3,
+      "winning": 1
+    },
     "nodes": 399
   }
 }
