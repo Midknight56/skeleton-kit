@@ -76,7 +76,7 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 [data-garland] .picture svg { display: block; width: 100%; height: 100%; }
 [data-garland] [data-ring="true"] .picture { outline: 1.5px dashed ${T.bone}; outline-offset: 5px; border-radius: 50%; }
 [data-garland] .number { margin-top: 6px; font-family: ${FONT_CODE}; font-size: ${L(12, 13)}; color: ${T.muted}; }
-[data-garland] .note { position: absolute; right: ${L(16, 96)}; bottom: ${L(8, 14)}; font-family: ${FONT_CODE}; font-size: ${L(12, 14)}; color: ${T.muted}; }
+[data-garland] .note { position: absolute; right: ${L(16, 96)}; bottom: ${L(8, 14)}; font-family: ${FONT_CODE}; font-size: ${L(13, 15)}; color: ${T.muted}; }
 @media (min-width: 700px) and (min-height: 640px) {
   [data-garland] { display: block; }
   [data-screen="title"][data-garland-below] { padding-bottom: calc(${L(110, 176)} + 16px); }

@@ -43,9 +43,11 @@
       .board { grid-area: board; min-width: 0; }
       .panel { grid-area: panel; position: relative; min-width: 0; }
 
-      h1 { margin: 0 0 12px; font-weight: 800; font-size: 34px; line-height: 1.03; letter-spacing: -0.02em; }
+      h1 { margin: 0 0 8px; font-weight: 800; font-size: 34px; line-height: 1.03; letter-spacing: -0.02em; }
       .intro p { margin: 0; max-width: 520px; font-size: 15px; line-height: 1.45; color: var(--muted); }
-      .intro p + p { margin-top: 8px; color: var(--bone); }
+      .intro p + p { margin-top: 6px; color: var(--bone); }
+      .intro-signs { margin-top: 8px; gap: 8px; }
+      .intro-signs .sign { flex: 0 1 auto; min-height: 44px; padding: 6px 12px; font-size: 14px; }
 
       .how { grid-area: how; margin-top: 8px; padding: 16px; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--dusk); box-shadow: 0 4px 0 var(--ink); }
       .how h2 { margin: 0 0 12px; font-size: 20px; font-weight: 800; line-height: 1.2; }
@@ -138,6 +140,17 @@
         .moon svg { position: absolute; left: 14%; top: 8%; width: 72%; height: auto; overflow: visible; filter: drop-shadow(0 3px 0 rgb(0 0 0 / .3)); }
       }
       @media (min-width: 1100px) and (max-height: 799px) { .moon { display: none; } }
+
+      @media (max-width: 699px) {
+        main { padding-top: calc(var(--rail) + 8px); gap: 10px; }
+        h1 { margin-bottom: 6px; font-size: 28px; }
+        .intro p + p { margin-top: 4px; }
+        .caption { margin-bottom: 4px; }
+        .hung { padding-top: 10px; }
+        .frame { height: 240px; }
+        .intro-signs { margin-top: 8px; gap: 8px; }
+        .intro-signs .sign { min-height: 44px; padding: 6px 10px; font-size: 13px; }
+      }
     </style>
     <script type="module" src="./landing.ts"></script>
   </head>
@@ -167,7 +180,12 @@
       <section class="intro" id="games">
         <h1>Games a program can play.</h1>
         <p data-landing="who">A kit for solo developers and small studios with nobody to test a build.</p>
-        <p data-landing="what">You write your game with the kit. Then an AI coding tool can play it with MCP tool calls: short messages that start a level, press its buttons and read what happened.</p>
+        <p data-landing="what">You write your game with the kit. Then an AI coding tool can play it with MCP tool calls.</p>
+        <p data-landing="guide">Play in the browser now, or get the kit to build your own game.</p>
+        <div class="signs intro-signs" data-landing="buttons">
+          <a class="sign primary" data-link="play-now" href="./garden/">Play in the browser</a>
+          <a class="sign" data-link="get-kit" href="__REPOSITORY_URL__">Get the kit</a>
+        </div>
       </section>
 
       <section class="board" aria-label="A level playing by itself">
@@ -199,7 +217,7 @@
         </div>
       </aside>
 
-      <div class="actions">
+      <div class="actions" id="actions">
         <nav class="signs" aria-label="The two games">
           <a class="sign primary" data-card="garden" href="./garden/">Play Moth Garden</a>
           <a class="sign" data-card="runner" href="./runner/">Play Broom Runner</a>

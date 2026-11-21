@@ -257,6 +257,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         w: parseFloat(el.style.width),
         h: parseFloat(el.style.height),
       }));
+      const foreground = scene.items.filter((item) => item.layer === 'world' || item.layer === 'actors');
       return showHints(doc, view.root, lessons, (anchor) => boxForAnchor(view.root, scene, anchor), {
         width: W,
         height: H,
@@ -266,7 +267,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         top: Math.max(0, ...hud.map((b) => b.y + b.h)),
         bottom: parseFloat(view.strip.style.top),
         avoid: [...hud, ...buttons],
-        obstacles: sceneBoxes(scene).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
+        obstacles: sceneBoxes({ ...scene, items: foreground }).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
       });
     }
 
@@ -421,7 +422,13 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   function boxForAnchor(root: HTMLElement, scene: Scene, anchor: string): Rect | null {
     const item = sceneBoxes(scene).find((b) => b.id === anchor);
-    if (item) return { x: item.x, y: item.y, w: item.w, h: item.h };
+    if (item) {
+      if (def.kind === 'tick' && anchor === 'player') {
+        const reach = Math.round(item.h * 1.8);
+        return { x: item.x, y: item.y - reach, w: item.w, h: item.h + reach };
+      }
+      return { x: item.x, y: item.y, w: item.w, h: item.h };
+    }
     const control = root.querySelector<HTMLElement>(`[data-control="${anchor}"]`);
     if (!control) return null;
     return { x: parseFloat(control.style.left), y: parseFloat(control.style.top), w: parseFloat(control.style.width), h: parseFloat(control.style.height) };

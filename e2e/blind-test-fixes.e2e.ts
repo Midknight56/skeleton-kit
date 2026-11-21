@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { FRAME_MS, clickItem, control, expect, freezeClock, installClock, screen, test } from './fixtures';
+import { FRAME_MS, clickItem, control, expect, freezeClock, installClock, runToTick, screen, test } from './fixtures';
 
 // The problems three first time testers found on 2026-11-20. Each test names the problem it checks.
 // The list is docs/acceptance/blind-test-fixes-2026-11-20.md.
@@ -261,4 +261,107 @@ test('runner level 1: the Tap jump chip stays on screen while the run goes on, u
   await page.keyboard.press(' ');
   await page.clock.runFor(4 * FRAME_MS);
   await expect(page.locator('[data-hint="jump"]')).toHaveCount(0);
+});
+
+for (const size of [{ width: 360, height: 640 }, { width: 390, height: 844 }]) {
+  test(`runner phone at ${size.width}x${size.height}: the Tap jump chip never overlaps any candle`, async ({ page }) => {
+    await installClock(page);
+    await page.setViewportSize(size);
+    await page.goto('/runner/');
+    await freezeClock(page);
+    await control(page, 'play').click();
+    await expect(screen(page, 'play')).toBeVisible();
+    const chip = page.locator('[data-hint="jump"]');
+    await expect(chip).toBeVisible();
+    const canvas = page.locator('[data-screen="play"] canvas');
+    let overlapsAny = false;
+    for (let frame = 0; frame < 150; frame++) {
+      await page.clock.runFor(FRAME_MS);
+      if ((await chip.count()) === 0) break;
+      const chipBox = await chip.boundingBox();
+      if (!chipBox) break;
+      const raw = await canvas.getAttribute('data-scene');
+      const items = JSON.parse(raw ?? '[]') as { id: string; x: number; y: number; w: number; h: number }[];
+      const candles = items.filter((b) => b.id.startsWith('candle-'));
+      const canvasBox = (await canvas.boundingBox())!;
+      for (const candle of candles) {
+        const cBox = { x: canvasBox.x + candle.x, y: canvasBox.y + candle.y, w: candle.w, h: candle.h };
+        if (meets({ x: chipBox.x, y: chipBox.y, w: chipBox.width, h: chipBox.height }, cBox)) {
+          overlapsAny = true;
+          break;
+        }
+      }
+      if (overlapsAny) break;
+    }
+    expect(overlapsAny, 'the chip overlaps a candle').toBe(false);
+  });
+}
+
+test('moth garden title screen on desktop: the garland note text is at least 12px', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/garden/');
+  const note = page.locator('[data-garland] .note');
+  await expect(note).toBeVisible();
+  const fontSize = await note.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(fontSize).toBeGreaterThanOrEqual(13);
+});
+
+test('landing page first lines state what a visitor can do and what a game maker does, with two clear buttons', async ({ page }) => {
+  await page.goto('/');
+  const guide = page.locator('[data-landing="guide"]');
+  await expect(guide).toBeVisible();
+  await expect(guide).toContainText('Play in the browser now');
+  await expect(guide).toContainText('get the kit');
+
+  const playNow = page.locator('[data-link="play-now"]');
+  const getKit = page.locator('[data-link="get-kit"]');
+  await expect(playNow).toBeVisible();
+  await expect(playNow).toHaveText('Play in the browser');
+  await expect(playNow).toHaveAttribute('href', './garden/');
+
+  await expect(getKit).toBeVisible();
+  await expect(getKit).toHaveText('Get the kit');
+
+  for (const size of [{ width: 360, height: 640 }, { width: 1920, height: 1080 }]) {
+    await page.setViewportSize(size);
+    const boxPlay = await playNow.boundingBox();
+    const boxGet = await getKit.boundingBox();
+    expect(boxPlay!.y + boxPlay!.height).toBeLessThanOrEqual(size.height);
+    expect(boxGet!.y + boxGet!.height).toBeLessThanOrEqual(size.height);
+  }
+});
+
+test('runner level 1 first gap is clearable with 250ms human reaction time after jump cue and wins', async ({ page }) => {
+  await installClock(page);
+  await page.goto('/runner/');
+  await freezeClock(page);
+  await control(page, 'play').click();
+  await expect(screen(page, 'play')).toBeVisible();
+
+  // Run until jump cue appears at tick 230
+  await runToTick(page, 230);
+  const canvas = page.locator('[data-screen="play"] canvas');
+  const raw = await canvas.getAttribute('data-scene');
+  expect(raw, 'jump cue appears before first gap').toContain('"id":"jump-cue"');
+
+  // Human reaction time: wait ~250 ms (15 ticks at 60 fps) after jump cue appears, then jump
+  await page.clock.runFor(15 * FRAME_MS);
+  await page.keyboard.press(' ');
+  await runToTick(page, 246);
+
+  // Gap 2 jump at tick 391
+  await runToTick(page, 391);
+  await page.keyboard.press(' ');
+  await runToTick(page, 392);
+
+  // Gap 3 jump at tick 543
+  await runToTick(page, 543);
+  await page.keyboard.press(' ');
+  await runToTick(page, 544);
+
+  // Run to win
+  await runToTick(page, 687);
+  await page.clock.runFor(1000);
+  await expect(screen(page, 'results')).toBeVisible();
+  await expect(screen(page, 'results')).toHaveAttribute('data-phase', 'won');
 });

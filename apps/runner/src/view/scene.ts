@@ -1,5 +1,5 @@
 import type { Scene, SceneItem, Viewport } from '@kit/core';
-import { BOX_H, BOX_W, TILE } from '../rules/constants';
+import { BOX_H, BOX_W, RUN, TILE } from '../rules/constants';
 import type { RunnerState } from '../rules/state';
 
 const BAR = 56;
@@ -139,5 +139,29 @@ export function view(state: RunnerState, viewport: Viewport): Scene {
     fill: '#ffffff',
     align: 'center',
   });
+
+  if (state.level === 'r01' && state.x >= 230 * RUN && state.x <= 252 * RUN && state.onGround) {
+    items.push({
+      kind: 'rect',
+      id: 'jump-cue',
+      layer: 'hud',
+      x: playerLeft + 40,
+      y: groundY - 80,
+      w: 64,
+      h: 24,
+      fill: 'rgba(255, 138, 31, 0.9)',
+    });
+    items.push({
+      kind: 'text',
+      id: 'jump-cue-text',
+      layer: 'hud',
+      x: playerLeft + 72,
+      y: groundY - 64,
+      text: 'Jump!',
+      size: 16,
+      fill: '#ffffff',
+      align: 'center',
+    });
+  }
   return { width: viewport.width, height: viewport.height, items };
 }
