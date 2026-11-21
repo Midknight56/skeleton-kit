@@ -201,7 +201,21 @@ describe('the claims in the text', () => {
     expect(readme).toContain('https://github.com/Midknight56/playcheck');
     expect(readme).toContain('Kiro Crew 0.12.2');
     expect(readme).toContain('20 Nov 2026');
-    expect(readme).toMatch(/0\.2\.1 is installed.*(has not been run|not yet run)/s);
+    const crew = /\*\*Kiro Crew\.\*\*([\s\S]*?)\n\n/.exec(readme)?.[1] ?? '';
+    expect(crew).toContain('Versions 0.1.0 and 0.2.0 were installed and run');
+    expect(crew).toMatch(/0\.2\.1 was enabled/);
+    expect(crew).toMatch(/ran twice on version 0\.2\.1/);
+    expect(crew).toContain('46decffc1423863afb37ce4396f64c55e20c33cb');
+    expect(crew).toContain('36.6 seconds');
+    expect(crew).toContain('Run 5');
+    expect(crew).toContain('"No new commit"');
+    expect(crew).toContain('3.0 seconds');
+    expect(crew).toContain("proof's own action lists");
+    expect(crew).not.toMatch(/switched off\. It has not been run/);
+    expect(crew).not.toMatch(/\bby hand\b/);
+    expect(readme).not.toMatch(/0\.2\.1 is installed/);
+    expect(readme).not.toMatch(/has not been run|not yet run/);
+    expect(readme).not.toMatch(/won [^.]*\bby hand\b/);
   });
 
   it('says the two recorded IDE pieces of work, from the proof', () => {
