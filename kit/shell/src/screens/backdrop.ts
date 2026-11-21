@@ -76,10 +76,54 @@ export function createBackdrop(doc: Document, theme: Theme): Backdrop {
   let current: Element | null = null;
   let watching: ResizeObserver | null = null;
 
+  // On phones the hanging illustration has its own space below the menu. Its long
+  // strings must not make the whole picture disappear when they reach the menu.
+  const hanging = Array.from(sky.querySelectorAll('[data-art="narrow"] [data-puppet]'))
+    .filter((el) => el.querySelector('[data-string]') && el.querySelector('use'));
+  const inset = doc.createElement('div');
+  inset.setAttribute('data-title-inset', '');
+  const picture = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  picture.setAttribute('focusable', 'false');
+  const definitions = sky.querySelector('[data-art="narrow"] svg defs');
+  if (definitions) picture.append(definitions.cloneNode(true));
+  const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+  for (const source of hanging) {
+    const copy = source.cloneNode(true) as Element;
+    for (const string of Array.from(copy.querySelectorAll('[data-string]'))) string.remove();
+    group.append(copy);
+    source.setAttribute('data-inset-source', '');
+  }
+  picture.append(group);
+  // Keep each drawing self contained, with unique ids for its paints and shapes.
+  const ids = new Set(Array.from(picture.querySelectorAll('[id]')).map(el => el.id));
+  for (const el of Array.from(picture.querySelectorAll('*'))) {
+    for (const attr of Array.from(el.attributes)) {
+      const value = attr.name === 'id' ? `inset-${attr.value}` : attr.value.replace(/#([\w-]+)/g, (ref, id: string) => ids.has(id) ? `#inset-${id}` : ref);
+      if (value !== attr.value) el.setAttribute(attr.name, value);
+    }
+  }
+  inset.append(picture);
+  if (hanging.length > 0) sky.append(inset);
+
+  function placeInset(screen: Element): void {
+    const win = doc.defaultView;
+    if (!win || win.innerWidth > 480 || sky.dataset.look !== 'title' || hanging.length === 0) return;
+    const menu = screen.querySelector('[data-column]')?.getBoundingClientRect();
+    if (!menu || menu.height === 0) return;
+    const top = menu.bottom + CLEARANCE;
+    const bottom = win.innerHeight * 0.8;
+    inset.style.top = `${top}px`;
+    inset.style.height = `${Math.max(0, bottom - top)}px`;
+    const box = group.getBBox();
+    // Leave room for the small sway and shadows around the original art.
+    picture.setAttribute('viewBox', `${box.x - 8} ${box.y - 8} ${box.width + 16} ${box.height + 16}`);
+  }
+
   function keepClear(screen: Element | null): void {
     const puppets = Array.from(sky.querySelectorAll('[data-puppet]'));
     for (const puppet of puppets) puppet.removeAttribute('data-culled');
     if (!screen) return;
+    placeInset(screen);
     const avoid = Array.from(screen.querySelectorAll(KEEP_CLEAR))
       .filter((el) => el.getClientRects().length > 0)
       .map((el) => el.getBoundingClientRect())

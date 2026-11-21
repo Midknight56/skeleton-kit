@@ -67,6 +67,12 @@ button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.acc
 [data-screen="title"] [data-control="play"]:active { box-shadow: 0 2px 0 ${T.warmDeep}; }
 [data-screen="title"] [data-control="watch"] { box-shadow: 0 4px 0 ${T.ink}; }
 @media (max-width: 480px) { [data-screen="title"] [data-column] { grid-template-columns: 1fr 1fr; } }
+[data-title-inset] { display: none; position: absolute; left: 16px; right: 16px; }
+[data-title-inset] svg { display: block; width: 100%; height: 100%; }
+@media (max-width: 480px) {
+  [data-backdrop][data-look="title"] [data-inset-source] { display: none; }
+  [data-backdrop][data-look="title"] [data-title-inset] { display: block; }
+}
 
 [data-garland] { position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; height: ${L(110, 176)}; padding: 0 ${L(16, 96)}; background: #110d21; border-top: 1.5px solid ${T.plum}; pointer-events: none; display: none; }
 [data-garland] .wire { position: absolute; left: ${L(16, 96)}; right: ${L(16, 96)}; top: ${L(26, 32)}; height: 1.5px; background: ${STRING_COLOUR}; }
