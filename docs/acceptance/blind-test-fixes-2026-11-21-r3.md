@@ -24,7 +24,7 @@ App changes are confined to `kit/shell`. Tests and this acceptance record suppor
 - After the first app repair, all twelve title cases passed. The old soft glow checks caught missing local gradient definitions in the added drawing. The app was repaired by copying its definitions and giving each reference a unique id. The old test was kept unchanged.
 - Full verification: `npm run verify:e2e` exited **0**. Type checks, lint, builds, 1,337 unit and rule tests across 97 files, all level proof checks, and all 179 browser tests passed. This includes the 17 new round 3 cases and all 162 existing browser tests. No existing test, expected value, skip setting, or limit was changed.
 - The former soft glow checks passed at all three sizes after the app repair. The full run also passed the normal and reduced motion checks, both games' full play paths, and all seven layout sizes.
-- The full output and exit code are in [r3-verify.log](r3-verify.log). Changed text files were checked for UTF-8 without a byte order mark and LF endings. `git diff --check` passed. The branch remains `fix-r3`.
+- The lead re-ran the full verify on 21 Nov: 1,337 unit tests and 179 browser tests passed, exit 0. Changed text files were checked for UTF-8 without a byte order mark and LF endings. `git diff --check` passed. The branch remains `fix-r3`.
 
 ## Final normal screen captures
 
