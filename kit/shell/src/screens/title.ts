@@ -44,7 +44,7 @@ function garlandPicture(doc: Document, props: GarlandProps): HTMLElement {
     item.append(picture, number);
     row.append(item);
   });
-  const note = doc.createElement('small');
+  const note = doc.createElement('span');
   note.className = 'note';
   const total = props.finished.length;
   note.textContent = next >= 0 ? `next: level ${next + 1} of ${total}` : `all ${total} levels done`;

@@ -257,6 +257,17 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         w: parseFloat(el.style.width),
         h: parseFloat(el.style.height),
       }));
+      const foreground = scene.items.filter((item) => item.layer === 'world' || item.layer === 'actors');
+      const obstacles = sceneBoxes({ ...scene, items: foreground }).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h }));
+      if (def.kind === 'tick') {
+        for (const lesson of lessons) {
+          const item = sceneBoxes(scene).find((b) => b.id === lesson.anchor);
+          if (item) {
+            const reach = Math.round(item.h * 1.8);
+            obstacles.push({ x: item.x - 20, y: item.y - reach, w: item.w + 40, h: reach });
+          }
+        }
+      }
       return showHints(doc, view.root, lessons, (anchor) => boxForAnchor(view.root, scene, anchor), {
         width: W,
         height: H,
@@ -266,7 +277,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         top: Math.max(0, ...hud.map((b) => b.y + b.h)),
         bottom: parseFloat(view.strip.style.top),
         avoid: [...hud, ...buttons],
-        obstacles: sceneBoxes(scene).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
+        obstacles,
       });
     }
 
