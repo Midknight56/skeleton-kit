@@ -25,6 +25,8 @@ export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement
       props.onToggle(name, values[name]);
     });
     b.setAttribute('aria-pressed', String(values[name]));
+    // The page style writes "on" or "off" after the name of a switch.
+    b.dataset.switch = '';
     return b;
   };
 

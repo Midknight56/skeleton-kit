@@ -37,5 +37,15 @@ export const gardenInput: InputMap<GardenState> = {
     { id: 'wait-turn', anchor: 'wait', text: 'Then wait' },
     { id: 'switch-lantern', anchor: 'lantern-2', text: 'Or switch' },
   ],
-  keys: ['1 to 5: light that lantern', 'Space: wait'],
+  keys: [
+    '1 to 5: light that lantern',
+    'Space: wait',
+    'Tap another lantern to move the light',
+    'A moth can rest on any free flower',
+    'Win in the fewest moves for 3 stars',
+    'A moth in a web, or no turns left: the level is lost',
+  ],
+  refused(actionText, state) {
+    return actionText === 'wait' && state.lit === 0 ? 'Light a lantern first' : null;
+  },
 };

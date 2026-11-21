@@ -1,6 +1,6 @@
 import type { LevelRef } from '@kit/core';
 import { describeFacts, type LevelFacts } from '../difficulty';
-import { button, heading, menuColumn, menuRoot, stars } from './dom';
+import { button, heading, menuColumn, menuRoot, paragraph, stars } from './dom';
 
 // A level is locked when an earlier level is not finished. The first unfinished level is open.
 export function levelLocks(levels: LevelRef[], isFinished: (id: string) => boolean): boolean[] {
@@ -64,6 +64,13 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
     }
     grid.append(tile);
   });
-  root.append(grid, menuColumn(doc, button(doc, 'back', 'Back', props.onBack)));
+  root.append(grid);
+  // A locked tile shows only a lock, so one line says how to open it.
+  if (locks.some((locked) => locked)) {
+    const note = paragraph(doc, 'Win a level to open the next one.');
+    note.dataset.locks = '';
+    root.append(note);
+  }
+  root.append(menuColumn(doc, button(doc, 'back', 'Back', props.onBack)));
   return root;
 }

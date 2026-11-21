@@ -17,5 +17,5 @@ export const runnerInput: InputMap<RunnerState> = {
     { id: 'jump', anchor: 'player', text: 'Tap: jump' },
     { id: 'candles', anchor: 'hud-score', text: 'Take candles' },
   ],
-  keys: ['Space: jump'],
+  keys: ['Space: jump', 'Take every candle for 3 stars', 'A gap, a pumpkin or a post ends the run'],
 };

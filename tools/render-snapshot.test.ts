@@ -49,11 +49,13 @@ describe('the tool door render output has no effects', () => {
     expect(fingerprint(svgAt(gardenDef, 'g01', proofActions('garden', 'g01')))).toEqual({ bytes: 930, sha256: '31774445ea24bcc595d01bb441a2f6dc87ca6a9879dba33472f5aca539f2680f' });
   });
 
+  // Course r01 changed on 2026-11-20 (blind test fixes: a later first gap and two practice candles). The old rows,
+  // drawn by the same code, still gave the old two fingerprints, so the drawing itself did not change.
   it('draws the runner course r01 at tick 0 as before', () => {
-    expect(fingerprint(svgAt(runnerDef, 'r01', []))).toEqual({ bytes: 3097, sha256: '3667bdcf59f26bb2da7e52f5b4889a2a416fcd0b608bc9c310e23902dd8a7614' });
+    expect(fingerprint(svgAt(runnerDef, 'r01', []))).toEqual({ bytes: 3214, sha256: '7a98af7116372d5b51b9f2b0408b535d6bb33879c13a20ac4309a62be53921f8' });
   });
 
   it('draws the runner course r01 at tick 120 as before', () => {
-    expect(fingerprint(svgAt(runnerDef, 'r01', proofActions('runner', 'r01').slice(0, 120)))).toEqual({ bytes: 3569, sha256: 'ccf78dd484570484347a1747d8708ce828a7aacfca7beb86a9958ebb14879896' });
+    expect(fingerprint(svgAt(runnerDef, 'r01', proofActions('runner', 'r01').slice(0, 120)))).toEqual({ bytes: 3803, sha256: '77f1fd108448cbb26d2670fe4646ebfe154152396f8b025fbd9ec2a02eeb7a7d' });
   });
 });

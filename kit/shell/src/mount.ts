@@ -58,6 +58,8 @@ const WIN_FLASH_MS = 120;
 // The old menu card lifts out in this time.
 const LIFT_OUT_MS = 300;
 const LOSE_SHAKE_MS = 240;
+// How long the reason for a refused press stays on screen.
+const REFUSED_MS = 3000;
 
 function readSafe(doc: Document): Viewport['safe'] {
   const win = doc.defaultView;
@@ -224,15 +226,68 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           if (active?.play.undo()) audio.play('tap');
         },
         button: (action) => {
-          active?.play.press(action);
+          const a = active;
+          if (!a) return;
+          if (a.play.press(action)) return;
+          // A press that the rules refuse says why, beside its button, when the game gives a reason.
+          const why = a.play.session.status().phase === 'playing' ? (input.refused?.(action, a.play.session.state) ?? null) : null;
+          const spec = input.buttons.find((b) => b.action === action);
+          if (why && spec) showRefused(spec.id, why);
         },
       },
     });
     const canvasHeight = H - stripHeight(scale, safe.bottom);
     const viewport: Viewport = { width: W, height: canvasHeight, safe: { top: safe.top, right: safe.right, bottom: 0, left: safe.left } };
     let hints: Hints | null = null;
+    let refusedNote: Hints | null = null;
     let shown: Lesson[] = [];
+    // The lessons of a level show one at a time: the first at the start, the next after each move.
+    let queue: Lesson[] = [];
     let painter: Painter;
+
+    function placeHints(lessons: Lesson[]): Hints | null {
+      const a = active;
+      if (!a || lessons.length === 0) return null;
+      // Chips stay below the counter text and above the strip, 12 px from the text and the buttons.
+      const scene = a.play.scene();
+      const hud = hudTextBoxes(scene);
+      const buttons = Array.from(view.root.querySelectorAll<HTMLElement>('[data-control]')).map((el) => ({
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        w: parseFloat(el.style.width),
+        h: parseFloat(el.style.height),
+      }));
+      return showHints(doc, view.root, lessons, (anchor) => boxForAnchor(view.root, scene, anchor), {
+        width: W,
+        height: H,
+        safe,
+        fontSize: theme.typeScale.small,
+        scale,
+        top: Math.max(0, ...hud.map((b) => b.y + b.h)),
+        bottom: parseFloat(view.strip.style.top),
+        avoid: [...hud, ...buttons],
+        obstacles: sceneBoxes(scene).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
+      });
+    }
+
+    function showNextLesson(): void {
+      hints?.remove();
+      hints = null;
+      const next = queue.shift();
+      if (next) hints = placeHints([next]);
+    }
+
+    function showRefused(anchor: string, text: string): void {
+      refusedNote?.remove();
+      refusedNote = placeHints([{ id: 'refused', anchor, text }]);
+      const note = refusedNote;
+      later(REFUSED_MS, () => {
+        if (refusedNote === note) {
+          note?.remove();
+          refusedNote = null;
+        }
+      });
+    }
 
     if (!active || active.levelId !== levelId || active.result !== null) {
       const current: { value: ActivePlay<S, A> | null } = { value: null };
@@ -242,9 +297,17 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         levelId,
         viewport,
         hudScale: scale,
-        onApplied: () => {
-          hints?.remove();
-          hints = null;
+        onApplied: (text) => {
+          refusedNote?.remove();
+          refusedNote = null;
+          // An idle tick of a tick game is not a move of the player, so the lesson on screen stays.
+          if (!(def.kind === 'tick' && text === input.idle)) {
+            if (current.value && current.value.play.session.status().phase === 'playing') showNextLesson();
+            else {
+              hints?.remove();
+              hints = null;
+            }
+          }
           const a = current.value;
           if (!a) return;
           const score = a.play.session.status().score;
@@ -296,26 +359,19 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     show(view.root, false);
     // The chips are measured and placed once the screen is shown, because a hidden page has no layout.
     if (shown.length > 0) {
-      // Chips stay below the counter text and above the strip, 12 px from the text and the buttons.
-      const hud = hudTextBoxes(current.play.scene());
-      const buttons = Array.from(view.root.querySelectorAll<HTMLElement>('[data-control]')).map((el) => ({
-        x: parseFloat(el.style.left),
-        y: parseFloat(el.style.top),
-        w: parseFloat(el.style.width),
-        h: parseFloat(el.style.height),
-      }));
-      hints = showHints(doc, view.root, shown, (anchor) => boxForAnchor(view.root, current.play.scene(), anchor), {
-        width: W,
-        height: H,
-        safe,
-        fontSize: theme.typeScale.small,
-        scale,
-        top: Math.max(0, ...hud.map((b) => b.y + b.h)),
-        bottom: parseFloat(view.strip.style.top),
-        avoid: [...hud, ...buttons],
-        obstacles: sceneBoxes(current.play.scene()).map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
-      });
+      queue = shown.slice();
+      showNextLesson();
     }
+
+    // The strip buttons whose action the rules refuse now are marked, so they look unavailable.
+    const stripButtons = input.buttons
+      .map((spec) => ({ spec, el: view.root.querySelector<HTMLElement>(`[data-control="${spec.id}"]`) }))
+      .filter((b): b is { spec: (typeof input.buttons)[number]; el: HTMLElement } => b.el !== null);
+    let blockedAt = -2;
+    const markBlocked = () => {
+      const legal = current.play.session.status().phase === 'playing' ? current.play.session.legal() : [];
+      for (const b of stripButtons) b.el.dataset.blocked = String(!legal.includes(b.spec.action));
+    };
 
     let lastTick = -1;
     let last = -1;
@@ -328,6 +384,10 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       if (current.play.session.tick !== lastTick) {
         lastTick = current.play.session.tick;
         painter.setScene(current.play.scene(), t);
+      }
+      if (blockedAt !== lastTick) {
+        blockedAt = lastTick;
+        markBlocked();
       }
       painter.paint(t);
       view.setStatus({ tick: current.play.session.tick, phase: current.play.session.status().phase, hash: current.play.session.hash() });

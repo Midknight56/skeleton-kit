@@ -19,17 +19,20 @@
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; color: var(--bone); font: 400 16px/1.45 var(--text); }
-      html { background: var(--night); }
-      body { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; background: transparent; }
+      /* The page colour under the sky is the colour at the foot of the sky, so a long page has no band. */
+      html { background: var(--dusk); }
+      body { position: relative; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; background: transparent; }
       a { color: inherit; }
       a:focus-visible, iframe:focus-visible { outline: 3px solid var(--program); outline-offset: 3px; }
 
       .sky { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse 1000px 800px at 72% 36%, #2d2357 0, transparent 64%), linear-gradient(var(--night) 0, #191231 62%, var(--dusk) 100%); }
       .sky svg.stars { position: absolute; inset: 0; width: 100%; height: 100%; }
-      .ground { position: fixed; left: 0; right: 0; bottom: 0; z-index: -1; width: 100%; height: min(18vh, 200px); pointer-events: none; }
+      /* The ground ends the page. It sits in the space that main keeps free at its foot, so no pumpkin
+         is ever on a line of text, whatever the scroll. */
+      .ground { position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; width: 100%; height: min(18vh, 200px); pointer-events: none; }
       .rail { position: fixed; top: 0; left: 0; right: 0; z-index: 5; height: var(--rail); background: var(--plum); border-bottom: 3px solid var(--ink); pointer-events: none; }
 
-      main { position: relative; max-width: 1920px; margin: 0 auto; padding: calc(var(--rail) + 16px) var(--gutter) calc(min(18vh, 200px) + 24px); display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "logo" "intro" "board" "panel" "actions" "nav" "foot"; }
+      main { position: relative; max-width: 1920px; margin: 0 auto; padding: calc(var(--rail) + 16px) var(--gutter) calc(min(18vh, 200px) + 24px); display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "logo" "intro" "board" "panel" "actions" "nav" "how" "foot"; }
       .logo { grid-area: logo; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; justify-self: start; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
       .logo svg { width: 32px; height: 32px; }
       .top { grid-area: nav; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -42,6 +45,13 @@
 
       h1 { margin: 0 0 12px; font-weight: 800; font-size: 34px; line-height: 1.03; letter-spacing: -0.02em; }
       .intro p { margin: 0; max-width: 520px; font-size: 15px; line-height: 1.45; color: var(--muted); }
+      .intro p + p { margin-top: 8px; color: var(--bone); }
+
+      .how { grid-area: how; margin-top: 8px; padding: 16px; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--dusk); box-shadow: 0 4px 0 var(--ink); }
+      .how h2 { margin: 0 0 12px; font-size: 20px; font-weight: 800; line-height: 1.2; }
+      .how ol { margin: 0 0 16px; padding-left: 24px; display: grid; gap: 10px; font-size: 15px; line-height: 1.45; color: var(--muted); }
+      .how ol strong { color: var(--bone); font-weight: 700; }
+      .how .sign { flex: 0 1 auto; }
 
       .signs { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; }
       .sign { display: inline-flex; flex: 1 1 auto; white-space: nowrap; align-items: center; justify-content: center; min-height: 52px; padding: 8px 12px; border-radius: 11px; background: var(--plum); color: var(--bone); box-shadow: 0 4px 0 var(--ink); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; text-decoration: none; transition: transform 80ms ease-out, box-shadow 80ms ease-out; }
@@ -96,6 +106,8 @@
         :root { --rail: 16px; }
         h1 { font-size: 44px; }
         .intro p { font-size: 17px; }
+        .how h2 { font-size: 24px; }
+        .how ol { font-size: 17px; }
         .sign { min-height: 56px; font-size: 18px; }
         .frame { height: min(60vh, 520px); }
         .caption strong { font-size: 20px; }
@@ -103,7 +115,9 @@
       }
 
       @media (min-width: 1100px) {
-        main { max-width: 1920px; grid-template-columns: minmax(300px, 0.9fr) minmax(320px, 1.3fr) minmax(280px, 1fr); grid-template-areas: "logo nav nav" "intro board panel" "actions board panel" "foot foot foot"; align-content: start; }
+        main { max-width: 1920px; grid-template-columns: minmax(300px, 0.9fr) minmax(320px, 1.3fr) minmax(280px, 1fr); grid-template-areas: "logo nav nav" "intro board panel" "actions board panel" "how how how" "foot foot foot"; align-content: start; }
+        .how { margin-top: 24px; padding: 24px 32px; border-radius: 16px; box-shadow: 0 10px 0 var(--ink); }
+        .how ol { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; font-size: clamp(16px, 1vw, 19px); }
         .top { justify-self: end; }
         .intro { padding-top: 24px; }
         h1 { font-size: clamp(44px, min(4.4vw, 7.8vh), 84px); }
@@ -147,14 +161,13 @@
         Skeleton kit
       </a>
       <nav class="top" aria-label="Page">
-        <a href="#games">Games</a>
-        <a href="#calls">Tool calls</a>
         <a data-link="repository" href="__REPOSITORY_URL__">Repository</a>
       </nav>
 
       <section class="intro" id="games">
         <h1>Games a program can play.</h1>
-        <p data-landing="who">A kit for solo developers and small studios with nobody to test a build. Every game made with it can also be played by a program.</p>
+        <p data-landing="who">A kit for solo developers and small studios with nobody to test a build.</p>
+        <p data-landing="what">You write your game with the kit. Then an AI coding tool can play it with MCP tool calls: short messages that start a level, press its buttons and read what happened.</p>
       </section>
 
       <section class="board" aria-label="A level playing by itself">
@@ -182,7 +195,7 @@
           <ol class="calls" data-calls>
             <li>Loading the calls.</li>
           </ol>
-          <footer>Five tools drive every game: new_game, act, observe, render and replay.</footer>
+          <footer>MCP is a common way for an AI coding tool to use another program. Here new_game starts a level, act presses buttons, observe reads the state, render draws the screen and replay checks a saved run.</footer>
         </div>
       </aside>
 
@@ -191,12 +204,23 @@
           <a class="sign primary" data-card="garden" href="./garden/">Play Moth Garden</a>
           <a class="sign" data-card="runner" href="./runner/">Play Broom Runner</a>
         </nav>
-        <p class="signs"><a class="sign program" href="#calls">Read the tool calls</a></p>
+        <p class="signs"><a class="sign program" href="#how">How the kit works</a></p>
         <ul class="key">
-          <li><span class="line person"></span>a person holds the strings</li>
-          <li><span class="line machine"></span>a program holds the strings</li>
+          <li><span class="line person"></span>Orange: you play a game yourself</li>
+          <li><span class="line machine"></span>Pink: a program plays it with tool calls</li>
         </ul>
       </div>
+
+      <section class="how" id="how" aria-labelledby="how-title">
+        <h2 id="how-title">What a game maker does with the kit</h2>
+        <ol>
+          <li><strong>Write the rules.</strong> Your game is plain data, a list of legal moves and one step function. The kit gives it every screen: title, levels, settings, pause and results.</li>
+          <li><strong>Prove each level.</strong> The prover searches every level and saves a proof that it can be finished. It uses no AI model.</li>
+          <li><strong>Let a tool play.</strong> An AI coding tool connects to your game with MCP and plays it with the five tool calls while it writes the code.</li>
+          <li><strong>Check a replay.</strong> A replay is a seed and a list of moves. It always ends in the same state, so a bug found once can be played again.</li>
+        </ol>
+        <p class="signs"><a class="sign" data-link="get" href="__REPOSITORY_URL__">Get the kit</a></p>
+      </section>
 
       <footer class="foot"><a data-link="privacy" href="./privacy/">Privacy</a></footer>
     </main>

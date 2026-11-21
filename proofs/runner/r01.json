@@ -16,7 +16,7 @@
       "passed": true
     },
     {
-      "detail": "smallest window 10 ticks, the plan needs 9",
+      "detail": "smallest window 9 ticks, the plan needs 9",
       "name": "window_ok",
       "passed": true
     }
@@ -27,15 +27,15 @@
   "level": "r01",
   "replay": {
     "actions": [
-      "none*135",
+      "none*252",
       "jump",
-      "none*139",
+      "none*138",
       "jump",
-      "none*162",
+      "none*151",
       "jump",
-      "none*248"
+      "none*143"
     ],
-    "finalHash": "4503bc41e7b255cd",
+    "finalHash": "fdea7cb918217f14",
     "finalPhase": "won",
     "format": 1,
     "game": "runner",
@@ -47,6 +47,6 @@
   "seed": 1,
   "stats": {
     "actions": 687,
-    "nodes": 88078
+    "nodes": 232435
   }
 }

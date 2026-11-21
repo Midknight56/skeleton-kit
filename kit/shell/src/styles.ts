@@ -32,6 +32,11 @@ small, .muted { font-size: ${u(t.small)}; color: ${p.muted}; }
 button, a[data-control] { box-sizing: border-box; min-width: ${u(44)}; min-height: ${u(44)}; padding: ${u(8)} ${u(16)}; border: 2px solid ${p.primary}; border-radius: ${theme.buttonRadius}px; background: ${p.surface}; color: ${p.text}; font: inherit; text-decoration: none; cursor: pointer; }
 a[data-control] { display: inline-flex; align-items: center; justify-content: center; }
 button[aria-pressed="true"], button.primary { background: ${p.primary}; color: ${p.background}; }
+/* A switch says its state in words, after its name. The name stays the text of the button. */
+button[data-switch][aria-pressed="true"]::after { content: ": on"; }
+button[data-switch][aria-pressed="false"]::after { content: ": off"; }
+/* A play button whose action cannot be used now. The text keeps its colour, so it stays readable. */
+button[data-blocked="true"] { border-style: dashed; }
 button[aria-disabled="true"] { opacity: 0.5; cursor: default; }
 button:disabled, button:disabled:hover { opacity: 0.4; border-style: dashed; cursor: default; }
 button:focus-visible, a[data-control]:focus-visible { outline: 3px solid ${p.accent}; outline-offset: 2px; }

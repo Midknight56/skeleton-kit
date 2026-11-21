@@ -18,6 +18,9 @@ export interface InputMap<S> {
   lessons: Lesson[];
   // One line for each key, such as "Space: wait". The how to play screen lists them.
   keys?: string[];
+  // The reason a play strip action cannot be used in this state, such as "Pick a piece first", or null.
+  // The play screen shows it beside the button when the button is pressed.
+  refused?(actionText: string, state: S): string | null;
 }
 
 export interface GameTexts<S> {
