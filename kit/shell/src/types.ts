@@ -18,9 +18,15 @@ export interface InputMap<S> {
   lessons: Lesson[];
   // One line for each key, such as "Space: wait". The how to play screen lists them.
   keys?: string[];
+  // Whole sentences for the how to play screen. When a game gives them, the screen lists these and not
+  // the lessons and the key lines.
+  howTo?: string[];
   // The reason a play strip action cannot be used in this state, such as "Pick a piece first", or null.
   // The play screen shows it beside the button when the button is pressed.
   refused?(actionText: string, state: S): string | null;
+  // The reason a key does nothing in this state, with the id of the play strip button that does the same
+  // thing, or null. The play screen shows it beside that button, as it does for a refused button press.
+  refusedKey?(key: string, state: S): { anchor: string; text: string } | null;
 }
 
 export interface GameTexts<S> {

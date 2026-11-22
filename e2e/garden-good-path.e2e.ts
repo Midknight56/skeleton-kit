@@ -9,7 +9,7 @@ test('garden: title, how to play, every level won by its proof replay, settings 
   await expect(screen(page, 'title')).toBeVisible();
   await control(page, 'how').click();
   await expect(screen(page, 'how')).toBeVisible();
-  await expect(page.locator('[data-screen="how"] li')).toContainText(['Tap lantern', 'Then wait', 'Or switch', '1 to 5: light that lantern', 'Space: wait']);
+  await expect(page.locator('[data-screen="how"] li')).toContainText(['Tap a lantern, or press 1 to 5, to light it.', 'every moth flies one step', 'Tap Wait, or press Space', 'Tap another lantern to move the light.', 'A moth rests on a free flower.']);
   await control(page, 'back').click();
   await expect(screen(page, 'title')).toBeVisible();
 

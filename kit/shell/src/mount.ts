@@ -109,6 +109,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   // True while the visit to the title screen that showed the notice goes on, so a redraw keeps it.
   let noticeOnTitle = false;
   let active: ActivePlay<S, A> | null = null;
+  // Shows why a key did nothing, beside the button of that action. Set by the play screen that is open.
+  let refuseKey: ((key: string) => boolean) | null = null;
   let stopLoop: (() => void) | null = null;
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
@@ -299,6 +301,16 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         }
       });
     }
+
+    // A key that the rules cannot use now says why, as the button of that action does.
+    refuseKey = (key) => {
+      const a = active;
+      if (!a || a.play.session.status().phase !== 'playing') return false;
+      const why = input.refusedKey?.(key, a.play.session.state) ?? null;
+      if (!why) return false;
+      showRefused(why.anchor, why.text);
+      return true;
+    };
 
     if (!active || active.levelId !== levelId || active.result !== null) {
       const current: { value: ActivePlay<S, A> | null } = { value: null };
@@ -628,7 +640,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
         );
         return;
       case 'how':
-        show(howScreen(doc, { lessons: input.lessons, keys: input.keys ?? [], onBack: () => router.go('title') }), true);
+        show(howScreen(doc, { lessons: input.lessons, keys: input.keys ?? [], howTo: input.howTo ?? [], onBack: () => router.go('title') }), true);
         return;
       case 'credits':
         show(creditsScreen(doc, { lines: options.credits, onBack: () => router.go('title') }), true);
@@ -665,6 +677,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     }
     const focused = doc.activeElement?.tagName === 'BUTTON';
     if (active.play.key(e.key, focused)) e.preventDefault();
+    else if (!focused && refuseKey?.(e.key)) e.preventDefault();
   };
   const onFirstInput = () => audio.unlock();
   const onTap = (e: Event) => {

@@ -142,8 +142,9 @@
       @media (min-width: 1100px) and (max-height: 799px) { .moon { display: none; } }
 
       @media (max-width: 699px) {
-        main { padding-top: calc(var(--rail) + 8px); gap: 10px; }
+        main { padding-top: calc(var(--rail) + 8px); gap: 8px; }
         h1 { margin-bottom: 6px; font-size: 28px; }
+        .intro p { font-size: 14px; line-height: 1.4; }
         .intro p + p { margin-top: 4px; }
         .caption { margin-bottom: 4px; }
         .hung { padding-top: 10px; }
@@ -178,10 +179,10 @@
       </nav>
 
       <section class="intro" id="games">
-        <h1>Games a program can play.</h1>
-        <p data-landing="who">A kit for solo developers and small studios with nobody to test a build.</p>
-        <p data-landing="what">You write your game with the kit. Then an AI coding tool can play it with MCP tool calls.</p>
-        <p data-landing="guide">Play in the browser now, or get the kit to build your own game.</p>
+        <h1>A kit for game developers.</h1>
+        <p data-landing="who">For developers with nobody to test a build. Your game ships with controls an AI coding tool can use to play and test it.</p>
+        <p data-landing="what">These controls are MCP tool calls, a common way for an AI coding tool to use another program. You write the game.</p>
+        <p data-landing="guide">Play in the browser now, or get the kit.</p>
         <div class="signs intro-signs" data-landing="buttons">
           <a class="sign primary" data-link="play-now" href="./garden/">Play in the browser</a>
           <a class="sign" data-link="get-kit" href="__REPOSITORY_URL__">Get the kit</a>
@@ -213,13 +214,13 @@
           <ol class="calls" data-calls>
             <li>Loading the calls.</li>
           </ol>
-          <footer>MCP is a common way for an AI coding tool to use another program. Here new_game starts a level, act presses buttons, observe reads the state, render draws the screen and replay checks a saved run.</footer>
+          <footer>The five calls: new_game starts a level, act presses buttons, observe reads the state, render draws the screen and replay checks a saved run. The hash is a short code for the state of the game, so the same moves always give the same code.</footer>
         </div>
       </aside>
 
       <div class="actions" id="actions">
         <nav class="signs" aria-label="The two games">
-          <a class="sign primary" data-card="garden" href="./garden/">Play Moth Garden</a>
+          <a class="sign" data-card="garden" href="./garden/">Play Moth Garden</a>
           <a class="sign" data-card="runner" href="./runner/">Play Broom Runner</a>
         </nav>
         <p class="signs"><a class="sign program" href="#how">How the kit works</a></p>

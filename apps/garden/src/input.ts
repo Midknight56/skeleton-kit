@@ -10,6 +10,11 @@ function tapLantern(k: number, state: GardenState): string | null {
   return state.lit === k ? 'wait' : `light:${k}`;
 }
 
+// The reason the Wait button and the space key give when no lantern is lit.
+function refusedText(actionText: string, state: GardenState): string | null {
+  return actionText === 'wait' && state.lit === 0 ? 'Light a lantern first' : null;
+}
+
 function toAction(event: InputEvent, state: GardenState): string | null {
   if (event.type === 'pointer') {
     for (const id of event.itemIds) {
@@ -45,7 +50,22 @@ export const gardenInput: InputMap<GardenState> = {
     'Win in the fewest moves for 3 stars',
     'A moth in a web, or no turns left: the level is lost',
   ],
-  refused(actionText, state) {
-    return actionText === 'wait' && state.lit === 0 ? 'Light a lantern first' : null;
+  // The how to play screen shows these whole sentences. The chips above stay short.
+  howTo: [
+    'Tap a lantern, or press 1 to 5, to light it.',
+    'Each turn, every moth flies one step toward the light.',
+    'Tap Wait, or press Space, to pass a turn.',
+    'Tap another lantern to move the light.',
+    'A moth rests on a free flower.',
+    'A hedge blocks the way.',
+    'A web catches a moth.',
+    'You win when every moth is on a flower.',
+    'The fewest moves earn 3 stars.',
+    'The level is lost if a web catches a moth or the turns run out.',
+  ],
+  refused: (actionText, state) => refusedText(actionText, state),
+  refusedKey: (key, state) => {
+    const text = key === ' ' ? refusedText('wait', state) : null;
+    return text ? { anchor: 'wait', text } : null;
   },
 };

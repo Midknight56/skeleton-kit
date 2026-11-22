@@ -65,8 +65,8 @@ for (const size of sizes) {
 test('r3 garden: unused keys leave the puzzle alone and the documented keys work', async ({ page }) => {
   await page.goto('/garden/');
   await control(page, 'how').click();
-  await expect(screen(page, 'how')).toContainText('1 to 5: light that lantern');
-  await expect(screen(page, 'how')).toContainText('Space: wait');
+  await expect(screen(page, 'how')).toContainText('press 1 to 5');
+  await expect(screen(page, 'how')).toContainText('press Space');
   await control(page, 'back').click();
   await control(page, 'play').click();
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
