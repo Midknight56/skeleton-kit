@@ -18,6 +18,7 @@ export function pauseScreen(doc: Document, props: PauseProps): HTMLElement {
         message: 'Leave this run?',
         confirmLabel: 'Leave',
         cancelLabel: 'Stay',
+        opener,
         onConfirm: () => {
           box.remove();
           action();

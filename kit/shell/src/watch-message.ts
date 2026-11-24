@@ -14,3 +14,10 @@ export interface WatchMessage {
 export function watchMessage(level: string, applied: number, total: number, round: number): WatchMessage {
   return { type: WATCH_MESSAGE, level, applied, total, round };
 }
+
+// The watch screen also tells that page when it is left, so the page can stop saying that a level plays.
+export const WATCH_LEFT_MESSAGE = 'skeleton-kit:watch-left';
+
+export function watchLeftMessage(): { type: typeof WATCH_LEFT_MESSAGE } {
+  return { type: WATCH_LEFT_MESSAGE };
+}

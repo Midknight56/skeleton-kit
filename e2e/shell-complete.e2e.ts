@@ -101,9 +101,9 @@ test('garden: the Privacy link of the settings opens the privacy page in the sam
   await control(page, 'settings').click();
   const link = control(page, 'privacy');
   await expect(link).toHaveText('Privacy');
-  await expect(link).toHaveAttribute('href', '../privacy/');
+  await expect(link).toHaveAttribute('href', '../privacy/?from=garden');
   await link.click();
-  await expect(page).toHaveURL(/\/privacy\/$/);
+  await expect(page).toHaveURL(/\/privacy\/\?from=garden$/);
   await expect(page.locator('h1')).toHaveText('Privacy');
   expect(page.context().pages().length).toBe(1);
 });

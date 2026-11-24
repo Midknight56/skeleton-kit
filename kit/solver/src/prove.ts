@@ -167,7 +167,7 @@ async function run(argv: string[]): Promise<number> {
     for (const level of game.def.levels()) {
       const outcome = proveLevel(game, level.id);
       if (!outcome.ok) {
-        failures.push(`${game.def.id} ${level.id}: ${outcome.reason}`);
+        failures.push(`${game.def.id} ${level.id}: proofs/${game.def.id}/${level.id}.json: ${outcome.reason}`);
         continue;
       }
       files.push({ game: game.def.id, name: `${level.id}.json`, text: outcome.text });

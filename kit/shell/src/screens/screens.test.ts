@@ -564,10 +564,13 @@ describe('level cards with the facts of the proof', () => {
     expect(card(root, 'a').getAttribute('aria-label')).toBe('Alpha, 0 of 3 stars');
   });
 
-  it('holds no digit in the text of a card besides the level number', () => {
+  it('holds no digit in the text of a card besides the level number and the fewest moves label', () => {
+    // Changed in tester-fixes task 9: a turn card now shows its fewest moves as a short label.
     const root = make();
     for (const [i, l] of lv.entries()) {
-      const text = (card(root, l.id).textContent ?? '').replace(String(i + 1), '');
+      const card0 = card(root, l.id).cloneNode(true) as HTMLElement;
+      card0.querySelector('[data-moves]')?.remove();
+      const text = (card0.textContent ?? '').replace(String(i + 1), '');
       expect(text, l.id).not.toMatch(/\d/);
     }
   });

@@ -122,6 +122,32 @@ describe('prove command', () => {
     expect(snapshot(cwd)).toEqual({});
   }, 60000);
 
+  it('names the replay file proofs/<game>/<level>.json on every failure line', () => {
+    // A level that cannot be solved.
+    const broken = workFolder([fixture('no-hop')]);
+    const unsolved = prove(broken);
+    expect(unsolved.code).toBe(1);
+    expect(unsolved.stderr).toContain('not solved');
+    expect(unsolved.stderr).toContain('proofs/no-hop/h1.json');
+    for (const line of unsolved.stderr.split('\n').filter((l) => l.trim() !== '')) expect(line, line).toContain('proofs/no-hop/');
+
+    // A proof that differs from the fresh proof.
+    const differs = workFolder([fixture('sample-hop')]);
+    expect(prove(differs).code).toBe(0);
+    const file = join(differs, 'proofs', 'sample-hop', 'h1.json');
+    writeFileSync(file, readFileSync(file, 'utf8').replace('"seed": 1,\n  "stats"', '"seed": 2,\n  "stats"'), 'utf8');
+    const changed = prove(differs, '--check');
+    expect(changed.code).toBe(2);
+    expect(changed.stderr).toContain('differs');
+    expect(changed.stderr).toContain('proofs/sample-hop/h1.json');
+
+    // A proof file that is not there.
+    const missing = workFolder([fixture('sample-hop')]);
+    const none = prove(missing, '--check');
+    expect(none.code).toBe(2);
+    expect(none.stderr).toContain('no file');
+    expect(none.stderr).toContain('proofs/sample-hop/h1.json');
+  }, 60000);
   it('exits 1 and leaves every proof file as it was when a level cannot be finished', () => {
     const cwd = workFolder([fixture('sample-lights'), fixture('sample-hop')]);
     expect(prove(cwd).code).toBe(0);

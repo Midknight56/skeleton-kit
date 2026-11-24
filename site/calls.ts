@@ -1,6 +1,6 @@
 // The calls of the landing page. They are built from the proof file of one level and only name the five
 // tools of the tool door (see docs/tool-door.md). A response is shown only when the proof file holds it.
-import { LANDING_MESSAGE } from './landing-message';
+import { LANDING_LEFT_MESSAGE, LANDING_MESSAGE } from './landing-message';
 
 export const TOOLS = ['new_game', 'act', 'observe', 'render', 'replay'] as const;
 export type ToolName = (typeof TOOLS)[number];
@@ -57,4 +57,16 @@ export function readProgress(data: unknown): Progress | null {
   if (!Number.isInteger(applied) || !Number.isInteger(total) || !Number.isInteger(round)) return null;
   if (total < 1 || applied < 0 || applied > total) return null;
   return { applied, total, round };
+}
+
+/** True for the message that says the frame left the watch screen. */
+export function isWatchLeft(data: unknown): boolean {
+  return data !== null && typeof data === 'object' && (data as Record<string, unknown>).type === LANDING_LEFT_MESSAGE;
+}
+
+/** The level id of a watch message, or null. */
+export function readLevel(data: unknown): string | null {
+  if (data === null || typeof data !== 'object') return null;
+  const m = data as Record<string, unknown>;
+  return m.type === LANDING_MESSAGE && typeof m.level === 'string' ? m.level : null;
 }

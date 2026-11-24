@@ -51,6 +51,8 @@ export function prepareProof<S extends Json, A>(def: GameDef<S, A>, texts: GameT
 }
 
 export interface WatchOptions<S extends Json, A> {
+  // Called after each action of the replay, with the state before and the state after.
+  onApplied?(previous: S, state: S): void;
   def: GameDef<S, A>;
   input: InputMap<S>;
   texts: GameTexts<S>;
@@ -99,7 +101,9 @@ export function createWatch<S extends Json, A>(options: WatchOptions<S, A>): Wat
   }
 
   function applyAt(i: number): void {
+    const before = session.state;
     session.apply(actions[i] as string);
+    options.onApplied?.(before, session.state);
   }
 
   function turnFrame(dt: number): void {

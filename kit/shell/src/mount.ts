@@ -1,10 +1,10 @@
-import type { GameDef, Json, Scene, Viewport } from '@kit/core';
+import type { GameDef, Json, Scene, Status, Viewport } from '@kit/core';
 import { expandActions } from '@kit/core';
 import { createAudio } from './audio';
 import { createBeacon } from './beacon';
 import { createBackdrop } from './screens/backdrop';
 import type { EffectFactory } from './effects';
-import { watchMessage } from './watch-message';
+import { watchLeftMessage, watchMessage } from './watch-message';
 import { lessonsToShow, showHints, type Hints } from './lessons';
 import { stripHeight, uiScale, type Rect } from './layout';
 import type { Lesson } from './types';
@@ -20,8 +20,10 @@ import { playScreen } from './screens/play-screen';
 import { resultsScreen } from './screens/results';
 import { settingsScreen } from './screens/settings';
 import { titleScreen } from './screens/title';
-import { watchLayout, watchScreen, type WatchScreenView } from './screens/watch-screen';
-import { parseWatchParam, createWatch } from './watch';
+import { watchCanvasTop, watchLayout, watchScreen, type WatchScreenView } from './screens/watch-screen';
+import { parseWatchParam, createWatch, type WatchController } from './watch';
+import { parseOpenParam } from './open-param';
+import { neighbourLevels } from './watch-nav';
 import { starsFor, finishLevel } from './stars';
 import { createStore, type ProgressStore } from './storage';
 import { themeCss } from './styles';
@@ -52,6 +54,8 @@ interface ActivePlay<S extends Json, A> {
   result: { won: boolean; reason: string | undefined; stars: number } | null;
   // True once a level_end was sent for this start, so a start never gets two.
   ended: boolean;
+  // The state that was last put into words for a screen reader.
+  heard: S;
 }
 
 const WIN_FLASH_MS = 120;
@@ -111,7 +115,16 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   let active: ActivePlay<S, A> | null = null;
   // Shows why a key did nothing, beside the button of that action. Set by the play screen that is open.
   let refuseKey: ((key: string) => boolean) | null = null;
-  let stopLoop: (() => void) | null = null;
+  // Stops the loop of the open play or watch screen. With keep the screen is only drawn again, so nothing ends.
+  let stopLoop: ((keep?: boolean) => void) | null = null;
+  // The open watch screen, so a resize can draw it again for the new size and keep its run.
+  let watching: { proof: ProofFile; watch: WatchController<S, A> } | null = null;
+  let watchView: WatchScreenView | null = null;
+  let watchEndSent = false;
+  // The size the open play or watch screen was laid out for.
+  let builtSize = '';
+  // Puts the state of the open play screen into words for a screen reader. Set by the play screen that is open.
+  let announceNow: () => void = () => undefined;
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
   // The theme names each sprite by a url inside the app. Images load once, at mount.
@@ -136,6 +149,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
   const router = createRouter(win, 'title');
   const watchAtStart = parseWatchParam(options.search ?? '', levels);
   if (watchAtStart) router.replace('watch', { level: watchAtStart });
+  else if (parseOpenParam(options.search ?? '') === 'settings') router.replace('settings');
   const reducedMotion = () => win.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   function later(ms: number, fn: () => void): void {
@@ -181,8 +195,14 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     if (focusFirst) node.querySelector<HTMLElement>('[data-control]')?.focus();
   }
 
-  function leavePlay(): void {
-    stopLoop?.();
+  // The words of the game for a screen reader. A game without its own gives the observation summary of a turn game.
+  function words(state: S, previous: S | null, status: Status): string | null {
+    if (input.narrate) return input.narrate(state, previous, status);
+    return def.kind === 'turn' ? def.observe(state).summary : null;
+  }
+
+  function leavePlay(keep = false): void {
+    stopLoop?.(keep);
     stopLoop = null;
   }
 
@@ -213,6 +233,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     const W = win2.innerWidth;
     const H = win2.innerHeight;
     const safe = readSafe(doc);
+    builtSize = `${W}x${H}`;
     const scale = uiScale(W, H);
     const view = playScreen(doc, {
       width: W,
@@ -225,7 +246,15 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       on: {
         pause: () => router.go('pause'),
         undo: () => {
-          if (active?.play.undo()) audio.play('tap');
+          if (active?.play.undo()) {
+            audio.play('tap');
+            announceNow();
+            // The lesson on screen is the one for the turn the board is back at.
+            if (shown.length > 0) {
+              queue = shown.slice(active.play.session.tick);
+              showNextLesson();
+            }
+          }
         },
         button: (action) => {
           const a = active;
@@ -246,6 +275,18 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     // The lessons of a level show one at a time: the first at the start, the next after each move.
     let queue: Lesson[] = [];
     let painter: Painter;
+    announceNow = () => {
+      const a = active;
+      if (!a) return;
+      const session = a.play.session;
+      view.setNarration(words(session.state, a.heard, session.status()));
+      a.heard = session.state;
+      syncUndo();
+    };
+    function syncUndo(): void {
+      const undo = view.root.querySelector<HTMLButtonElement>('[data-control="undo"]');
+      if (undo && active) undo.disabled = active.play.session.status().phase !== 'playing';
+    }
 
     function placeHints(lessons: Lesson[]): Hints | null {
       const a = active;
@@ -333,6 +374,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           }
           const a = current.value;
           if (!a) return;
+          announceNow();
           const score = a.play.session.status().score;
           if (def.kind === 'turn') audio.play('move');
           else if (score > a.score) {
@@ -365,7 +407,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           });
         },
       });
-      const fresh: ActivePlay<S, A> = { levelId, levelIndex, play, start: play.session.state, score: 0, result: null, ended: false };
+      const fresh: ActivePlay<S, A> = { levelId, levelIndex, play, start: play.session.state, score: 0, result: null, ended: false, heard: play.session.state };
       current.value = fresh;
       active = fresh;
       hints = null;
@@ -379,6 +421,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       painter.setScene(active.play.scene(), 0);
     }
     const current = active;
+    view.setNarration(words(current.play.session.state, null, current.play.session.status()));
+    current.heard = current.play.session.state;
+    syncUndo();
     show(view.root, false);
     // The chips are measured and placed once the screen is shown, because a hidden page has no layout.
     if (shown.length > 0) {
@@ -450,13 +495,32 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
     return { x: parseFloat(control.style.left), y: parseFloat(control.style.top), w: parseFloat(control.style.width), h: parseFloat(control.style.height) };
   }
 
-  function startWatch(proof: ProofFile): void {
+  function startWatch(proof: ProofFile, kept?: WatchController<S, A>): void {
     const W = win.innerWidth;
     const H = win.innerHeight;
+    builtSize = `${W}x${H}`;
     const safe = readSafe(doc);
-    const watch = createWatch({ def, input, texts, proof });
-    beacon.send('watch_start', { level: proof.level });
+    const watch =
+      kept ??
+      createWatch({
+        def,
+        input,
+        texts,
+        proof,
+        onApplied: (previous, state) => watchView?.setNarration(words(state, previous, def.status(state))),
+      });
+    if (!kept) {
+      watchEndSent = false;
+      beacon.send('watch_start', { level: proof.level });
+    }
+    watching = { proof, watch };
+    const nav = neighbourLevels(
+      levels.map((l) => l.id),
+      proofIndex ? new Set(proofIndex.levels.map((l) => l.id)) : null,
+      proof.level,
+    );
     const view: WatchScreenView = watchScreen(doc, {
+      nav: { number: nav.number, hasPrev: nav.prev !== null, hasNext: nav.next !== null },
       width: W,
       height: H,
       safe,
@@ -465,18 +529,33 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       fontSize: theme.typeScale.body,
       on: {
         back: () => router.go('title'),
+        level: (direction) => {
+          const target = direction < 0 ? nav.prev : nav.next;
+          if (target) router.replace('watch', { level: target });
+        },
         speed: (n) => {
           watch.setSpeed(n);
           view.setSpeed(n);
         },
       },
     });
+    watchView = view;
+    view.setSpeed(watch.speed());
     const verdict = watch.verdict;
     const proofText = verdict.kind === 'unproved' ? null : verdict.text;
-    const rows = watchLayout(W, H, safe, proofText, theme.typeScale.body);
-    const viewport: Viewport = { width: W, height: H - 72 - safe.bottom, safe: { top: rows.sceneSafe.top, right: safe.right, bottom: 0, left: safe.left } };
+    const rows = watchLayout(W, H, safe, proofText, theme.typeScale.body, true);
+    // The picture sits under the level row. Its own safe top is what is left of the proof line above it.
+    const canvasTop = watchCanvasTop(W, safe, theme.typeScale.body, true);
+    const viewport: Viewport = { width: W, height: H - 72 - safe.bottom - canvasTop, safe: { top: Math.max(0, rows.sceneSafe.top - canvasTop), right: safe.right, bottom: 0, left: safe.left } };
+    // A box of the scene is in picture coordinates, a control is in screen coordinates.
+    const markBox = (scene: Scene, anchor: string): Rect | null => {
+      const item = sceneBoxes(scene).find((b) => b.id === anchor);
+      if (item) return { x: item.x, y: item.y + canvasTop, w: item.w, h: item.h };
+      return boxForAnchor(view.root, scene, anchor);
+    };
     const painter = makePainter(view);
     view.setProof(proofText);
+    view.setNarration(words(watch.session.state, null, watch.session.status()));
     show(view.root, false);
 
     let last = -1;
@@ -492,10 +571,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       win.parent.postMessage(watchMessage(proof.level, applied, total, round), win.location.origin);
     };
     // One watch_end for each watch_start: at the first end of the replay, or when the screen is left.
-    let watchEnded = false;
     const endWatch = () => {
-      if (watchEnded) return;
-      watchEnded = true;
+      if (watchEndSent) return;
+      watchEndSent = true;
       beacon.send('watch_end', { level: proof.level });
     };
     const frame = (ts: number) => {
@@ -506,7 +584,10 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       if (watch.finished()) endWatch();
       if (watch.session.tick !== seenTick || watch.restarts() !== seenRestarts) {
         // A run that starts again is a fresh start, so the effects do not carry their last picture over.
-        if (seenRestarts !== -1 && watch.restarts() !== seenRestarts) painter.reset();
+        if (seenRestarts !== -1 && watch.restarts() !== seenRestarts) {
+          painter.reset();
+          view.setNarration(words(watch.session.state, null, watch.session.status()));
+        }
         seenTick = watch.session.tick;
         seenRestarts = watch.restarts();
         tellParent(watch.session.tick, watch.restarts());
@@ -514,14 +595,18 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       }
       painter.paint(t);
       const mark = watch.mark();
-      view.setMark(mark && mark.anchor ? boxForAnchor(view.root, def.view(watch.session.state, viewport), mark.anchor) : null);
+      view.setMark(mark && mark.anchor ? markBox(def.view(watch.session.state, viewport), mark.anchor) : null);
       view.setStatus({ tick: watch.session.tick, phase: watch.session.status().phase, hash: watch.session.hash() });
       raf = win.requestAnimationFrame(frame);
     };
     raf = win.requestAnimationFrame(frame);
-    stopLoop = () => {
+    stopLoop = (keep) => {
       win.cancelAnimationFrame(raf);
-      endWatch();
+      if (!keep) {
+        endWatch();
+        // The page that holds this one in a frame hears that no level plays now.
+        if (win.parent !== win && win.location.origin !== 'null') win.parent.postMessage(watchLeftMessage(), win.location.origin);
+      }
     };
   }
 
@@ -532,6 +617,8 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   function render(route: Route): void {
     leavePlay();
+    watching = null;
+    watchView = null;
     leaveLevelFor(route);
     if (route.screen !== 'title') noticeOnTitle = false;
     switch (route.screen) {
@@ -579,8 +666,11 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           router.replace('title');
           return;
         }
-        if (route.params.fresh === '1') active = null;
+        const fresh = route.params.fresh === '1';
+        if (fresh) active = null;
         startPlay(levelId);
+        // The history entry no longer says fresh, so Back from Pause returns to this run and does not restart it.
+        if (fresh) router.settle({ level: levelId });
         return;
       }
       case 'pause': {
@@ -623,6 +713,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       case 'settings':
         show(
           settingsScreen(doc, {
+            gameId: def.id,
             settings: store.read().settings,
             onToggle: (name, value) => {
               if (name === 'sound') audio.setSound(value);
@@ -652,7 +743,9 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
           return;
         }
         container.replaceChildren(backdrop.sky, backdrop.rail);
-        proofs.load(levelId).then(
+        // The index of proofs tells which levels the level controls may go to.
+        const ready = proofIndex ? Promise.resolve() : proofs.loadIndex().then((index) => void (proofIndex = index), () => undefined);
+        ready.then(() => proofs.load(levelId)).then(
           (proof) => {
             const now = router.current();
             if (destroyed || now.screen !== 'watch' || now.params.level !== levelId) return;
@@ -669,6 +762,21 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
 
   router.onChange(render);
 
+  // A resize or a turn of the device lays the open play or watch screen out again. The game goes on.
+  const onResize = () => {
+    if (destroyed || builtSize === `${win.innerWidth}x${win.innerHeight}`) return;
+    const route = router.current();
+    if (route.screen === 'play' && active && active.result === null) {
+      leavePlay(true);
+      startPlay(active.levelId);
+    } else if (route.screen === 'watch' && watching) {
+      const { proof, watch } = watching;
+      leavePlay(true);
+      startWatch(proof, watch);
+    }
+  };
+  win.addEventListener('resize', onResize);
+
   const onKey = (e: KeyboardEvent) => {
     if (router.current().screen !== 'play' || !active) return;
     if (e.key === 'Escape') {
@@ -676,8 +784,10 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       return;
     }
     const focused = doc.activeElement?.tagName === 'BUTTON';
+    // Space and Enter press the focused button. Every other key goes to the game.
+    const buttonKey = focused && (e.key === ' ' || e.key === 'Enter');
     if (active.play.key(e.key, focused)) e.preventDefault();
-    else if (!focused && refuseKey?.(e.key)) e.preventDefault();
+    else if (!buttonKey && refuseKey?.(e.key)) e.preventDefault();
   };
   const onFirstInput = () => audio.unlock();
   const onTap = (e: Event) => {
@@ -701,6 +811,7 @@ export function mountGame<S extends Json, A>(element: HTMLElement, options: Moun
       for (const t of timers) clearTimeout(t);
       timers.clear();
       stopFocusLoss();
+      win.removeEventListener('resize', onResize);
       win.removeEventListener('keydown', onKey);
       win.removeEventListener('keydown', onFirstInput);
       win.removeEventListener('pointerdown', onFirstInput);

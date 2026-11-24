@@ -5,8 +5,9 @@ import { neutralTheme } from './test-theme';
 
 const MOVING = '@media not all and (prefers-reduced-motion: reduce)';
 const css = motionCss();
-const reduce = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
-const normal = css.slice(css.indexOf(MOVING), css.indexOf('@media (prefers-reduced-motion: reduce)'));
+// The block of moving styles ends where a reduced motion block would begin, if one were there.
+const reducedAt = css.indexOf('@media (prefers-reduced-motion: reduce)');
+const normal = css.slice(css.indexOf(MOVING), reducedAt >= 0 ? reducedAt : undefined);
 
 describe('motionCss', () => {
   it('is part of the page style of a game, before the look so the look test still reads its own block', () => {
@@ -15,13 +16,12 @@ describe('motionCss', () => {
     expect(page.indexOf(css)).toBeLessThan(page.indexOf('[data-backdrop]'));
   });
 
-  it('puts every motion except the 150 ms fade inside a query that reduced motion switches off', () => {
+  it('puts every motion inside a query that reduced motion switches off', () => {
     expect(css.indexOf(MOVING)).toBeGreaterThanOrEqual(0);
     // The look keeps its own no-preference block, and its test reads everything after it.
     expect(css).not.toContain('prefers-reduced-motion: no-preference');
-    expect(reduce).not.toMatch(/rotate|translate|infinite|kit-swing|kit-drop|kit-lift/);
-    const outside = css.replace(normal, '').replace(reduce, '');
-    expect(outside).not.toMatch(/animation|transition/);
+    const outside = css.replace(normal, '');
+    expect(outside).not.toMatch(/animation|transition|@keyframes|rotate|translate|infinite/);
   });
 
   it('swings a button once in 600 ms when the pointer is over it', () => {
@@ -72,9 +72,11 @@ describe('motionCss', () => {
     expect(normal).toMatch(/\[data-lift\][^{]*\{[^}]*animation: kit-lift 300ms/);
   });
 
-  it('cross fades a new screen in 150 ms with reduced motion, and moves nothing', () => {
-    expect(reduce).toMatch(/animation: kit-fade 150ms/);
-    expect(reduce).toMatch(/@keyframes kit-fade/);
+  // Changed in tester-fixes task 13: the 150 ms fade under reduced motion is gone, so nothing animates.
+  it('has no rule at all for reduced motion, so a new screen does not fade in either', () => {
+    expect(css).not.toContain('@media (prefers-reduced-motion: reduce)');
+    expect(css.replace(normal, '')).not.toMatch(/kit-fade/);
+    expect(css.match(/kit-fade 150ms/)).toBeNull();
   });
 
   it('keeps the play and watch screens still', () => {

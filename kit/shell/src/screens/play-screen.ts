@@ -2,6 +2,7 @@ import type { Viewport } from '@kit/core';
 import { playLayout } from '../layout';
 import type { InputButton } from '../types';
 import { button, screenRoot } from './dom';
+import { narrationRegion } from './narration';
 
 export interface PlayScreenProps {
   width: number;
@@ -22,6 +23,8 @@ export interface PlayScreenView {
   strip: HTMLElement;
   // Publishes the values the browser tests read.
   setStatus(info: { tick: number; phase: string; hash: string }): void;
+  // The text version of the state for a screen reader. Null leaves the text as it is.
+  setNarration(text: string | null): void;
 }
 
 // Width of a strip button: `minWidth` (44 px) at least, and room for the label plus 8 px padding on each side.
@@ -80,11 +83,14 @@ export function playScreen(doc: Document, props: PlayScreenProps): PlayScreenVie
   root.style.width = `${props.width}px`;
   root.style.height = `${props.height}px`;
   root.prepend(canvas, strip);
+  const narration = narrationRegion(doc);
+  root.append(narration.el);
 
   return {
     root,
     canvas,
     strip,
+    setNarration: narration.say,
     setStatus(info) {
       root.dataset.tick = String(info.tick);
       root.dataset.phase = info.phase;
