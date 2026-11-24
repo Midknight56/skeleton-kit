@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "menu-contrast-preview",
+  "version": "0.1.0",
+  "description": "Try a theme colour in the garden or runner and see which menu labels or controls fall below their contrast limit.",
+  "author": {
+    "name": "Adrian Ferguson"
+  },
+  "keywords": ["menu contrast", "sky glow", "palette change", "theme colour"],
+  "repository": "https://github.com/Midknight56/skeleton-kit",
+  "license": "MIT"
+}

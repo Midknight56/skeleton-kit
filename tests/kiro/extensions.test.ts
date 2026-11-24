@@ -198,10 +198,33 @@ describe('6 the README claims', () => {
   });
 
   it('6.2 the first paragraph lists the power among what Kiro wrote', () => {
-    expect(first).toMatch(/one power/);
+    expect(first).toMatch(/two powers/);
+    expect(readme).toContain('`power/skeleton-kit/`');
+    expect(readme).toContain('`power/menu-contrast-preview/`');
   });
 
   it('6.3 has no dash between words in the section', () => {
     expect(powers).not.toMatch(/\s[\u2013\u2014-]\s|[\u2013\u2014]/);
+  });
+});
+
+describe('7 the proof that the menu contrast power ran in one headless session', () => {
+  const file = ['docs', 'acceptance', 'menu-contrast-preview', 'README.md'];
+
+  it('7.1 has a README', () => {
+    expect(existsSync(join(REPO, ...file))).toBe(true);
+  });
+
+  it('7.2 holds the tool call line, a later completed line and the three garden rows', () => {
+    const proof = text(...file);
+    const call = proof.indexOf('[tool] @menu-contrast-preview/contrast/preview_menu_contrast');
+    expect(call).toBeGreaterThanOrEqual(0);
+    expect(proof.indexOf('[tool] status: Completed', call)).toBeGreaterThan(call);
+    for (const label of ['Storage notice on the sky', 'Result reason on the sky', 'Watch proof line on the sky']) {
+      const row = proof.split('\n').find((line) => line.startsWith('| ' + label));
+      expect(row, label).toBeDefined();
+      const cells = (row as string).split('|').map((cell) => cell.trim());
+      expect(cells.slice(2, 5), label).toEqual(['4.51', '4.06', '4.5']);
+    }
   });
 });

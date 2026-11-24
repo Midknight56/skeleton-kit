@@ -126,7 +126,9 @@ describe('numbers read from the files', () => {
     expect(count('.kiro', 'hooks')).toBe(3);
     expect(count('.kiro', 'agents')).toBe(2);
     expect(servers).toBe(3);
-    expect(readme).toContain('three hooks, three MCP servers, two custom agents and one power');
+    const powers = readdirSync(join(REPO, 'power'), { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    expect(powers.map((entry) => entry.name).sort()).toEqual(['menu-contrast-preview', 'skeleton-kit']);
+    expect(readme).toContain('three hooks, three MCP servers, two custom agents and two powers');
   });
 
   it('gives the level counts and ranges of the proof indexes', () => {
