@@ -62,8 +62,11 @@ describe('the top of README.md', () => {
     const alt = match?.[1] ?? '';
     expect(alt).toMatch(/landing page/i);
     expect(alt).toMatch(/in play/i);
-    expect(alt).toMatch(/level select/i);
-    expect(alt).toMatch(/pips/i);
+    expect(alt).toMatch(/runner/i);
+    expect(alt).toMatch(/jump/i);
+    expect(alt).toMatch(/lantern/i);
+    expect(alt).not.toMatch(/level select/i);
+    expect(alt).not.toMatch(/pips/i);
   });
 
   it('holds the play link and the video link', () => {

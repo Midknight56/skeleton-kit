@@ -1,7 +1,8 @@
 // The landing page script. It reads the proof file of the garden puzzle level g03 from the built site and
 // lists the tool calls that play that level. It follows the real watch screen in the frame: the watch
-// screen posts how many actions it has applied, and the call that runs is marked. It imports nothing from
-// the kit or from a game.
+// screen posts how many actions it has applied, and the call that runs is marked. The turn limit try out
+// runs the search of the kit in this page (see try-rule.ts).
+import { SHIPPED_LIMIT, readLimit, tryLimit } from './try-rule';
 import { buildCalls, isWatchLeft, readLevel, readProgress, runningIndex, type Call, type ProofFile } from './calls';
 
 // The star field of the sky, at fixed places. A small generator keeps them the same on every visit.
@@ -65,7 +66,34 @@ function showProgress(applied: number, total: number): void {
   Array.from(dots.children).forEach((dot, i) => ((dot as HTMLElement).dataset.done = String(i < applied)));
 }
 
+// The turn limit try out. It writes nothing but the result line and the field.
+function setupTry(): void {
+  const form = document.querySelector<HTMLFormElement>('[data-try="form"]');
+  const field = document.querySelector<HTMLInputElement>('[data-try="limit"]');
+  const restore = document.querySelector<HTMLButtonElement>('[data-try="restore"]');
+  const out = document.querySelector<HTMLElement>('[data-try="result"]');
+  if (!form || !field || !restore || !out) return;
+  const show = (limit: number | null): void => {
+    const result = limit === null ? null : tryLimit(limit);
+    out.textContent = result ? result.text : 'Use a whole number of turns from 1 to 20.';
+    out.dataset.won = result?.kind === 'won' ? 'true' : result?.kind === 'lost' ? 'false' : 'error';
+    for (const name of ['count', 'hash'] as const) {
+      if (result?.kind === 'won') out.dataset[name] = String(name === 'count' ? result.count : result.hash);
+      else delete out.dataset[name];
+    }
+  };
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    show(readLimit(field.value));
+  });
+  restore.addEventListener('click', () => {
+    field.value = String(SHIPPED_LIMIT);
+    show(SHIPPED_LIMIT);
+  });
+}
+
 async function main(): Promise<void> {
+  setupTry();
   drawStars();
   const list = document.querySelector('[data-calls]');
   if (!list) return;

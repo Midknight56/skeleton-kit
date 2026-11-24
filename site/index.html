@@ -62,6 +62,7 @@
       .sign:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
       @media (prefers-reduced-motion: reduce) { .sign { transition: none; } }
 
+      .games { margin-top: 12px; gap: 12px; }
       .key { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 15px; color: var(--muted); }
       .key li { display: flex; align-items: center; gap: 12px; }
       .key .line { flex: none; width: 28px; height: 3px; border-radius: 2px; }
@@ -104,6 +105,20 @@
       .calls code { font: inherit; }
       .panel footer { padding: 12px 16px; border-top: 1.5px solid var(--plum); font-size: 14px; line-height: 1.4; color: var(--muted); }
 
+
+      .try { margin-top: 16px; padding: 12px 16px 16px; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--dusk); box-shadow: 0 4px 0 var(--ink); }
+      .try h2 { margin: 0 0 4px; font-size: 17px; font-weight: 800; line-height: 1.2; }
+      .try p { margin: 0 0 12px; font-size: 14px; line-height: 1.4; color: var(--muted); }
+      .try form { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
+      .try label { flex: none; font-size: 14px; font-weight: 600; }
+      .try input, .try button { min-height: 48px; border-radius: 10px; font: 700 16px/1.1 var(--text); }
+      .try input { width: 72px; padding: 8px 12px; border: 2px solid var(--violet); background: var(--ink); color: var(--bone); text-align: center; }
+      .try button { padding: 8px 16px; border: 0; box-shadow: 0 4px 0 var(--ink); cursor: pointer; background: var(--plum); color: var(--bone); }
+      .try button[data-try="run"] { background: var(--warm); color: var(--night); box-shadow: 0 4px 0 var(--warm-deep); }
+      .try button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+      .try input:focus-visible, .try button:focus-visible { outline: 3px solid var(--program); outline-offset: 3px; }
+      .try-result { margin-top: 12px; font-size: 14px; line-height: 1.45; color: var(--bone); overflow-wrap: anywhere; }
+      .try-result[data-won="false"], .try-result[data-won="error"] { color: var(--program); }
       .moon { display: none; pointer-events: none; }
 
       @media (min-width: 700px) {
@@ -151,9 +166,13 @@
         .caption { margin-bottom: 4px; }
         .hung { padding-top: 10px; }
         .frame { height: 240px; }
-        .intro-signs { margin-top: 8px; gap: 12px; }
+        .intro-signs { margin-top: 4px; gap: 12px; }
         .intro-signs .sign { min-height: 44px; padding: 6px 10px; font-size: 13px; }
-      }
+        h1 { margin-bottom: 2px; font-size: 24px; letter-spacing: -0.03em; }
+        .caption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+        .caption strong { font-size: 15px; }
+        .games { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .sign.game { min-height: 48px; padding: 4px 6px; font-size: 14px; }      }
     </style>
     <script type="module" src="./landing.ts"></script>
   </head>
@@ -189,6 +208,10 @@
           <a class="sign primary" data-link="play-now" href="./garden/">Play in the browser</a>
           <a class="sign" data-link="get-kit" href="__REPOSITORY_URL__">Get the kit</a>
         </div>
+        <nav class="signs games" aria-label="The two games">
+          <a class="sign game" data-card="garden" href="./garden/" aria-label="Play Moth Garden, the turn puzzle" title="Moth Garden, a turn puzzle">Play Moth Garden</a>
+          <a class="sign game" data-card="runner" href="./runner/" aria-label="Play Broom Runner, the timed runner" title="Broom Runner, a timed runner">Play Broom Runner</a>
+        </nav>
       </section>
 
       <section class="board" aria-label="A level playing by itself">
@@ -203,6 +226,17 @@
         <div class="status" aria-hidden="true">
           <span><span class="count" data-count>action 0 of 4</span> <span class="dots" data-dots></span></span>
           <span>starts again when the level is won</span>
+        </div>
+        <div class="try" data-try-box>
+          <h2>Change one rule</h2>
+          <p>Level 3 gives you 8 turns. Pick another limit and the kit's own search checks if the level can still be won.</p>
+          <form data-try="form">
+            <label for="try-limit">Turn limit</label>
+            <input id="try-limit" data-try="limit" type="text" inputmode="numeric" autocomplete="off" value="8" maxlength="2" />
+            <button type="submit" data-try="run">Check it</button>
+            <button type="button" data-try="restore">Restore 8</button>
+          </form>
+          <div class="try-result" data-try="result" role="status" aria-live="polite"></div>
         </div>
       </section>
 
@@ -221,10 +255,6 @@
       </aside>
 
       <div class="actions" id="actions">
-        <nav class="signs" aria-label="The two games">
-          <a class="sign" data-card="garden" href="./garden/">Play Moth Garden</a>
-          <a class="sign" data-card="runner" href="./runner/">Play Broom Runner</a>
-        </nav>
         <p class="signs"><a class="sign program" href="#how">How the kit works</a></p>
         <ul class="key">
           <li><span class="line person"></span>Orange: you play a game yourself</li>
