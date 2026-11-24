@@ -1,0 +1,16 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "contrast": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "-e",
+        "const { pathToFileURL } = require('node:url'); const path = require('node:path'); const fs = require('node:fs'); const root = process.env.SKELETON_KIT_ROOT; if (!root) { console.error('menu-contrast-preview power: set SKELETON_KIT_ROOT to the full path of your clone of this repository, the folder that holds package.json and power/.'); process.exit(1); } const file = path.join(root, 'power', 'menu-contrast-preview', 'server.mjs'); if (!fs.existsSync(file)) { console.error('menu-contrast-preview power: ' + file + ' does not exist. Set SKELETON_KIT_ROOT to the full path of your clone of this repository.'); process.exit(1); } import(pathToFileURL(file).href);"
+      ],
+      "env": {
+        "SKELETON_KIT_ROOT": "${SKELETON_KIT_ROOT}"
+      }
+    }
+  }
+}
