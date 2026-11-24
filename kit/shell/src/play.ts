@@ -25,7 +25,7 @@ export interface PlayController<S extends Json, A> {
   readonly session: Session<S, A>;
   // A pointer at a point of the play area, in CSS px. Returns true when an action was applied or queued.
   pointer(x: number, y: number): boolean;
-  // A key. It counts only while no button has focus.
+  // A key. While a button has focus, Space and Enter belong to the button. Every other key reaches the game.
   key(key: string, buttonFocused: boolean): boolean;
   // The action of a play strip button.
   press(actionText: string): boolean;
@@ -92,14 +92,15 @@ export function createPlay<S extends Json, A>(options: PlayOptions<S, A>): PlayC
       return event({ type: 'pointer', itemIds: itemIdsAt(scene(), x, y) });
     },
     key(key, buttonFocused) {
-      if (buttonFocused) return false;
+      if (buttonFocused && (key === ' ' || key === 'Enter')) return false;
       return event({ type: 'key', key });
     },
     press(actionText) {
       return submit(actionText);
     },
     undo() {
-      if (def.kind !== 'turn') return false;
+      // The end of a level is final: once the phase is not playing, there is nothing to undo.
+      if (def.kind !== 'turn' || session.status().phase !== 'playing') return false;
       const done = session.undo();
       if (done) ended = session.status().phase !== 'playing';
       return done;

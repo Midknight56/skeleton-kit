@@ -64,6 +64,13 @@ const inside = (inner: Rect, outer: Rect): boolean =>
 
 const overlap = (a: Rect, b: Rect): boolean => a.x < b.x + b.w - 0.5 && b.x < a.x + a.w - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5;
 
+// A confirm box opens under the mouse pointer after a click. The hover swing (a rotation) then changes the box of that
+// button by a fraction of a pixel. So the pointer goes to a corner and the test waits until no finite animation runs.
+async function settle(page: Page): Promise<void> {
+  await page.mouse.move(1, 1);
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity));
+}
+
 async function checkCard(page: Page, name: string, viewport: { width: number; height: number }, confirm = false): Promise<void> {
   const m = await measure(page, name, confirm);
   const where = `${name} at ${viewport.width}x${viewport.height}`;
@@ -173,6 +180,7 @@ for (const game of GAMES) {
       await checkCard(page, 'settings', viewport);
       await control(page, 'reset').click();
       await expect(page.locator('[data-dialog="confirm"]')).toBeVisible();
+      await settle(page);
       await checkCard(page, 'settings-confirm', viewport, true);
       await control(page, 'cancel').click();
       await control(page, 'back').click();
@@ -185,6 +193,7 @@ for (const game of GAMES) {
       await checkCard(page, 'pause', viewport);
       await control(page, 'retry').click();
       await expect(page.locator('[data-dialog="confirm"]')).toBeVisible();
+      await settle(page);
       await checkCard(page, 'pause-confirm', viewport, true);
       await control(page, 'cancel').click();
       await control(page, 'resume').click();

@@ -62,6 +62,14 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
       }
       tile.append(row);
     }
+    // A turn level says the fewest moves that win. The spoken name of the card already says it.
+    if (facts && props.kind === 'turn') {
+      const moves = doc.createElement('span');
+      moves.dataset.moves = '';
+      moves.setAttribute('aria-hidden', 'true');
+      moves.textContent = `${facts.actions} ${facts.actions === 1 ? 'move' : 'moves'}`;
+      tile.append(moves);
+    }
     grid.append(tile);
   });
   root.append(grid);

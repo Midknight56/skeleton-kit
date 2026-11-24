@@ -1,4 +1,5 @@
 import type { InputEvent, InputMap } from '@kit/shell';
+import { narrateRunner } from './narrate';
 import type { RunnerState } from './rules/state';
 
 // One tap anywhere, or the space key, is a jump. The shell passes on only a legal action, so a jump
@@ -12,6 +13,7 @@ export const runnerInput: InputMap<RunnerState> = {
   idle: 'none',
   toAction,
   buttons: [],
+  narrate: narrateRunner,
   anchorFor: (actionText) => (actionText === 'jump' ? 'player' : null),
   lessons: [
     { id: 'jump', anchor: 'player', text: 'Tap: jump' },

@@ -2,7 +2,7 @@
 // lists the tool calls that play that level. It follows the real watch screen in the frame: the watch
 // screen posts how many actions it has applied, and the call that runs is marked. It imports nothing from
 // the kit or from a game.
-import { buildCalls, readProgress, runningIndex, type Call, type ProofFile } from './calls';
+import { buildCalls, isWatchLeft, readLevel, readProgress, runningIndex, type Call, type ProofFile } from './calls';
 
 // The star field of the sky, at fixed places. A small generator keeps them the same on every visit.
 function drawStars(): void {
@@ -76,11 +76,23 @@ async function main(): Promise<void> {
     list.replaceChildren(...buildCalls(proof).map(line));
     // The frame is the only page that may speak to this one.
     const frame = document.querySelector<HTMLIFrameElement>('iframe[data-frame="watch"]');
+    const board = document.querySelector('.board');
+    const title = document.querySelector('[data-caption-title]');
     window.addEventListener('message', (event) => {
       if (event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
+      // The frame left the watch screen: the caption and the counter say nothing until a demo plays again.
+      if (isWatchLeft(event.data)) {
+        board?.setAttribute('data-demo', 'off');
+        return;
+      }
       const progress = readProgress(event.data);
       if (!progress) return;
-      mark(list, runningIndex(progress.applied, progress.total));
+      board?.setAttribute('data-demo', 'on');
+      const level = readLevel(event.data);
+      const number = level === null ? null : /(\d+)$/.exec(level)?.[1];
+      if (title && number) title.textContent = `Moth Garden, level ${Number(number)}`;
+      // The calls list is the list of the level of the proof. Another level does not mark it.
+      if (level === proof.level) mark(list, runningIndex(progress.applied, progress.total));
       showProgress(progress.applied, progress.total);
     });
   } catch {

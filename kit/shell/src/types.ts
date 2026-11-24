@@ -1,4 +1,4 @@
-import type { Replay } from '@kit/core';
+import type { Replay, Status } from '@kit/core';
 
 export type InputEvent = { type: 'pointer'; itemIds: string[] } | { type: 'key'; key: string };
 
@@ -27,6 +27,10 @@ export interface InputMap<S> {
   // The reason a key does nothing in this state, with the id of the play strip button that does the same
   // thing, or null. The play screen shows it beside that button, as it does for a refused button press.
   refusedKey?(key: string, state: S): { anchor: string; text: string } | null;
+  // The state in words, for a screen reader. previous is the state before the last action, or null at the start.
+  // A turn game says the whole state each time. A tick game says a sentence only when something changes,
+  // and null on every other tick. A game without it gets the observation summary of a turn game.
+  narrate?(state: S, previous: S | null, status: Status): string | null;
 }
 
 export interface GameTexts<S> {

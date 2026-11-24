@@ -180,6 +180,18 @@ describe('tick input', () => {
     expect(play.pending()).toBe(null);
   });
 
+  it('lets a game key reach the game while a button has focus', () => {
+    const play = turnPlay();
+    expect(play.key('2', true)).toBe(true);
+    expect(play.session.state.total).toBe(2);
+  });
+
+  it('keeps Space and Enter for a focused button', () => {
+    const play = turnPlay();
+    expect(play.key(' ', true)).toBe(false);
+    expect(play.key('Enter', true)).toBe(false);
+    expect(play.session.state.total).toBe(0);
+  });
   it('ignores a pointer outside the play area', () => {
     const play = tickPlay();
     expect(play.pointer(-1, 15)).toBe(false);
@@ -255,6 +267,17 @@ describe('turn game', () => {
     expect(play.session.state.total).toBe(1);
     expect(play.undo()).toBe(true);
     expect(play.undo()).toBe(false);
+  });
+
+  it('does not undo once the level is won or lost', () => {
+    const play = turnPlay();
+    play.press('add1');
+    play.press('add2');
+    expect(play.session.status().phase).toBe('won');
+    const hash = play.session.hash();
+    expect(play.undo()).toBe(false);
+    expect(play.session.hash()).toBe(hash);
+    expect(play.session.status().phase).toBe('won');
   });
 
   it('does not undo on a tick game', () => {

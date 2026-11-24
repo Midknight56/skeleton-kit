@@ -312,8 +312,8 @@ describe('usage events from mountGame', () => {
     window.history.back();
     await back2;
     expect(screenOf(root)).toBe('levels');
-    // Back from pause lands on the fresh play entry, which starts the level again.
-    expect(await names()).toEqual(['open', 'level_start', 'level_end:left', 'level_start', 'level_end:left']);
+    // Back from pause returns to the same run, which does not start the level again (tester-fixes task 3).
+    expect(await names()).toEqual(['open', 'level_start', 'level_end:left']);
     handle.destroy();
   });
 

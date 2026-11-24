@@ -267,6 +267,7 @@ function pairsOf(game: string, theme: Theme): Pair[] {
   // A locked level is an inactive control and WCAG 1.4.3 exempts it. It is tested at full strength
   // anyway: the opacity of 0.5 that the shell adds is not applied here.
   text({ name: 'locked level tile label on its fill', colour: '.tiles button[data-locked="true"]', size: '[data-screen]', weight: BUTTON, background: backgroundOf('.tiles button[data-locked="true"]') });
+  text({ name: 'level card moves label on its fill', colour: BUTTON, size: '.tiles [data-moves]', weight: null, background: plum });
   text({ name: 'hint chip label on its fill', colour: '[data-hint]', size: '[data-hint]', weight: '[data-hint]', background: backgroundOf('[data-hint]') });
 
   // The garland of the title screen: text on a dark panel of its own.

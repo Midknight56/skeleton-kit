@@ -1,4 +1,5 @@
 import type { InputEvent, InputMap } from '@kit/shell';
+import { narrateGarden } from './narrate';
 import type { GardenState } from './rules/state';
 
 const LANTERN_ITEM = /^lantern-([1-5])$/;
@@ -63,6 +64,7 @@ export const gardenInput: InputMap<GardenState> = {
     'The fewest moves earn 3 stars.',
     'The level is lost if a web catches a moth or the turns run out.',
   ],
+  narrate: narrateGarden,
   refused: (actionText, state) => refusedText(actionText, state),
   refusedKey: (key, state) => {
     const text = key === ' ' ? refusedText('wait', state) : null;

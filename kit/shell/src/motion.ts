@@ -4,7 +4,7 @@ import { STRING_COLOUR } from './tokens';
 // layout or a rule of a game. The strings of a card sway and drop in, the old card leaves as a hollow
 // ghost that rises, a button swings once when the pointer comes and bobs when it is pressed. The card
 // and its controls stay where they are, so a test can click a control at once and measure it.
-// With reduced motion every one of these is off, and a new screen only fades in over 150 ms.
+// With reduced motion every one of these is off, the fade of a new screen too. Nothing animates.
 export function motionCss(): string {
   return `
 @media not all and (prefers-reduced-motion: reduce) {
@@ -33,11 +33,6 @@ export function motionCss(): string {
   [data-lift] i[data-side="left"] { left: 22%; }
   [data-lift] i[data-side="right"] { right: 22%; }
   @keyframes kit-lift { from { translate: 0 0; opacity: 1; } to { translate: 0 -60px; opacity: 0; } }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-screen]:not([data-screen="play"]):not([data-screen="watch"]):not([data-screen="loading"]) { animation: kit-fade 150ms linear both; }
-  @keyframes kit-fade { from { opacity: 0; } to { opacity: 1; } }
 }
 `;
 }

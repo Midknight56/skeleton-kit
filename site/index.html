@@ -69,6 +69,8 @@
       .key .machine { background: var(--program); }
 
       .caption { margin: 0 0 8px; }
+      /* The frame left the watch screen: the caption and the counter keep their place and say nothing. */
+      .board[data-demo="off"] .caption, .board[data-demo="off"] .status { visibility: hidden; }
       .caption small { display: block; font: 500 12px/1.4 var(--code); letter-spacing: 0.1em; text-transform: uppercase; color: var(--program); }
       .caption strong { display: block; font-size: 17px; font-weight: 700; }
       .hung { position: relative; padding-top: 16px; }
@@ -192,7 +194,7 @@
       <section class="board" aria-label="A level playing by itself">
         <div class="caption">
           <small>now playing itself</small>
-          <strong>Moth Garden, level 3</strong>
+          <strong data-caption-title>Moth Garden, level 3</strong>
         </div>
         <div class="hung">
           <div class="bar" aria-hidden="true"></div>

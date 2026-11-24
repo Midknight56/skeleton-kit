@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { gardenTheme } from '../apps/garden/theme';
 import { runnerTheme } from '../apps/runner/theme';
-import { WATCH_MESSAGE, TOKENS, checkTheme } from '../kit/shell/src/index';
-import { TOOLS, buildCalls, readProgress, runningIndex } from '../site/calls';
-import { LANDING_MESSAGE } from '../site/landing-message';
+import { WATCH_LEFT_MESSAGE, WATCH_MESSAGE, TOKENS, checkTheme, watchLeftMessage } from '../kit/shell/src/index';
+import { TOOLS, buildCalls, isWatchLeft, readLevel, readProgress, runningIndex } from '../site/calls';
+import { LANDING_LEFT_MESSAGE, LANDING_MESSAGE } from '../site/landing-message';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -113,7 +113,24 @@ describe('the landing calls', () => {
   it('uses the same message name as the watch screen', () => {
     expect(LANDING_MESSAGE).toBe(WATCH_MESSAGE);
   });
-});
+
+  it('reads the message that says the frame left the watch screen, and nothing else', () => {
+    expect(isWatchLeft({ type: LANDING_LEFT_MESSAGE })).toBe(true);
+    expect(isWatchLeft({ type: WATCH_MESSAGE })).toBe(false);
+    expect(isWatchLeft(null)).toBe(false);
+    expect(isWatchLeft('skeleton-kit:watch-left')).toBe(false);
+  });
+
+  it('reads the level of a watch message', () => {
+    expect(readLevel({ type: WATCH_MESSAGE, level: 'g03', applied: 2, total: 4, round: 1 })).toBe('g03');
+    expect(readLevel({ type: 'other', level: 'g03' })).toBeNull();
+    expect(readLevel({ type: WATCH_MESSAGE, level: 3 })).toBeNull();
+  });
+
+  it('uses the same left message name as the watch screen', () => {
+    expect(LANDING_LEFT_MESSAGE).toBe(WATCH_LEFT_MESSAGE);
+    expect(watchLeftMessage()).toEqual({ type: WATCH_LEFT_MESSAGE });
+  });});
 
 describe('the credits', () => {
   for (const game of ['garden', 'runner']) {

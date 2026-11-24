@@ -25,6 +25,16 @@ describe('router', () => {
     expect(seen).toEqual(['play:lv-2']);
   });
 
+  it('settle rewrites the params of the open entry and tells no listener', () => {
+    router = createRouter(window, 'title');
+    router.go('play', { level: 'lv-1', fresh: '1' });
+    const seen: string[] = [];
+    router.onChange((route) => seen.push(route.screen));
+    router.settle({ level: 'lv-1' });
+    expect(router.current()).toEqual({ screen: 'play', params: { level: 'lv-1' } });
+    expect(seen).toEqual([]);
+    expect((window.history.state as { kitRoute: { params: unknown } }).kitRoute.params).toEqual({ level: 'lv-1' });
+  });
   it('goes back with the browser history', async () => {
     router = createRouter(window, 'title');
     const seen: string[] = [];

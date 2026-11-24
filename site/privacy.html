@@ -46,5 +46,13 @@
       </table>
       <p>The server that receives these events sees the address of the request, as any server does.</p>
     </main>
-  </body>
+    <script>
+      // A game links here with ?from=<game>. Back then returns to the Settings screen of that game.
+      // Only a plain game name is used, so the link cannot leave this site.
+      (function () {
+        var from = new URLSearchParams(window.location.search).get('from');
+        var back = document.querySelector('a.back');
+        if (back && from && /^[a-z0-9-]+$/.test(from)) back.setAttribute('href', '../' + from + '/?open=settings');
+      })();
+    </script>  </body>
 </html>

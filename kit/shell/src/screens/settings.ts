@@ -8,10 +8,17 @@ export interface SettingsProps {
   onToggle(name: SettingName, value: boolean): void;
   onReset(): void;
   onBack(): void;
+  // The id of the game, passed to the privacy page.
+  gameId?: string;
 }
 
 // Where the privacy page sits, seen from a game page such as /garden/.
 export const PRIVACY_HREF = '../privacy/';
+
+// The same link with the game it comes from, so the privacy page can return to that game's Settings screen.
+export function privacyHref(gameId?: string): string {
+  return gameId ? `${PRIVACY_HREF}?from=${encodeURIComponent(gameId)}` : PRIVACY_HREF;
+}
 
 export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement {
   const root = menuRoot(doc, 'settings');
@@ -36,6 +43,7 @@ export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement
       message: 'Delete all progress?',
       confirmLabel: 'Delete',
       cancelLabel: 'Keep',
+      opener: reset,
       onConfirm: () => {
         box.remove();
         props.onReset();
@@ -52,7 +60,7 @@ export function settingsScreen(doc: Document, props: SettingsProps): HTMLElement
       toggle('sound', 'Sound'),
       toggle('music', 'Music'),
       toggle('usage', 'Usage data'),
-      link(doc, 'privacy', 'Privacy', PRIVACY_HREF),
+      link(doc, 'privacy', 'Privacy', privacyHref(props.gameId)),
       reset,
       button(doc, 'back', 'Back', props.onBack),
     ),

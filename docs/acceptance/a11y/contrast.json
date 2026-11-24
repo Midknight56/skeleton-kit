@@ -4,7 +4,7 @@
     "normalText": 4.5,
     "largeTextAndControlBordersAndIcons": 3
   },
-  "pairs": 52,
+  "pairs": 54,
   "failing": 0,
   "lowestRatio": {
     "name": "garden: storage notice on the sky",
@@ -135,6 +135,15 @@
       "background": "#221a3d",
       "size": "18px weight 700, normal text",
       "ratio": 7.55,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "garden: level card moves label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "12px weight 400, normal text",
+      "ratio": 10.65,
       "limit": 4.5,
       "result": "pass"
     },
@@ -369,6 +378,15 @@
       "background": "#221a3d",
       "size": "17px weight 700, normal text",
       "ratio": 7.55,
+      "limit": 4.5,
+      "result": "pass"
+    },
+    {
+      "name": "runner: level card moves label on its fill",
+      "foreground": "#efe7d2",
+      "background": "#33285c",
+      "size": "12px weight 400, normal text",
+      "ratio": 10.65,
       "limit": 4.5,
       "result": "pass"
     },

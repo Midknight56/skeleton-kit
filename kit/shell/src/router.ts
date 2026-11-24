@@ -4,6 +4,8 @@ export interface Router {
   current(): Route;
   go(screen: ScreenName, params?: Record<string, string>): void;
   replace(screen: ScreenName, params?: Record<string, string>): void;
+  // Rewrites the history entry of the open screen with new params. It tells no listener and draws nothing.
+  settle(params: Record<string, string>): void;
   onChange(listener: (route: Route) => void): void;
   destroy(): void;
 }
@@ -43,6 +45,10 @@ export function createRouter(win: Window, initial: ScreenName, initialParams: Re
       route = { screen, params };
       win.history.replaceState(state(route), '');
       emit();
+    },
+    settle(params) {
+      route = { screen: route.screen, params };
+      win.history.replaceState(state(route), '');
     },
     onChange(listener) {
       listeners.push(listener);
