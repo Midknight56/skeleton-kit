@@ -71,7 +71,7 @@ describe('the top of README.md', () => {
 
   it('holds the play link and the video link', () => {
     expect(top).toContain('https://skeleton-kit-games.pages.dev');
-    expect(top).toContain('https://youtu.be/AU-yrIBvsuA');
+    expect(top).toContain('https://youtu.be/0NeJ8kmdDJc');
   });
 
   it('puts the image right under the title', () => {

@@ -4,7 +4,7 @@
 
 Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
-Video: https://youtu.be/AU-yrIBvsuA
+Video: https://youtu.be/0NeJ8kmdDJc (2:37). Guide: 0:00 the problem, 0:20 the landing page, 0:28 Moth Garden, 0:37 levels, 0:44 Broom Runner from its proof, 0:55 Broom Runner played, 1:07 Watch mode, 1:20 the hardest level, 1:28 the proof check, 1:39 the Kiro Crew app, 1:52 keyboard and settings, 2:03 on a phone, 2:08 how Kiro built it, 2:31 the end card.
 
 ## Judging criteria at a glance
 
