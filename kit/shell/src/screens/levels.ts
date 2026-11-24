@@ -1,5 +1,5 @@
 import type { LevelRef } from '@kit/core';
-import { describeFacts, type LevelFacts } from '../difficulty';
+import { describeFacts, describeWindow, type LevelFacts } from '../difficulty';
 import { button, heading, menuColumn, menuRoot, paragraph, stars } from './dom';
 
 // A level is locked when an earlier level is not finished. The first unfinished level is open.
@@ -43,6 +43,7 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
     tile.setAttribute('aria-label', described ? `${base}, ${described.text}` : base);
     if (facts) {
       tile.dataset.actions = String(facts.actions);
+      if (props.kind === 'tick' && facts.window !== undefined) tile.dataset.windowTicks = String(facts.window);
       if (facts.firstMoves) {
         tile.dataset.firstLegal = String(facts.firstMoves.legal);
         tile.dataset.firstWin = String(facts.firstMoves.winning);
@@ -69,6 +70,19 @@ export function levelsScreen(doc: Document, props: LevelsProps): HTMLElement {
       moves.setAttribute('aria-hidden', 'true');
       moves.textContent = `${facts.actions} ${facts.actions === 1 ? 'move' : 'moves'}`;
       tile.append(moves);
+    }
+    // A tick course says its tightest jump. The spoken name of the card already says it.
+    if (facts && props.kind === 'tick' && facts.window !== undefined) {
+      const tight = describeWindow(facts.window);
+      const box = doc.createElement('span');
+      box.dataset.window = '';
+      box.setAttribute('aria-hidden', 'true');
+      const steps = doc.createElement('span');
+      steps.textContent = tight.steps;
+      const time = doc.createElement('span');
+      time.textContent = tight.time;
+      box.append(steps, time);
+      tile.append(box);
     }
     grid.append(tile);
   });

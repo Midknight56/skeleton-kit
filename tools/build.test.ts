@@ -161,9 +161,13 @@ describe('the build output', () => {
       }
     });
 
-    it('holds actions only for the runner, with no firstMoves', () => {
+    it('holds actions and the smallest window for the runner, with no firstMoves', () => {
       const facts = pageFacts('runner');
-      for (const item of index('runner').levels) expect(facts.levels[item.id]).toEqual({ actions: item.actions });
+      for (const item of index('runner').levels) {
+        const proof = JSON.parse(readFileSync(fileURLToPath(new URL('../proofs/runner/' + item.id + '.json', import.meta.url)), 'utf8')) as { checks: { name: string; detail: string }[] };
+        const window = Number(/^smallest window (\d+) ticks/.exec(proof.checks.find((c) => c.name === 'window_ok')?.detail ?? '')?.[1]);
+        expect(facts.levels[item.id]).toEqual({ actions: item.actions, window });
+      }
       expect(readFileSync(join(dist, 'runner', 'index.html'), 'utf8')).not.toContain('firstMoves');
     });
 
