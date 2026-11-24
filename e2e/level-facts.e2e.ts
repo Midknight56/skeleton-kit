@@ -31,11 +31,18 @@ interface Card {
 }
 interface Measured { cards: Card[]; back: Rect; scrolls: boolean; scrollsWithoutPips: boolean }
 
-interface IndexItem { id: string; actions: number; firstMoves?: { legal: number; winning: number } }
+interface IndexItem { id: string; actions: number; firstMoves?: { legal: number; winning: number }; window?: number }
 
 function readIndex(game: string): IndexItem[] {
   const path = fileURLToPath(new URL(`../proofs/${game}/index.json`, import.meta.url));
-  return (JSON.parse(readFileSync(path, 'utf8')) as { levels: IndexItem[] }).levels;
+  const levels = (JSON.parse(readFileSync(path, 'utf8')) as { levels: IndexItem[] }).levels;
+  // A runner course also has the smallest window of its proof, in the check window_ok.
+  return levels.map((item) => {
+    const proofPath = fileURLToPath(new URL(`../proofs/${game}/${item.id}.json`, import.meta.url));
+    const proof = JSON.parse(readFileSync(proofPath, 'utf8')) as { kind?: string; checks: { name: string; detail: string }[] };
+    const found = /^smallest window (\d+) ticks/.exec(proof.checks.find((c) => c.name === 'window_ok')?.detail ?? '');
+    return proof.kind === 'tick' && found ? { ...item, window: Number(found[1]) } : item;
+  });
 }
 
 // Compares the cards of the page with the items of the index. It returns one text for each difference.
@@ -48,13 +55,13 @@ export function compareFacts(cards: Card[], items: IndexItem[], kind: 'turn' | '
       problems.push(`${item.id}: no card`);
       continue;
     }
-    const facts: LevelFacts = { actions: item.actions, ...(item.firstMoves ? { firstMoves: item.firstMoves } : {}) };
+    const facts: LevelFacts = { actions: item.actions, ...(item.firstMoves ? { firstMoves: item.firstMoves } : {}), ...(item.window ? { window: item.window } : {}) };
     const expected = describeFacts(facts, kind);
     if (card.actions !== String(item.actions)) problems.push(`${item.id}: data-actions is ${card.actions}, the index says ${item.actions}`);
     if (card.firstLegal !== (item.firstMoves ? String(item.firstMoves.legal) : undefined)) problems.push(`${item.id}: data-first-legal is ${card.firstLegal}, the index says ${item.firstMoves?.legal}`);
     if (card.firstWin !== (item.firstMoves ? String(item.firstMoves.winning) : undefined)) problems.push(`${item.id}: data-first-win is ${card.firstWin}, the index says ${item.firstMoves?.winning}`);
     // The numbers parsed from the accessible name.
-    const m = /wins in (\d+)(?:, (\d+) of (\d+) first moves? wins?)?(?: ticks)?$/.exec(card.label);
+    const m = /wins in (\d+)(?:, (\d+) of (\d+) first moves? wins?)?(?: ticks)?(?:, tightest jump \d+ steps?, about \d+ ms)?$/.exec(card.label);
     if (!m) {
       problems.push(`${item.id}: the name "${card.label}" does not end with the facts`);
     } else {

@@ -24,5 +24,5 @@ export type {
   ProofIndex,
   ProofSet,
 } from './types';
-export { describeFacts } from './difficulty';
-export type { Difficulty, LevelFacts } from './difficulty';
+export { describeFacts, describeWindow } from './difficulty';
+export type { Difficulty, LevelFacts, WindowText } from './difficulty';

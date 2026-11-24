@@ -1,6 +1,7 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { levelFactsPlugin, readLevelFacts } from './level-facts.mjs';
 
@@ -105,5 +106,60 @@ describe('levelFactsPlugin', () => {
   it('fails the build for a missing index', () => {
     const root = tree('one', null);
     expect(() => run(root, join(root, 'apps', 'one'), page)).toThrow(/proofs\/one\/index\.json.*npm run prove/);
+  });
+});
+
+// A tick proof holds the check window_ok. The build copies the smallest window from its detail.
+function tickTree(proofs: Record<string, unknown>): string {
+  const ids = Object.keys(proofs);
+  const root = tree('run', JSON.stringify({ game: 'run', levels: ids.map((id) => ({ id, actions: 100 })) }));
+  for (const [id, proof] of Object.entries(proofs)) writeFileSync(join(root, 'proofs', 'run', id + '.json'), JSON.stringify(proof), 'utf8');
+  return root;
+}
+const tickProof = (detail: string | null, passed = true) => ({
+  kind: 'tick',
+  checks: [{ name: 'finishable', passed: true, detail: 'solved in 100 ticks' }, ...(detail === null ? [] : [{ name: 'window_ok', passed, detail }])],
+});
+
+describe('the smallest window of a tick proof', () => {
+  it('copies the window of each level', () => {
+    const root = tickTree({ r1: tickProof('smallest window 9 ticks, the plan needs 9'), r2: tickProof('smallest window 10 ticks, the plan needs 9') });
+    const facts = readLevelFacts(root, 'run');
+    expect(facts.levels.r1).toEqual({ actions: 100, window: 9 });
+    expect(facts.levels.r2).toEqual({ actions: 100, window: 10 });
+  });
+
+  it('reads all six runner proofs of the repository', () => {
+    const repo = fileURLToPath(new URL('..', import.meta.url));
+    const facts = readLevelFacts(repo, 'runner');
+    expect(Object.keys(facts.levels)).toEqual(['r01', 'r02', 'r03', 'r04', 'r05', 'r06']);
+    for (const id of Object.keys(facts.levels)) {
+      const proof = JSON.parse(readFileSync(join(repo, 'proofs', 'runner', id + '.json'), 'utf8')) as { checks: { name: string; detail: string }[] };
+      const detail = proof.checks.find((c) => c.name === 'window_ok')?.detail ?? '';
+      expect(detail, id).toMatch(/^smallest window (\d+) ticks/);
+      expect(facts.levels[id]?.window, id).toBe(Number(/^smallest window (\d+) ticks/.exec(detail)?.[1]));
+    }
+  });
+
+  it('adds no window for a turn level with no tick proof', () => {
+    const root = tree('one', turnIndex);
+    mkdirSync(join(root, 'proofs', 'one'), { recursive: true });
+    writeFileSync(join(root, 'proofs', 'one', 'a1.json'), JSON.stringify({ kind: 'turn', checks: [] }), 'utf8');
+    expect(readLevelFacts(root, 'one').levels.a1).toEqual({ actions: 4, firstMoves: { legal: 5, winning: 2 } });
+  });
+
+  it.each([
+    ['a missing window_ok check', null],
+    ['a detail with no number', 'smallest window unknown'],
+    ['a detail with a decimal', 'smallest window 9.5 ticks, the plan needs 9'],
+    ['a detail with a zero window', 'smallest window 0 ticks, the plan needs 9'],
+  ])('fails loudly with the level name for %s', (_name, detail) => {
+    const root = tickTree({ r1: tickProof('smallest window 9 ticks, the plan needs 9'), r7: tickProof(detail) });
+    expect(() => readLevelFacts(root, 'run')).toThrow(/r7.*window_ok.*npm run prove/);
+  });
+
+  it('fails loudly with the level name when the check did not pass', () => {
+    const root = tickTree({ r3: tickProof('smallest window 3 ticks, the plan needs 5', false) });
+    expect(() => readLevelFacts(root, 'run')).toThrow(/r3.*window_ok/);
   });
 });

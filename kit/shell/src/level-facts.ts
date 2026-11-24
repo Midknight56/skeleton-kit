@@ -4,13 +4,14 @@ const whole = (v: unknown): v is number => typeof v === 'number' && Number.isInt
 
 function parseItem(item: unknown): LevelFacts | null {
   if (item === null || typeof item !== 'object') return null;
-  const { actions, firstMoves } = item as { actions?: unknown; firstMoves?: unknown };
+  const { actions, firstMoves, window } = item as { actions?: unknown; firstMoves?: unknown; window?: unknown };
   if (!whole(actions)) return null;
-  if (firstMoves === undefined) return { actions };
+  const tight = whole(window) ? { window } : {};
+  if (firstMoves === undefined) return { actions, ...tight };
   if (firstMoves === null || typeof firstMoves !== 'object') return null;
   const { legal, winning } = firstMoves as { legal?: unknown; winning?: unknown };
   if (!whole(legal) || !whole(winning) || winning > legal) return null;
-  return { actions, firstMoves: { legal, winning } };
+  return { actions, firstMoves: { legal, winning }, ...tight };
 }
 
 // The build puts the numbers of the proof into the page as one JSON tag. This reads it once.

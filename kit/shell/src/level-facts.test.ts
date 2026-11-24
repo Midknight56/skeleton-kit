@@ -32,3 +32,12 @@ describe('readLevelFacts of the page', () => {
     expect(facts.has('a')).toBe(false);
   });
 });
+describe('the window of a tick level in the page', () => {
+  it('reads a whole number window', () => {
+    expect(setup('{"levels":{"r":{"actions":687,"window":9}}}').get('r')).toEqual({ actions: 687, window: 9 });
+  });
+
+  it.each([['"9"'], ['0.5'], ['-1'], ['null']])('skips a damaged window %s and keeps actions', (value) => {
+    expect(setup('{"levels":{"r":{"actions":687,"window":' + value + '}}}').get('r')).toEqual({ actions: 687 });
+  });
+});

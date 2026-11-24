@@ -3,6 +3,8 @@
 export interface LevelFacts {
   actions: number;
   firstMoves?: { legal: number; winning: number };
+  // Tick level only: the smallest window of the proof, in ticks.
+  window?: number;
 }
 export interface Difficulty {
   filled: number;
@@ -11,12 +13,28 @@ export interface Difficulty {
 }
 
 const MAX_PIPS = 8;
+const TICKS_A_SECOND = 60;
+
+export interface WindowText {
+  steps: string;
+  time: string;
+  text: string;
+}
+
+// The tightest jump as steps and milliseconds at 60 ticks a second, rounded to the nearest millisecond.
+export function describeWindow(window: number): WindowText {
+  const steps = `${window} ${window === 1 ? 'step' : 'steps'}`;
+  const time = `${Math.round((window * 1000) / TICKS_A_SECOND)} ms`;
+  return { steps, time, text: `tightest jump ${steps}, about ${time}` };
+}
 
 export function describeFacts(facts: LevelFacts, kind: 'turn' | 'tick' = 'turn'): Difficulty {
   const first = facts.firstMoves;
   if (!first) {
     const unit = kind === 'tick' ? ' ticks' : '';
-    return { filled: 0, total: 0, text: `wins in ${facts.actions}${unit}` };
+    const base = `wins in ${facts.actions}${unit}`;
+    const tight = kind === 'tick' && facts.window !== undefined ? `, ${describeWindow(facts.window).text}` : '';
+    return { filled: 0, total: 0, text: base + tight };
   }
   const { legal, winning } = first;
   const total = Math.min(legal, MAX_PIPS);

@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { describeFacts } from './difficulty';
+import { describeFacts, describeWindow } from './difficulty';
 
 const facts = (actions: number, winning: number, legal: number) => ({ actions, firstMoves: { legal, winning } });
 
@@ -81,5 +81,27 @@ describe('describeFacts property', () => {
   it('uses no word of opinion', () => {
     const d = describeFacts(facts(4, 2, 5));
     expect(d.text).not.toMatch(/easy|hard|tough|safe/i);
+  });
+});
+
+describe('the tightest jump of a tick level', () => {
+  it('gives 10 steps and 167 ms for a window of 10', () => {
+    expect(describeWindow(10)).toEqual({ steps: '10 steps', time: '167 ms', text: 'tightest jump 10 steps, about 167 ms' });
+  });
+
+  it('gives 9 steps and 150 ms for a window of 9', () => {
+    expect(describeWindow(9)).toEqual({ steps: '9 steps', time: '150 ms', text: 'tightest jump 9 steps, about 150 ms' });
+  });
+
+  it('says one step in the singular', () => {
+    expect(describeWindow(1).steps).toBe('1 step');
+  });
+
+  it('adds the window to the text of a tick level and keeps the ticks first', () => {
+    expect(describeFacts({ actions: 687, window: 9 }, 'tick').text).toBe('wins in 687 ticks, tightest jump 9 steps, about 150 ms');
+  });
+
+  it('leaves a turn level text as it was', () => {
+    expect(describeFacts({ actions: 4, window: 9 }).text).toBe('wins in 4');
   });
 });
