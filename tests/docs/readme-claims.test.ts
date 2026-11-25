@@ -70,7 +70,7 @@ describe('paths and forbidden words', () => {
 describe('the order of the sections', () => {
   it('the judging block follows the picture and the links at once', () => {
     const top = readme.slice(0, readme.indexOf('\n## ')).split('\n').filter((line) => line.trim() !== '');
-    expect(top[0]).toBe('# Skeleton kit');
+    expect(top[0]).toBe('# Skeleton Kit');
     expect(top.slice(1).map((line) => line.split(/[ :]/)[0])).toEqual(['![The', 'Play', 'Video']);
     expect(readme).toMatch(/\n## Judging criteria at a glance\n/);
     expect(readme.indexOf('\n## ')).toBe(readme.indexOf('\n## Judging criteria at a glance\n'));

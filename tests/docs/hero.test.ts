@@ -76,7 +76,7 @@ describe('the top of README.md', () => {
 
   it('puts the image right under the title', () => {
     const lines = top.split('\n');
-    expect(lines[0]).toBe('# Skeleton kit');
+    expect(lines[0]).toBe('# Skeleton Kit');
     const image = lines.findIndex((line) => line.startsWith('![') && line.includes('docs/img/hero.png'));
     expect(image).toBeGreaterThan(0);
     expect(image).toBeLessThanOrEqual(2);

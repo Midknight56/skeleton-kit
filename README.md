@@ -1,6 +1,6 @@
-# Skeleton kit
+# Skeleton Kit
 
-![The Skeleton kit landing page with a garden level playing by itself, a Broom Runner course in play with the witch mid jump, and a garden level in play with a lit lantern.](docs/img/hero.png)
+![The Skeleton Kit landing page with a garden level playing by itself, a Broom Runner course in play with the witch mid jump, and a garden level in play with a lit lantern.](docs/img/hero.png)
 
 Play: https://skeleton-kit-games.pages.dev (no login, no account)
 
@@ -24,7 +24,7 @@ For each turn level the prover also finds the fewest actions that win and how ma
 
 ## What it is
 
-Skeleton kit is our entry for the Skeleton Crew category: a skeleton code template lean enough to be clear but flexible enough to support various use cases, with two distinct applications built from one foundation. Moth Garden is a turn puzzle and Broom Runner is a one button runner at 60 ticks a second, and both run on the same kit. Kiro built it with spec driven development, from 17 specs. A search script proves that every level of both games can be finished, and any AI tool can play the games through a tool door (an MCP server built from the game's own rules).
+Skeleton Kit is our entry for the Skeleton Crew category: a skeleton code template lean enough to be clear but flexible enough to support various use cases, with two distinct applications built from one foundation. Moth Garden is a turn puzzle and Broom Runner is a one button runner at 60 ticks a second, and both run on the same kit. Kiro built it with spec driven development, from 17 specs. A search script proves that every level of both games can be finished, and any AI tool can play the games through a tool door (an MCP server built from the game's own rules).
 
 Built with Kiro for Kiroween 2026, Skeleton Crew category. Kiro wrote the code from 17 specs, with five steering files, three hooks, three MCP servers, two custom agents and two powers.
 
