@@ -1,4 +1,4 @@
-# Skeleton kit power
+# Skeleton Kit power
 
 A Kiro power in the Agent Plugins format. It gives Kiro the five tools of the kit's tool door (`new_game`, `act`, `observe`, `render`, `replay`, from `kit/mcp/src/server.ts`) so Kiro can play a game built on the kit. It has one skill, `play-and-prove`. The skill holds the rules that matter to a player: play a level to a won status before calling it fine, send only legal actions, never edit `proofs/` by hand.
 

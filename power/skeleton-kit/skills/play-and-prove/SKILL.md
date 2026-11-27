@@ -1,6 +1,6 @@
 ---
 name: play-and-prove
-description: Use when you are asked to play a level of a game built on Skeleton kit, check that a level can be won, or report a replay, a status or a state hash, with the tools new_game, act, observe, render and replay.
+description: Use when you are asked to play a level of a game built on Skeleton Kit, check that a level can be won, or report a replay, a status or a state hash, with the tools new_game, act, observe, render and replay.
 ---
 
 # Play a level, then say what happened
