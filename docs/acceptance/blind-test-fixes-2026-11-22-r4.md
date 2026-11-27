@@ -1,6 +1,6 @@
 # Blind test fixes, round 4, 2026-11-22
 
-Scope: only the Skeleton kit parts of the reports of sonnet4a, sonnet4b and sonnet4c, the three items the lead checked on the live site, and the lead's pictures `sk-howto.png` and `sk-wait.png`. Notes about the other apps are not part of this list.
+Scope: only the Skeleton kit parts of the reports of tester G, tester H and tester I, the three items the lead checked on the live site, and the lead's pictures `sk-howto.png` and `sk-wait.png`. Notes about the other apps are not part of this list.
 
 The job needed three folders, and the kit boundary rule says one task changes one folder. The lead's three required items cannot be done in one: the landing copy lives in `site/`, the how to play text and the Space key message come from `apps/garden`, and the screen that shows whole sentences and the message for a key are in `kit/shell`. The kit change is small and general: two optional fields on `InputMap` (`howTo`, `refusedKey`). It names no word from a game. This is stated here so the lead can decide whether to split it.
 
@@ -8,7 +8,7 @@ No package was added. No rule, level, proof file, theme, font or token was chang
 
 ## Overlap claims
 
-No tester of this app claims that something overlaps. The one sticky bar claim (sonnet4c, `a2s1.png`) is about the other app. The landing page, the how to play screen and the play screen were checked in normal windows at 360 by 640, 390 by 844 and 1920 by 1080 (the how to play screen also at 375 by 667 by the existing layout test). Nothing overlaps and every control is 16 px inside the screen.
+No tester of this app claims that something overlaps. The one sticky bar claim (tester I, `a2s1.png`) is about the other app. The landing page, the how to play screen and the play screen were checked in normal windows at 360 by 640, 390 by 844 and 1920 by 1080 (the how to play screen also at 375 by 667 by the existing layout test). Nothing overlaps and every control is 16 px inside the screen.
 
 ## Problems
 
