@@ -32,13 +32,14 @@
       .ground { position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; width: 100%; height: min(18vh, 200px); pointer-events: none; }
       .rail { position: fixed; top: 0; left: 0; right: 0; z-index: 5; height: var(--rail); background: var(--plum); border-bottom: 3px solid var(--ink); pointer-events: none; }
 
-      main { position: relative; max-width: 1920px; margin: 0 auto; padding: calc(var(--rail) + 16px) var(--gutter) calc(min(18vh, 200px) + 24px); display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "logo" "intro" "board" "panel" "actions" "nav" "how" "foot"; }
+      main { position: relative; max-width: 1920px; margin: 0 auto; padding: calc(var(--rail) + 16px) var(--gutter) calc(min(18vh, 200px) + 24px); display: grid; gap: 16px 48px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "logo" "intro" "board" "panel" "actions" "compare" "nav" "how" "foot"; }
       .logo { grid-area: logo; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; justify-self: start; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
       .logo svg { width: 32px; height: 32px; }
       .top { grid-area: nav; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
       .top a, .foot a { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 16px; border-radius: 10px; background: rgb(12 9 25 / .78); text-decoration: none; font-weight: 600; font-size: 17px; }
       .foot { grid-area: foot; display: flex; gap: 12px; }
       .intro { grid-area: intro; }
+      .compare { grid-area: compare; }
       .actions { grid-area: actions; display: grid; gap: 16px; align-content: start; }
       .board { grid-area: board; min-width: 0; }
       .panel { grid-area: panel; position: relative; min-width: 0; }
@@ -125,6 +126,47 @@
       .try input:focus-visible, .try button:focus-visible { outline: 3px solid var(--program); outline-offset: 3px; }
       .try-result { margin-top: 12px; font-size: 14px; line-height: 1.45; color: var(--bone); overflow-wrap: anywhere; }
       .try-result[data-won="false"], .try-result[data-won="error"] { color: var(--program); }
+
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .compare { min-width: 0; margin-top: 8px; padding: 16px; border: 1.5px solid var(--plum); border-radius: 12px; background: var(--dusk); box-shadow: 0 4px 0 var(--ink); scroll-margin-top: 24px; }
+      .compare h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; line-height: 1.2; }
+      .compare h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
+      .compare p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+      .compare label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+      .compare textarea { display: block; width: 100%; max-width: 20em; padding: 8px 12px; border: 2px solid var(--violet); border-radius: 10px; background: var(--ink); color: var(--bone); font: 500 18px/1.5 var(--code); letter-spacing: 0.12em; resize: vertical; }
+      .compare textarea[aria-invalid="true"] { border-color: var(--program); }
+      .compare button, .compare .file { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 8px 16px; border: 0; border-radius: 10px; background: var(--plum); color: var(--bone); box-shadow: 0 4px 0 var(--ink); font: 700 15px/1.1 var(--text); cursor: pointer; }
+      .compare button[data-compare="run"] { background: var(--warm); color: var(--night); box-shadow: 0 4px 0 var(--warm-deep); }
+      .compare button:disabled { opacity: .5; cursor: default; }
+      .compare button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+      .compare input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+      .compare .file:focus-within, .compare button:focus-visible, .compare textarea:focus-visible { outline: 3px solid var(--program); outline-offset: 3px; }
+      .cmp-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+      .cmp-error { min-height: 1.4em; margin: 8px 0 0; color: var(--program); }
+      .cmp-status { margin: 0 0 12px; padding: 8px 12px; border-left: 4px solid var(--violet); color: var(--bone); font-size: 15px; }
+      .cmp-boards { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+      .cmp-board { min-width: 0; margin: 0; padding: 12px; border: 1.5px solid var(--plum); border-radius: 10px; background: var(--night); }
+      .cmp-board[data-side="edited"] { border-color: var(--program); }
+      .cmp-scene { aspect-ratio: 4 / 3; width: 100%; }
+      .cmp-scene svg { display: block; width: 100%; height: 100%; }
+      .cmp-board pre { margin: 0 0 8px; font: 500 16px/1.4 var(--code); letter-spacing: 0.12em; }
+      .cmp-board .turn { margin: 8px 0; color: var(--bone); font-size: 15px; }
+      .cmp-board ol { margin: 0; padding-left: 0; list-style: none; font: 400 13px/1.5 var(--code); color: var(--muted); overflow-wrap: anywhere; }
+      .cmp-step { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0 8px; }
+      .cmp-step [data-compare="step-label"] { color: var(--bone); font: 500 14px/1.4 var(--code); }
+      .cmp-out p { color: var(--bone); font-size: 15px; }
+      .cmp-out [data-changed="true"] { border-left: 4px solid var(--program); padding-left: 12px; }
+      .cmp-out [data-kind] { color: var(--muted); }
+      .cmp-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+      .cmp-table th, .cmp-table td { padding: 6px 8px; border: 1px solid var(--plum); text-align: left; vertical-align: top; overflow-wrap: break-word; }
+      .cmp-table th:nth-child(1), .cmp-table td:nth-child(1) { min-width: 48px; }
+      .cmp-table th:nth-child(2), .cmp-table td:nth-child(2) { min-width: 72px; }
+      .cmp-table th:nth-child(3), .cmp-table td:nth-child(3), .cmp-table th:nth-child(4), .cmp-table td:nth-child(4) { min-width: 200px; }
+      .cmp-table th:nth-child(5), .cmp-table td:nth-child(5) { min-width: 80px; }
+      .cmp-table tr[data-current="true"] { background: rgb(255 111 181 / .16); }
+      .cmp-table tr[data-same="false"] td:last-child { color: var(--program); font-weight: 700; }
+      .cmp-scroll { max-width: 100%; min-width: 0; overflow-x: auto; }
+      @media (min-width: 700px) { .cmp-boards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       .moon { display: none; pointer-events: none; }
 
       @media (min-width: 700px) {
@@ -140,7 +182,7 @@
       }
 
       @media (min-width: 1100px) {
-        main { max-width: 1920px; grid-template-columns: minmax(300px, 0.9fr) minmax(320px, 1.3fr) minmax(280px, 1fr); grid-template-areas: "logo nav nav" "intro board panel" "actions board panel" "how how how" "foot foot foot"; align-content: start; }
+        main { max-width: 1920px; grid-template-columns: minmax(300px, 0.9fr) minmax(320px, 1.3fr) minmax(280px, 1fr); grid-template-areas: "logo nav nav" "intro board panel" "actions board panel" "compare compare compare" "how how how" "foot foot foot"; align-content: start; }
         .how { margin-top: 24px; padding: 24px 32px; border-radius: 16px; box-shadow: 0 10px 0 var(--ink); }
         .how ol { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; font-size: clamp(16px, 1vw, 19px); }
         .top { justify-self: end; }
@@ -212,6 +254,7 @@
         <p data-landing="guide">Play in the browser now, or get the kit.</p>
         <div class="signs intro-signs" data-landing="buttons">
           <a class="sign" data-link="get-kit" href="__REPOSITORY_URL__">Get the kit</a>
+          <a class="sign program" data-link="compare" href="#compare">Edit a level and compare</a>
         </div>
         <nav class="signs games" aria-label="The two games">
           <a class="sign game" data-card="garden" href="./garden/" aria-label="Play Moth Garden, the turn puzzle" title="Moth Garden, a turn puzzle">Play Moth Garden</a>
@@ -263,6 +306,58 @@
         </div>
       </aside>
 
+      <section class="compare" id="compare" aria-labelledby="compare-title" data-compare="root">
+        <h2 id="compare-title">Edit a level, replay the same moves</h2>
+        <p>The left board is Moth Garden level 1 as shipped. The right board is a copy you can edit. Both play the same winning moves, found by the kit search on the original. Everything runs in this page. Nothing is sent anywhere.</p>
+        <form data-compare="form" novalidate>
+          <label for="cmp-grid">Edited copy: one row per line</label>
+          <textarea id="cmp-grid" data-compare="grid" rows="3" cols="9" maxlength="120" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="cmp-help cmp-error"></textarea>
+          <p id="cmp-help">Squares: . empty, # hedge, w web, f flower, m moth, 1 to 5 lantern. At most 7 rows of 9.</p>
+          <p class="cmp-error" id="cmp-error" data-compare="error" role="alert"></p>
+          <div class="cmp-row">
+            <button type="submit" data-compare="run">Compare</button>
+            <button type="button" data-compare="example">Example: move a flower</button>
+            <button type="button" data-compare="restore">Restore level</button>
+            <button type="button" data-compare="export">Export JSON</button>
+            <label class="file">Import JSON<input type="file" accept="application/json,.json" data-compare="import" /></label>
+          </div>
+        </form>
+        <p class="cmp-status" role="status" aria-live="polite" data-compare="status"></p>
+        <div class="cmp-boards">
+          <figure class="cmp-board" data-side="original">
+            <h3>Original board</h3>
+            <pre data-compare="original-grid" aria-label="Original rows"></pre>
+            <div class="cmp-scene" data-compare="original-scene"></div>
+            <p class="turn" data-compare="original-text"></p>
+            <ol data-compare="original-squares" aria-label="Squares of the original board"></ol>
+          </figure>
+          <figure class="cmp-board" data-side="edited">
+            <h3>Edited board</h3>
+            <pre data-compare="edited-grid" aria-label="Edited rows"></pre>
+            <div class="cmp-scene" data-compare="edited-scene"></div>
+            <p class="turn" data-compare="edited-text"></p>
+            <ol data-compare="edited-squares" aria-label="Squares of the edited board"></ol>
+          </figure>
+        </div>
+        <div class="cmp-step" role="group" aria-label="Step through the moves">
+          <button type="button" data-compare="start">Start</button>
+          <button type="button" data-compare="prev">Back</button>
+          <button type="button" data-compare="next">Next move</button>
+          <span data-compare="step-label"></span>
+        </div>
+        <div class="cmp-out">
+          <p data-compare="first"></p>
+          <p data-compare="route"></p>
+          <p data-compare="search"></p>
+          <div class="cmp-scroll">
+            <table class="cmp-table" data-compare="table">
+              <caption class="sr-only">Outcome of each move on both boards</caption>
+              <thead><tr><th scope="col">Turn</th><th scope="col">Move</th><th scope="col">Original board</th><th scope="col">Edited board</th><th scope="col">Result</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       <div class="actions" id="actions">
         <p class="signs"><a class="sign program" href="#how">How the kit works</a></p>
         <ul class="key">

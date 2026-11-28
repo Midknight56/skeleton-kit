@@ -5,6 +5,7 @@
 import { gardenTheme } from '../apps/garden/theme';
 import { Replayer, replayFrames, type Frame } from './rule-replay';
 import { SHIPPED_LIMIT, readLimit, tryLimit } from './try-rule';
+import { setupCompare } from './level-compare-ui';
 import { buildCalls, isWatchLeft, readLevel, readProgress, runningIndex, type Call, type ProofFile } from './calls';
 
 // The star field of the sky, at fixed places. A small generator keeps them the same on every visit.
@@ -181,6 +182,7 @@ function setupTry(): void {
 }
 async function main(): Promise<void> {
   setupTry();
+  setupCompare();
   drawStars();
   const list = document.querySelector('[data-calls]');
   if (!list) return;

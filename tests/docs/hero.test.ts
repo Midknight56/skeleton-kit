@@ -8,6 +8,8 @@ import { describe, expect, it } from 'vitest';
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PNG = join(REPO, 'docs', 'img', 'hero.png');
 const TOOL = join(REPO, 'tools', 'capture-hero.mjs');
+// The released video URL is release metadata: docs/demo-video.txt is its one record (see docs/release-metadata.md).
+const DEMO_VIDEO = readFileSync(join(REPO, 'docs', 'demo-video.txt'), 'utf8').trim();
 
 function pngSize(): { width: number; height: number } {
   const bytes = readFileSync(PNG);
@@ -71,7 +73,12 @@ describe('the top of README.md', () => {
 
   it('holds the play link and the video link', () => {
     expect(top).toContain('https://skeleton-kit-games.pages.dev');
-    expect(top).toContain('https://youtu.be/svm-jh3C0tE');
+    expect(top).toContain(DEMO_VIDEO);
+  });
+
+  it('holds only the released video URL of docs/demo-video.txt, as a full YouTube link', () => {
+    expect(DEMO_VIDEO).toMatch(/^https:\/\/youtu\.be\/[A-Za-z0-9_-]{11}$/);
+    expect(top.match(/https:\/\/youtu\.be\/\S+?(?=\)|\s|$)/g)).toEqual([DEMO_VIDEO]);
   });
 
   it('puts the image right under the title', () => {

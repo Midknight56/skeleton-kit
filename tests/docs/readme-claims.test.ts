@@ -115,8 +115,10 @@ describe('numbers read from the files', () => {
     expect(readme).toContain(`${on('Kiro CLI 3.3.0')} on Kiro CLI 3.3.0`);
     expect(readme).toContain(`${on('Kiro CLI 3.5.0')} on Kiro CLI 3.5.0`);
     expect(readme).toContain(`${on('Kiro CLI 3.6.2')} on Kiro CLI 3.6.2`);
+    // 3.7.0 is the version printed by `kiro-cli --version` for the task level-compare-repair.
+    expect(readme).toContain(`${on('Kiro CLI 3.7.0')} on Kiro CLI 3.7.0`);
     expect(readme).toContain(`${on('Kiro IDE')} in the Kiro IDE`);
-    expect(on('Kiro CLI 3.3.0') + on('Kiro CLI 3.5.0') + on('Kiro CLI 3.6.2') + on('Kiro IDE')).toBe(rows.length);
+    expect(on('Kiro CLI 3.3.0') + on('Kiro CLI 3.5.0') + on('Kiro CLI 3.6.2') + on('Kiro CLI 3.7.0') + on('Kiro IDE')).toBe(rows.length);
   });
 
   it('counts steering files, hooks, MCP servers and agents', () => {

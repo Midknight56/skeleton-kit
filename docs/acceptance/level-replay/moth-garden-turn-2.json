@@ -1,0 +1,30 @@
+{
+  "format": "skeleton-kit/level-compare",
+  "version": 1,
+  "game": "garden",
+  "seed": 1,
+  "actions": [
+    "light:1",
+    "wait"
+  ],
+  "original": {
+    "id": "g01",
+    "title": "First light",
+    "maxTurns": 6,
+    "rows": [
+      "2f1..",
+      "m..#.",
+      ".f..."
+    ]
+  },
+  "edited": {
+    "id": "g01",
+    "title": "First light",
+    "maxTurns": 6,
+    "rows": [
+      "2.1f.",
+      "m..#.",
+      ".f..."
+    ]
+  }
+}
