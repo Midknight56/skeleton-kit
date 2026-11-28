@@ -44,12 +44,17 @@ test('landing: limit 3 unloads the winning replay, limit 4 plays the real action
   await expect(page.locator('.status [data-count]')).toContainText(/action 4 of 4, won, hash/);
   await expect(page.locator('[data-dots] i[data-done="true"]')).toHaveCount(4);
   await expect(page.locator('[data-calls] li[data-call="act"]')).toHaveCount(4);
+  const newGame = page.locator('[data-calls] li[data-call="new_game"]');
+  await expect(newGame).toContainText('{"level":"g03","seed":1}');
+  await expect(newGame).not.toContainText('maxTurns');
+  await expect(page.locator('#calls header span:last-child')).toHaveText('local copy, 4 turn limit');
   await expect(page.locator('[data-try="result"]')).toHaveAttribute('data-count', '4');
 
   await limit.fill('3');
   await run.click();
   await expect(fail).toBeVisible();
   await expect(scene).toBeHidden();
+  await expect(page.locator('#calls header span:last-child')).toHaveText('local rule check');
   await page.waitForTimeout(1000);
   await expect(scene.locator('svg')).toHaveCount(0);
 

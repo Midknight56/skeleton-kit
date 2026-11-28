@@ -87,9 +87,17 @@ function enterRuleMode(): void {
   const small = document.querySelector('.caption small');
   if (small) small.textContent = 'rule check';
   document.querySelector<HTMLElement>('[data-rule="box"]')!.hidden = false;
+  setCallsNote('local rule check');
+}
+
+// The second words of the calls panel header. They name the local copy, which is not a parameter of a tool.
+function setCallsNote(text: string): void {
+  const note = document.querySelector('#calls header span:last-child');
+  if (note) note.textContent = text;
 }
 
 function clearCalls(note: string): void {
+  setCallsNote('local rule check');
   const list = document.querySelector('[data-calls]');
   if (!list) return;
   const li = document.createElement('li');
@@ -102,9 +110,10 @@ function ruleCalls(limit: number, actions: string[]): void {
   const list = document.querySelector('[data-calls]');
   if (!list) return;
   const calls: Call[] = [
-    { name: 'new_game', input: { level: 'g03', seed: 1, maxTurns: limit } },
+    { name: 'new_game', input: { level: 'g03', seed: 1 } },
     ...actions.map((action): Call => ({ name: 'act', input: { session: 's1', actions: [action] } })),
   ];
+  setCallsNote(`local copy, ${limit} turn limit`);
   list.replaceChildren(...calls.map(line));
   mark(list, -1);
 }
