@@ -13,3 +13,6 @@
 ## Limits
 
 The wrapper imports the garden level list and rules and `kit/solver`, because the search must run on the real level. The page is built by the normal site build. Each log row names the folders touched.
+
+## Update 2026-11-27
+The generic Play in the browser anchor (`data-link=play-now`) is removed. The intro keeps the Get the kit button and the two named game links. Demo, judge replay, film, Devpost and counts are unchanged.

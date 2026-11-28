@@ -13,3 +13,6 @@ Rule for every task: write the test first and see it fail for the right reason. 
 - [x] 3. The README image alt text test names the true panels
   - Change the alt text asserts in `tests/docs/hero.test.ts`: it must match landing page, in play, runner, jump and lantern, and must not match level select or pips. Run only that file and see it fail on the old README text. The README text is written after this task.
   - _Requirements: 2.4_
+- [x] 4. Remove the duplicate generic play link (approved simplification, 2026-11-27)
+  - Remove `data-link=play-now` from `site/index.html`. Keep the named garden and runner links and Get the kit. Update `e2e/landing-links.e2e.ts`, `e2e/blind-test-r4.e2e.ts`, `e2e/blind-test-fixes.e2e.ts`. Codex verified build and 42 focused landing/replay browser checks, all passed.
+  - _Requirements: 2.5_

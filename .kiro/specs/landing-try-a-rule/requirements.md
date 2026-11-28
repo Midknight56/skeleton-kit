@@ -20,3 +20,4 @@ Two changes to the landing page and the README image. A visitor can change one r
 2. THE phone demo SHALL stay inside the first screen. The same SHALL hold at 1280x800.
 3. THE capture plan of `tools/capture-hero.mjs` SHALL include a real Broom Runner frame in the air, in place of one garden panel, and keep a garden frame with a lantern move.
 4. THE test of the README image SHALL require alt text that names the landing page, the runner jump, and a garden level in play with a lantern, and SHALL refuse the words level select and pips.
+5. (Approved 2026-11-27) THE landing page SHALL NOT carry a generic Play in the browser link. The two named play links SHALL stay equally prominent and at least 44 px high, and Get the kit SHALL stay visible in the first screen. No game picker is added.

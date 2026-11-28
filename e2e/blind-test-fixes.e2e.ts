@@ -313,21 +313,24 @@ test('landing page first lines state what a visitor can do and what a game maker
   await expect(guide).toContainText('Play in the browser now');
   await expect(guide).toContainText('get the kit');
 
-  const playNow = page.locator('[data-link="play-now"]');
+  await expect(page.locator('[data-link="play-now"]')).toHaveCount(0);
+  const garden = page.locator('a[data-card="garden"]');
+  const runner = page.locator('a[data-card="runner"]');
   const getKit = page.locator('[data-link="get-kit"]');
-  await expect(playNow).toBeVisible();
-  await expect(playNow).toHaveText('Play in the browser');
-  await expect(playNow).toHaveAttribute('href', './garden/');
-
+  await expect(garden).toHaveText('Play Moth Garden');
+  await expect(garden).toHaveAttribute('href', './garden/');
+  await expect(runner).toHaveText('Play Broom Runner');
+  await expect(runner).toHaveAttribute('href', './runner/');
   await expect(getKit).toBeVisible();
   await expect(getKit).toHaveText('Get the kit');
 
   for (const size of [{ width: 360, height: 640 }, { width: 1920, height: 1080 }]) {
     await page.setViewportSize(size);
-    const boxPlay = await playNow.boundingBox();
-    const boxGet = await getKit.boundingBox();
-    expect(boxPlay!.y + boxPlay!.height).toBeLessThanOrEqual(size.height);
-    expect(boxGet!.y + boxGet!.height).toBeLessThanOrEqual(size.height);
+    for (const link of [garden, runner, getKit]) {
+      const box = await link.boundingBox();
+      expect(box!.y + box!.height).toBeLessThanOrEqual(size.height);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
   }
 });
 

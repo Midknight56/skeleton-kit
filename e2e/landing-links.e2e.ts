@@ -15,6 +15,16 @@ for (const size of [{ width: 360, height: 640 }, { width: 1280, height: 800 }]) 
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator('[data-link="play-now"]'), 'no generic play link').toHaveCount(0);
+    await expect(page.getByRole('link', { name: /^Play in the browser$/ })).toHaveCount(0);
+    for (const game of GAMES) {
+      await expect(page.locator(`a[data-card="${game.id}"]`)).toHaveAttribute('href', `./${game.id}/`);
+    }
+    const kit = page.locator('[data-link="get-kit"]');
+    await expect(kit, 'the kit link is visible').toBeVisible();
+    const kitBox = (await kit.boundingBox())!;
+    expect(kitBox.y + kitBox.height, 'the kit link is in the first screen').toBeLessThanOrEqual(size.height);
+    expect(kitBox.height, 'kit link height').toBeGreaterThanOrEqual(44);
     const boxes = [];
     for (const game of GAMES) {
       const link = page.locator(`a[data-card="${game.id}"]`);

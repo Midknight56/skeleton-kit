@@ -47,14 +47,13 @@ for (const size of SIZES) {
     expect(found!.block).toMatch(/MCP tool calls, a common way for an AI coding tool to use another program/);
   });
 
-  test(`r4 landing at ${name}: the top play button and the game buttons do not look like the same button`, async ({ page }) => {
+  test(`r4 landing at ${name}: no generic play button, and the two named game buttons look alike`, async ({ page }) => {
     await page.setViewportSize(size);
     await page.goto('/');
     const background = (selector: string) => page.locator(selector).evaluate((el) => getComputedStyle(el).backgroundColor);
-    const top = await background('[data-link="play-now"]');
+    await expect(page.locator('[data-link="play-now"]')).toHaveCount(0);
     const garden = await background('a[data-card="garden"]');
     const runner = await background('a[data-card="runner"]');
-    expect(top, 'the top play button and Play Moth Garden').not.toBe(garden);
     expect(garden, 'the two game buttons are one kind of button').toBe(runner);
   });
 }
