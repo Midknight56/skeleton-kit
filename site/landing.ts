@@ -2,6 +2,8 @@
 // lists the tool calls that play that level. It follows the real watch screen in the frame: the watch
 // screen posts how many actions it has applied, and the call that runs is marked. The turn limit try out
 // runs the search of the kit in this page (see try-rule.ts).
+import { gardenTheme } from '../apps/garden/theme';
+import { Replayer, replayFrames, type Frame } from './rule-replay';
 import { SHIPPED_LIMIT, readLimit, tryLimit } from './try-rule';
 import { buildCalls, isWatchLeft, readLevel, readProgress, runningIndex, type Call, type ProofFile } from './calls';
 
@@ -66,14 +68,71 @@ function showProgress(applied: number, total: number): void {
   Array.from(dots.children).forEach((dot, i) => ((dot as HTMLElement).dataset.done = String(i < applied)));
 }
 
-// The turn limit try out. It writes nothing but the result line and the field.
+// The turn limit try out. It stops the normal replay in the frame, runs the search and shows the result on the
+// board. It writes nothing but the page and it makes no request.
+let ruleMode = false;
+const replayer = new Replayer();
+
+function enterRuleMode(): void {
+  if (ruleMode) return;
+  ruleMode = true;
+  const frame = document.querySelector<HTMLIFrameElement>('iframe[data-frame="watch"]');
+  if (frame) {
+    frame.src = 'about:blank';
+    frame.hidden = true;
+  }
+  const board = document.querySelector('.board');
+  board?.setAttribute('data-demo', 'on');
+  board?.setAttribute('data-mode', 'rule');
+  const small = document.querySelector('.caption small');
+  if (small) small.textContent = 'rule check';
+  document.querySelector<HTMLElement>('[data-rule="box"]')!.hidden = false;
+}
+
+function clearCalls(note: string): void {
+  const list = document.querySelector('[data-calls]');
+  if (!list) return;
+  const li = document.createElement('li');
+  li.dataset.rule = 'calls-note';
+  li.textContent = note;
+  list.replaceChildren(li);
+}
+
+function ruleCalls(limit: number, actions: string[]): void {
+  const list = document.querySelector('[data-calls]');
+  if (!list) return;
+  const calls: Call[] = [
+    { name: 'new_game', input: { level: 'g03', seed: 1, maxTurns: limit } },
+    ...actions.map((action): Call => ({ name: 'act', input: { session: 's1', actions: [action] } })),
+  ];
+  list.replaceChildren(...calls.map(line));
+  mark(list, -1);
+}
+
+function showFrame(frame: Frame, limit: number): void {
+  const scene = document.querySelector<HTMLElement>('[data-rule="scene"]')!;
+  scene.innerHTML = frame.svg;
+  scene.dataset.applied = String(frame.applied);
+  scene.dataset.hash = frame.hash;
+  scene.dataset.phase = frame.phase;
+  const list = document.querySelector('[data-calls]');
+  // Call 0 is new_game. The call that was applied last is the one that runs.
+  if (list) mark(list, frame.applied);
+  showProgress(frame.applied, frame.total);
+  const count = document.querySelector('[data-count]');
+  if (count) count.textContent = `action ${frame.applied} of ${frame.total}, ${frame.phase}, hash ${frame.hash}, limit ${limit}`;
+}
+
 function setupTry(): void {
   const form = document.querySelector<HTMLFormElement>('[data-try="form"]');
   const field = document.querySelector<HTMLInputElement>('[data-try="limit"]');
   const restore = document.querySelector<HTMLButtonElement>('[data-try="restore"]');
   const out = document.querySelector<HTMLElement>('[data-try="result"]');
-  if (!form || !field || !restore || !out) return;
+  const scene = document.querySelector<HTMLElement>('[data-rule="scene"]');
+  const fail = document.querySelector<HTMLElement>('[data-rule="fail"]');
+  if (!form || !field || !restore || !out || !scene || !fail) return;
   const show = (limit: number | null): void => {
+    replayer.stop();
     const result = limit === null ? null : tryLimit(limit);
     out.textContent = result ? result.text : 'Use a whole number of turns from 1 to 20.';
     out.dataset.won = result?.kind === 'won' ? 'true' : result?.kind === 'lost' ? 'false' : 'error';
@@ -81,6 +140,26 @@ function setupTry(): void {
       if (result?.kind === 'won') out.dataset[name] = String(name === 'count' ? result.count : result.hash);
       else delete out.dataset[name];
     }
+    if (result === null || result.kind === 'error') return;
+    enterRuleMode();
+    if (result.kind === 'lost') {
+      scene.replaceChildren();
+      scene.hidden = true;
+      fail.hidden = false;
+      fail.textContent = result.text;
+      fail.dataset.shortest = result.shortest === null ? '' : String(result.shortest);
+      clearCalls(`No calls play a win within ${result.limit} turns.`);
+      showProgress(0, 0);
+      const count = document.querySelector('[data-count]');
+      if (count) count.textContent = 'no winning run';
+      return;
+    }
+    fail.hidden = true;
+    fail.textContent = '';
+    scene.hidden = false;
+    const frames = replayFrames(result.limit, result.actions, gardenTheme.sprites);
+    ruleCalls(result.limit, result.actions);
+    replayer.start(frames, (frame) => showFrame(frame, result.limit));
   };
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -91,7 +170,6 @@ function setupTry(): void {
     show(SHIPPED_LIMIT);
   });
 }
-
 async function main(): Promise<void> {
   setupTry();
   drawStars();
@@ -101,13 +179,14 @@ async function main(): Promise<void> {
     const response = await fetch('./proofs/garden/g03.json');
     if (!response.ok) throw new Error(String(response.status));
     const proof = (await response.json()) as ProofFile;
+    if (ruleMode) return;
     list.replaceChildren(...buildCalls(proof).map(line));
     // The frame is the only page that may speak to this one.
     const frame = document.querySelector<HTMLIFrameElement>('iframe[data-frame="watch"]');
     const board = document.querySelector('.board');
     const title = document.querySelector('[data-caption-title]');
     window.addEventListener('message', (event) => {
-      if (event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
+      if (ruleMode || event.origin !== window.location.origin || event.source !== frame?.contentWindow) return;
       // The frame left the watch screen: the caption and the counter say nothing until a demo plays again.
       if (isWatchLeft(event.data)) {
         board?.setAttribute('data-demo', 'off');
@@ -124,6 +203,7 @@ async function main(): Promise<void> {
       showProgress(progress.applied, progress.total);
     });
   } catch {
+    if (ruleMode) return;
     const li = document.createElement('li');
     li.textContent = 'The calls could not be loaded.';
     list.replaceChildren(li);

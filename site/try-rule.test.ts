@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import levelsJson from '../apps/garden/src/levels/levels.json';
-import { MAX_LIMIT, MIN_LIMIT, SHIPPED_LIMIT, readLimit, tryLimit } from './try-rule';
+import { deriveShortest, MAX_LIMIT, MIN_LIMIT, SHIPPED_LIMIT, readLimit, tryLimit } from './try-rule';
 
 // Task 1 of .kiro/specs/landing-try-a-rule. The wrapper runs the real turn search of the kit on a copy of g03.
 
@@ -66,5 +66,26 @@ describe('the search wrapper of the landing page', () => {
     const start = performance.now();
     for (let limit = MIN_LIMIT; limit <= MAX_LIMIT; limit++) tryLimit(limit);
     expect(performance.now() - start).toBeLessThan(2000);
+  });
+});
+
+describe('the shortest win claim', () => {
+  it('limit 3 says every route was exhausted and the shortest win is derived by the search', () => {
+    const result = tryLimit(3);
+    expect(result.kind === 'lost' && result.shortest).toBe(deriveShortest());
+    expect(deriveShortest()).toBe(4);
+    expect(result.text).toMatch(/every possible route was exhausted within 3 turns/i);
+    expect(result.text).toMatch(/shortest win needs 4 turns/i);
+  });
+
+  it('makes no shortest claim when the search hits its cap', () => {
+    const result = tryLimit(3, 2);
+    expect(result.kind).toBe('lost');
+    if (result.kind !== 'lost') return;
+    expect(result.reason).toBe('node_limit');
+    expect(result.shortest).toBeNull();
+    expect(result.text).toMatch(/inconclusive/i);
+    expect(result.text).not.toMatch(/needs \d+ turns/);
+    expect(deriveShortest(2)).toBeNull();
   });
 });

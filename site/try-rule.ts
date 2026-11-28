@@ -17,7 +17,7 @@ export const NODE_CAP = 20000;
 
 export type TryResult =
   | { kind: 'won'; limit: number; actions: string[]; count: number; hash: string; text: string }
-  | { kind: 'lost'; limit: number; reason: 'exhausted' | 'node_limit' | 'depth_limit'; text: string }
+  | { kind: 'lost'; limit: number; reason: 'exhausted' | 'node_limit' | 'depth_limit'; shortest: number | null; text: string }
   | { kind: 'error'; text: string };
 
 /** A whole number from the minimum to the maximum, or null. */
@@ -33,23 +33,62 @@ function levelsWith(limit: number): RawLevel[] {
   return (levelsJson as RawLevel[]).map((level) => (level.id === LEVEL ? { ...level, rows: [...level.rows], maxTurns: limit } : level));
 }
 
+function defFor(limit: number): GameDef<Json, unknown> {
+  return makeGardenDef(levelsWith(limit)) as unknown as GameDef<Json, unknown>;
+}
+
+/** The game definition of the in-memory copy of g03 with this turn limit. Used by the board replay. */
+export function copyDef(limit: number): GameDef<Json, unknown> {
+  return defFor(limit);
+}
+
 function words(action: string): string {
   return action.startsWith('light:') ? `light lantern ${action.slice('light:'.length)}` : action;
 }
 
+type Found = ReturnType<typeof solveTurn>;
+
+function search(limit: number, cap: number): Found {
+  return solveTurn(defFor(limit), LEVEL, 1, { ...turnOptions, maxNodes: cap });
+}
+
+/**
+ * The shortest win, derived from real searches and never written down. A relaxed copy (the largest limit)
+ * gives a win of n actions. The copy with limit n must be won, and every copy with a limit from 1 to n - 1
+ * must end with "exhausted". Any other outcome (a cap reached, no win) gives null.
+ */
+export function deriveShortest(cap = NODE_CAP): number | null {
+  const relaxed = search(MAX_LIMIT, cap);
+  if (!relaxed.solved) return null;
+  const n = relaxed.actions.length;
+  const atN = search(n, cap);
+  if (!atN.solved || atN.actions.length !== n) return null;
+  for (let lower = MIN_LIMIT; lower < n; lower++) {
+    const found = search(lower, cap);
+    if (found.solved || found.reason !== 'exhausted') return null;
+  }
+  return n;
+}
+
 /** Runs the search on level g03 with the given turn limit. */
-export function tryLimit(limit: number): TryResult {
+export function tryLimit(limit: number, cap = NODE_CAP): TryResult {
   if (!Number.isInteger(limit) || limit < MIN_LIMIT || limit > MAX_LIMIT) {
     return { kind: 'error', text: `Use a whole number of turns from ${MIN_LIMIT} to ${MAX_LIMIT}.` };
   }
-  const def = makeGardenDef(levelsWith(limit)) as unknown as GameDef<Json, unknown>;
-  const found = solveTurn(def, LEVEL, 1, { ...turnOptions, maxNodes: NODE_CAP });
+  const def = defFor(limit);
+  const found = search(limit, cap);
   if (!found.solved) {
-    const text =
-      found.reason === 'exhausted'
-        ? `No route wins within ${limit} turns. The search ran out of routes to try.`
-        : `The search stopped after ${found.nodes} states, so it cannot say if a route wins within ${limit} turns.`;
-    return { kind: 'lost', limit, reason: found.reason, text };
+    if (found.reason !== 'exhausted') {
+      const text = `Inconclusive: the search stopped after ${found.nodes} states, so it cannot say if a route wins within ${limit} turns. It makes no claim about the shortest win.`;
+      return { kind: 'lost', limit, reason: found.reason, shortest: null, text };
+    }
+    const shortest = deriveShortest(cap);
+    const tail =
+      shortest === null
+        ? ' The search could not confirm the shortest win, so it makes no claim about it.'
+        : ` The shortest win needs ${shortest} turns.`;
+    const text = `No route wins within ${limit} turns. The search ran out of routes to try: every possible route was exhausted within ${limit} turns.${tail}`;
+    return { kind: 'lost', limit, reason: 'exhausted', shortest, text };
   }
   const session = createSession(def, LEVEL, 1);
   for (const action of found.actions) session.apply(action);
